@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EWU Portal Helper - License Activation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      background-color: #090d16;
+      color: #f3f4f6;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      margin: 0;
+    }
+    .activation-card {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(99, 102, 241, 0.15);
+      border-radius: 16px;
+      max-width: 520px;
+      width: 100%;
+      padding: 36px;
+      box-sizing: border-box;
+    }
+    .brand-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .brand-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+    }
+    .brand-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0;
+      letter-spacing: -0.5px;
+    }
+    .brand-sub {
+      font-size: 13px;
+      color: #818cf8;
+      margin-top: 2px;
+    }
+    .welcome-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #9ca3af;
+      margin-bottom: 24px;
+    }
+    .feature-list {
+      background: rgba(31, 41, 55, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #e5e7eb;
+      margin-bottom: 8px;
+    }
+    .feature-item:last-child { margin-bottom: 0; }
+    .feature-icon { color: #34d399; font-weight: bold; }
+    .input-group {
+      margin-bottom: 20px;
+    }
+    .input-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #cbd5e1;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .license-input {
+      width: 100%;
+      padding: 14px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      border-radius: 10px;
+      color: #ffffff;
+      font-family: monospace;
+      font-size: 16px;
+      letter-spacing: 2px;
+      text-align: center;
+      box-sizing: border-box;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .license-input:focus {
+      border-color: #818cf8;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+    }
+    .activate-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #6366f1, #4338ca);
+      border: none;
+      border-radius: 10px;
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .activate-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+    }
+    .activate-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .status-box {
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      display: none;
+      line-height: 1.5;
+    }
+    .status-success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34d399;
+    }
+    .status-error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #f87171;
+    }
+    .contact-owner {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+    .contact-link {
+      color: #818cf8;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .contact-link:hover { text-decoration: underline; }
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #ffffff;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="activation-card">
+    <div class="brand-header">
+      <div class="brand-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="brand-title">EWU Portal Helper</h1>
+        <div class="brand-sub">Production License Activation</div>
+      </div>
+    </div>
+
+    <div class="welcome-text">
+      Welcome to EWU Portal Helper! Enter your license key below to activate full access to all features on your East West University Portal.
+    </div>
+
+    <div class="feature-list">
+      <div class="feature-item"><span class="feature-icon">✓</span> Automatic Captcha Auto-Fill on Login</div>
+      <div class="feature-item"><span class="feature-icon">✓</span> Routine Generator & Exportable Schedule Cards</div>
+      <div class="feature-item"><span class="feature-icon">✓</span> Enhanced Offered Courses Table & Live Search</div>
+      <div class="feature-item"><span class="feature-icon">✓</span> Offline Advising Course Planner & Conflict Solver</div>
+    </div>
+
+    <form id="activationForm">
+      <div class="input-group">
+        <label class="input-label" for="licenseKey">License Activation Key</label>
+        <input type="text" id="licenseKey" class="license-input" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" required spellcheck="false" maxlength="24">
+      </div>
+
+      <button type="submit" id="btnActivate" class="activate-btn">
+        <span id="btnText">Activate Extension</span>
+        <div id="btnSpinner" class="spinner" style="display:none;"></div>
+      </button>
+    </form>
+
+    <div id="statusBox" class="status-box"></div>
+
+    <div class="contact-owner">
+      Don't have a license key? <a href="mailto:support@ewubuddy.com?subject=License%20Key%20Request" class="contact-link">Contact Developer / Request Access</a>
+    </div>
+  </div>
+
+  <script src="activation.js"></script>
+</body>
+</html>

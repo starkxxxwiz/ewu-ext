@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EWU Portal Helper — Cyber Command</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    /* =============================================================
+       CYBERTECH DARK GLASSMORPHISM SETTINGS UI
+       ============================================================= */
+
+    :root {
+      --bg-base: #070a13;
+      --bg-surface: rgba(14, 22, 40, 0.75);
+      --bg-surface-elevated: rgba(22, 34, 60, 0.85);
+      --bg-card: rgba(255, 255, 255, 0.035);
+      --bg-card-hover: rgba(255, 255, 255, 0.065);
+      --bg-input: rgba(8, 14, 28, 0.8);
+      
+      --border-subtle: 1px solid rgba(255, 255, 255, 0.08);
+      --border-focus: 1px solid rgba(99, 102, 241, 0.6);
+      --border-glow: 0 0 16px rgba(99, 102, 241, 0.25);
+      
+      --accent: #6366f1;
+      --accent-glow: #818cf8;
+      --accent-gradient: linear-gradient(135deg, #6366f1, #38bdf8);
+      --accent-dim: rgba(99, 102, 241, 0.12);
+      
+      --cyan: #38bdf8;
+      --cyan-dim: rgba(56, 189, 248, 0.12);
+      --emerald: #10b981;
+      --emerald-dim: rgba(16, 185, 129, 0.12);
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --rose-dim: rgba(244, 63, 94, 0.12);
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+      --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 380px;
+      min-height: 520px;
+      max-height: 600px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-main);
+      background: #070a13;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.18) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.14) 0px, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(15, 23, 42, 0.8) 0px, transparent 100%);
+      background-attachment: fixed;
+      overflow-x: hidden;
+      overflow-y: auto;
+      user-select: none;
+    }
+
+    body::-webkit-scrollbar { width: 5px; }
+    body::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+    body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+    body::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+
+    /* --- Top Neon Glow Line --- */
+    .top-glow-line {
+      position: sticky;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #6366f1, #38bdf8, #10b981);
+      z-index: 100;
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.6);
+    }
+
+    /* --- Header --- */
+    .header {
+      position: sticky;
+      top: 2px;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: rgba(10, 15, 29, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: var(--border-subtle);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: var(--accent-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 14px rgba(99, 102, 241, 0.4);
+      color: #ffffff;
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+      background: linear-gradient(135deg, #ffffff 40%, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-sub {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: var(--cyan);
+      letter-spacing: 0.4px;
+    }
+
+    .header-pills {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .version-pill {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: var(--accent-dim);
+      color: var(--accent-glow);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    /* --- Quick Search & Filter Bar --- */
+    .search-nav-container {
+      padding: 12px 18px 6px;
+    }
+
+    .search-input-wrap {
+      position: relative;
+      margin-bottom: 10px;
+    }
+
+    .search-input-wrap svg {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 8px 12px 8px 32px;
+      background: var(--bg-input);
+      border: var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 12px;
+      font-family: var(--font-sans);
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
+    }
+
+    /* Segmented Navigation Tabs */
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 3px;
+      border-radius: var(--radius-md);
+      border: var(--border-subtle);
+      overflow-x: auto;
+    }
+
+    .tab-bar::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 52px;
+      padding: 6px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      text-align: center;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      background: var(--accent-dim);
+      color: #ffffff;
+      font-weight: 700;
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      box-shadow: 0 0 8px rgba(99, 102, 241, 0.2);
+    }
+
+    /* --- Content Body --- */
+    .content-body {
+      padding: 10px 18px 20px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--cyan);
+      margin-top: 14px;
+      margin-bottom: 8px;
+      padding-left: 2px;
+    }
+
+    .section-heading svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    /* --- Setting Card --- */
+    .setting-card {
+      background: var(--bg-card);
+      border: var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: var(--transition);
+    }
+
+    .setting-card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(99, 102, 241, 0.3);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .card-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .card-sub-items {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .sub-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .sub-title {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: #cbd5e1;
+    }
+
+    /* --- Cyber Modern Toggle Switch --- */
+    .cyber-switch {
+      position: relative;
+      width: 38px;
+      height: 22px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .cyber-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+
+    .switch-slider {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      transition: var(--transition);
+    }
+
+    .switch-slider::before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      left: 2px;
+      top: 2px;
+      background: #ffffff;
+      border-radius: 50%;
+      transition: var(--transition);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .cyber-switch input:checked + .switch-slider {
+      background: var(--accent);
+      border-color: rgba(99, 102, 241, 0.6);
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .cyber-switch input:checked + .switch-slider::before {
+      transform: translateX(16px);
+      background: #ffffff;
+    }
+
+    /* --- Modern Input & Select Controls --- */
+    .cyber-select {
+      background: var(--bg-input);
+      border: var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: #f8fafc;
+      font-size: 11px;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      padding: 5px 22px 5px 8px;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 6px center;
+      transition: var(--transition);
+    }
+
+    .cyber-select:focus {
+      border-color: var(--accent);
+    }
+
+    .cyber-number-input {
+      width: 65px;
+      background: var(--bg-input);
+      border: var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: #f8fafc;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      padding: 5px 6px;
+      text-align: center;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .cyber-number-input:focus {
+      border-color: var(--accent);
+    }
+
+    .cyber-text-input {
+      width: 140px;
+      background: var(--bg-input);
+      border: var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: #f8fafc;
+      font-size: 11px;
+      font-family: var(--font-sans);
+      padding: 5px 8px;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .cyber-text-input:focus {
+      border-color: var(--accent);
+    }
+
+    /* --- Action Buttons & Footer --- */
+    .btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .cyber-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 12px;
+      font-size: 11.5px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      border-radius: var(--radius-md);
+      border: var(--border-subtle);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .cyber-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(99, 102, 241, 0.4);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .cyber-btn-danger {
+      color: var(--rose);
+      border-color: rgba(244, 63, 94, 0.2);
+    }
+
+    .cyber-btn-danger:hover {
+      background: var(--rose-dim);
+      border-color: var(--rose);
+      color: #ffffff;
+    }
+
+    .footer {
+      padding: 12px 18px 8px;
+      border-top: var(--border-subtle);
+      background: rgba(0, 0, 0, 0.4);
+      text-align: center;
+    }
+
+    .footer-text {
+      font-size: 10px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    .footer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--cyan);
+    }
+
+    /* --- Toast --- */
+    .toast {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      padding: 8px 16px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #ffffff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 12px rgba(99, 102, 241, 0.3);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      z-index: 999;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-glow-line"></div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">EWU Buddy</span>
+        <span class="brand-sub">CYBER COMMAND</span>
+      </div>
+    </div>
+    <div class="header-pills">
+      <span class="version-pill">v2.0</span>
+    </div>
+  </div>
+
+  <!-- License Status Card -->
+  <div id="licenseStatusCard" style="margin: 10px 14px 0 14px; background: rgba(31, 41, 55, 0.5); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span id="licBadgeDot" style="width: 8px; height: 8px; border-radius: 50%; background: #f87171; display: inline-block;"></span>
+      <div>
+        <div id="licStatusText" style="font-size: 11px; font-weight: 700; color: #ffffff;">Checking License...</div>
+        <div id="licSubText" style="font-size: 10px; color: #94a3b8;">Key required for full access</div>
+      </div>
+    </div>
+    <button id="btnManageLicense" style="background: linear-gradient(135deg, #6366f1, #4338ca); border: none; border-radius: 6px; color: #ffffff; font-size: 10.5px; font-weight: 600; padding: 5px 10px; cursor: pointer;">Manage</button>
+  </div>
+
+  <!-- Quick Filter & Category Navigation -->
+  <div class="search-nav-container">
+    <div class="search-input-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="settingsSearch" class="search-input" placeholder="Quick search settings..." autocomplete="off" />
+    </div>
+    <div class="tab-bar">
+      <button type="button" class="tab-btn active" data-tab="all">All</button>
+      <button type="button" class="tab-btn" data-tab="advising">Advising</button>
+      <button type="button" class="tab-btn" data-tab="courses">Courses</button>
+      <button type="button" class="tab-btn" data-tab="routine">Routine</button>
+      <button type="button" class="tab-btn" data-tab="login">Login</button>
+      <button type="button" class="tab-btn" data-tab="system">System</button>
+    </div>
+  </div>
+
+  <!-- Content Body -->
+  <div class="content-body" id="settingsContainer">
+
+    <!-- ==================== GENERAL / SYSTEM ==================== -->
+    <div class="setting-group" data-group="system">
+      <div class="section-heading">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Master Controls</span>
+      </div>
+
+      <!-- Master Toggle -->
+      <div class="setting-card">
+        <div class="card-row">
+          <div class="card-info">
+            <span class="card-title">Extension Master Power</span>
+            <span class="card-desc">Globally enable or pause all extension modules</span>
+          </div>
+          <label class="cyber-switch">
+            <input type="checkbox" id="toggleEnabled" />
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Toast & Animations -->
+      <div class="setting-card">
+        <div class="card-row">
+          <div class="card-info">
+            <span class="card-title">Toast Alerts &amp; Animations</span>
+            <span class="card-desc">Status indicators and transition physics</span>
+          </div>
+        </div>
+        <div class="card-sub-items">
+          <div class="sub-item-row">
+            <span class="sub-title">Status Toast Notifications</span>
+            <label class="cyber-switch">
+              <input type="checkbox" id="toggleToast" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="sub-item-row">
+            <span class="sub-title">Smooth UI Animations</span>
+            <label class="cyber-switch">
+              <input type="checkbox" id="toggleAnimations" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== ADVISING (ONLINE & OFFLINE) ==================== -->
+    <div class="setting-group" data-group="advising">
+      <div class="section-heading">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Advising Offline Suite</span>
+      </div>
+
+      <!-- Advising Offline Master -->
+      <div class="setting-card">
+        <div class="card-row">
+          <div class="card-info">
+            <span class="card-title">Advising Offline Enhancement</span>
+            <span class="card-desc">Inject Course Planner &amp; Recommended Course suite</span>
+          </div>
+          <label class="cyber-switch">
+            <input type="checkbox" id="toggleAdvisingOffline" />
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+        <div class="card-sub-items" id="subAdvisingOffline">
+          <div class="sub-item-row">
+            <span class="sub-title">Recommended Course Table</span>
+            <label class="cyber-switch">
+              <input type="checkbox" id="toggleOfflineRecommended" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="sub-item-row">
+            <span class="sub-title">Course Planner Dashboard</span>
+            <label class="cyber-switch">
+              <input type="checkbox" id="toggleOfflinePlanner" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="sub-item-row">
+            <span class="sub-title">Planner Max Credit Limit</span>
+            <input type="number" id="inputPlannerCreditLimit" class="cyber-number-input" min="3" max="25" step="0.5" value="15.0" />
+          </div>
+        </div>
+      </div>
+
+      <div class="section-heading">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>Online Advising Page</span>
+      </div>
+
+      <!-- Online Advising Enhancer -->
+      <div class="setting-card">
+        <div class="card-row">
+          <div class="card-info">
+            <span class="card-title">Advising Table Enhancer</span>
+            <span class="card-desc">10-column layout with instant PDF export &amp; filters</span>
+          </div>
+          <label class="cyber-switch">
+            <input type="checkbox" id="toggleAdvisingEnhancer" />
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+        <div class="card-sub-items" id="subAdvisingOnline">
+          <div class="sub-item-row">
+            <span class="sub-title">Seat Color Indicators</span>
+            <label class="cyber-switch">
+              <input type="checkbox" id="toggleAdvColorLeft" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="sub-item-row">
+            <span class="sub-title">Advising Live Search</span>
+            <label class="cyber-switch">
+              <input type="checkbox" id="toggleAdvSearchBox" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== OFFERED COURSES ==================== -->
+    <div class="setting-group" data-group="courses">
+      <div class="section-heading">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Offered Courses Enhancer</span>
+      </div>
+
+      <div class="setting-card">
+        <div class="card-row">
+          <div class="card-info">
+            <span class="card-title">Offered Courses Enhancer</span>
+            <span class="card-desc">Upgrades course catalog with live search &amp; PDF</span>
+          </div>
+          <label class="cyber-switch">
+            <input type="checkbox" id="toggleOfferedCourses" />
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+        <div class="card-sub-items" id="subOfferedCourses">
+          <div class="sub-item-row">
+            <span class="sub-title">Sticky Table Header</span>
+            <label class="cyber-switch">
+              <input type="checkbox" id="toggleOCStickyHeader" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="sub-item-row">
+            <span class="sub-title">Seat Color Indicator</span>
+            <label class="cyber-switch">
+              <input type="checkbox" id="toggleOCColorLeft" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="sub-item-row">
+            <span class="sub-title">Course Search Box</span>
+            <label class="cyber-switch">
+              <input type="checkbox" id="toggleOCSearchBox" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="sub-item-row">
+            <span class="sub-title">Search Placeholder</span>
+            <input type="text" id="inputOCSearchPlaceholder" class="cyber-text-input" value="Search by course or faculty..." />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== ROUTINE GENERATOR ==================== -->
+    <div class="setting-group" data-group="routine">
+      <div class="section-heading">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span>Routine Generator</span>
+      </div>
+
+      <div class="setting-card">
+        <div class="card-row">
+          <div class="card-info">
+            <span class="card-title">Class Schedule Timetable</span>
+            <span class="card-desc">Visual weekly schedule generator &amp; export</span>
+          </div>
+          <label class="cyber-switch">
+            <input type="checkbox" id="toggleRoutine" />
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+        <div class="card-sub-items" id="subRoutine">
+          <div class="sub-item-row">
+            <span class="sub-title">Compact Timetable Mode</span>
+            <label class="cyber-switch">
+              <input type="checkbox" id="toggleCompact" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="sub-item-row">
+            <span class="sub-title">Show EWU Logo in Header</span>
+            <label class="cyber-switch">
+              <input type="checkbox" id="toggleShowLogo" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="sub-item-row">
+            <span class="sub-title">Blue Theme Intensity</span>
+            <select id="selectBlueIntensity" class="cyber-select">
+              <option value="light">Light</option>
+              <option value="medium">Medium</option>
+              <option value="strong">Strong</option>
+            </select>
+          </div>
+          <div class="sub-item-row">
+            <span class="sub-title">Export PDF Resolution</span>
+            <select id="selectExportQuality" class="cyber-select">
+              <option value="standard">Standard</option>
+              <option value="high">High (2x)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Schedule Table Enhancer -->
+      <div class="setting-card">
+        <div class="card-row">
+          <div class="card-info">
+            <span class="card-title">Schedule Table Enhancer</span>
+            <span class="card-desc">11-column table with faculty initial, name &amp; email</span>
+          </div>
+          <label class="cyber-switch">
+            <input type="checkbox" id="toggleScheduleEnhancer" />
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+        <div class="card-sub-items" id="subScheduleEnhancer">
+          <div class="sub-item-row">
+            <span class="sub-title">Faculty Email Direct Link</span>
+            <label class="cyber-switch">
+              <input type="checkbox" id="toggleScheduleEmailLink" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="sub-item-row">
+            <span class="sub-title">Total Courses &amp; Credit Summary Card</span>
+            <label class="cyber-switch">
+              <input type="checkbox" id="toggleScheduleSummaryCard" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== LOGIN HELPER ==================== -->
+    <div class="setting-group" data-group="login">
+      <div class="section-heading">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Login Automation</span>
+      </div>
+
+      <div class="setting-card">
+        <div class="card-row">
+          <div class="card-info">
+            <span class="card-title">Auto Captcha Solver</span>
+            <span class="card-desc">Solves and inserts portal number math captcha</span>
+          </div>
+          <label class="cyber-switch">
+            <input type="checkbox" id="toggleLoginHelper" />
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+        <div class="card-sub-items" id="subLogin">
+          <div class="sub-item-row">
+            <span class="sub-title">Auto-fill &amp; Trigger Form</span>
+            <label class="cyber-switch">
+              <input type="checkbox" id="toggleAutoFill" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="sub-item-row">
+            <span class="sub-title">Solve Delay (ms)</span>
+            <input type="number" id="inputDelay" class="cyber-number-input" min="0" max="3000" step="50" value="300" />
+          </div>
+          <div class="sub-item-row">
+            <span class="sub-title">Verbose Debug Logging</span>
+            <label class="cyber-switch">
+              <input type="checkbox" id="toggleDebug" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== BACKUP & DATA ==================== -->
+    <div class="setting-group" data-group="system">
+      <div class="section-heading">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Data &amp; Presets</span>
+      </div>
+
+      <div class="btn-grid">
+        <button type="button" class="cyber-btn" id="btnExport">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Export JSON
+        </button>
+        <button type="button" class="cyber-btn" id="btnImport">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Import JSON
+        </button>
+      </div>
+      <div style="margin-top: 8px;">
+        <button type="button" class="cyber-btn cyber-btn-danger" id="btnReset" style="width: 100%;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          Reset to Factory Defaults
+        </button>
+      </div>
+
+      <input type="file" id="fileImport" accept=".json" style="display:none;" />
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-text">
+      East West University Student Portal Helper &bull; Crafted for EWU Students
+    </div>
+    <div class="footer-badge">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+      <span>Live Sync Active</span>
+    </div>
+  </div>
+
+  <!-- Toast Element -->
+  <div class="toast" id="toast"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

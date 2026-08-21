@@ -1,0 +1,12 @@
+{
+  "name": "ewu-portal-helper-build",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Build & Obfuscation scripts for EWU Portal Helper production release",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "javascript-obfuscator": "^4.1.0"
+  }
+}

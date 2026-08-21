@@ -1,0 +1,1546 @@
+/* =============================================================
+   EWU Portal Helper v2.5.0
+   Content Script Styles
+   ============================================================= */
+
+:root {
+  --ewu-bg-primary:       rgba(15, 15, 25, 0.85);
+  --ewu-bg-secondary:     rgba(25, 25, 45, 0.75);
+  --ewu-bg-card:          rgba(30, 30, 55, 0.65);
+  --ewu-bg-hover:         rgba(45, 45, 80, 0.70);
+  --ewu-bg-input:         rgba(20, 20, 40, 0.80);
+  --ewu-glass-blur:       16px;
+  --ewu-glass-blur-heavy: 24px;
+  --ewu-border-glass:     1px solid rgba(255, 255, 255, 0.08);
+  --ewu-border-glow:      1px solid rgba(100, 140, 255, 0.25);
+  --ewu-border-radius:    12px;
+  --ewu-border-radius-sm: 8px;
+  --ewu-border-radius-lg: 16px;
+  --ewu-accent:           #6C8EFF;
+  --ewu-accent-hover:     #8AA4FF;
+  --ewu-accent-dim:       rgba(108, 142, 255, 0.15);
+  --ewu-success:          #4ADE80;
+  --ewu-success-dim:      rgba(74, 222, 128, 0.15);
+  --ewu-warning:          #FBBF24;
+  --ewu-warning-dim:      rgba(251, 191, 36, 0.15);
+  --ewu-danger:           #F87171;
+  --ewu-danger-dim:       rgba(248, 113, 113, 0.15);
+  --ewu-info:             #60A5FA;
+  --ewu-info-dim:         rgba(96, 165, 250, 0.15);
+  --ewu-text-primary:     rgba(255, 255, 255, 0.92);
+  --ewu-text-secondary:   rgba(255, 255, 255, 0.55);
+  --ewu-text-muted:       rgba(255, 255, 255, 0.30);
+  --ewu-font-family:      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  --ewu-font-size-xs:     11px;
+  --ewu-font-size-sm:     12px;
+  --ewu-font-size-md:     13px;
+  --ewu-font-size-lg:     15px;
+  --ewu-font-size-xl:     18px;
+  --ewu-shadow-sm:        0 2px 8px rgba(0, 0, 0, 0.30);
+  --ewu-shadow-md:        0 4px 16px rgba(0, 0, 0, 0.40);
+  --ewu-shadow-lg:        0 8px 32px rgba(0, 0, 0, 0.50);
+  --ewu-shadow-glow:      0 0 20px rgba(108, 142, 255, 0.20);
+  --ewu-transition-fast:  0.15s ease;
+  --ewu-transition-md:    0.25s ease;
+  --ewu-transition-slow:  0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --ewu-z-toast:          2147483650;
+  --ewu-z-modal:          2147483640;
+}
+
+body.ewu-no-animations *,
+body.ewu-no-animations *::before,
+body.ewu-no-animations *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+
+/* =============================================================
+   TOAST NOTIFICATIONS
+   ============================================================= */
+
+#ewu-toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: var(--ewu-z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  max-width: 300px;
+  width: auto;
+}
+
+.ewu-toast-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  overflow: hidden;
+  min-height: 0;
+  background: rgba(127, 127, 127, 0.27);
+  border-radius: 12px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(3.3px);
+  -webkit-backdrop-filter: blur(3.3px);
+  border: 1px solid rgba(127, 127, 127, 1);
+  font-family: var(--ewu-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #ffffff;
+  letter-spacing: 0.15px;
+  line-height: 1.3;
+  white-space: normal;
+  word-break: break-word;
+  cursor: default;
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateX(120%) scale(0.95);
+  transition: opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+              transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 0.3s ease;
+}
+
+.ewu-toast-item::before {
+  content: none;
+}
+
+.ewu-toast-item.ewu-toast-visible {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.ewu-toast-item.ewu-toast-exit {
+  opacity: 0;
+  transform: translateX(120%) scale(0.95);
+}
+
+.ewu-toast-item.ewu-toast-success {
+  background: rgba(52, 211, 153, 0.22);
+  box-shadow: 0 4px 30px rgba(52, 211, 153, 0.15);
+  border: 1px solid rgba(52, 211, 153, 0.85);
+}
+
+.ewu-toast-item.ewu-toast-error {
+  background: rgba(248, 113, 113, 0.22);
+  box-shadow: 0 4px 30px rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.85);
+}
+
+.ewu-toast-item.ewu-toast-warning {
+  background: rgba(251, 191, 36, 0.22);
+  box-shadow: 0 4px 30px rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.85);
+}
+
+.ewu-toast-item.ewu-toast-info {
+  background: rgba(127, 127, 127, 0.27);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(127, 127, 127, 1);
+}
+
+.ewu-toast-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  line-height: 1;
+}
+
+.ewu-toast-success .ewu-toast-icon { color: #059669; filter: drop-shadow(0 0 4px rgba(52, 211, 153, 0.5)); }
+.ewu-toast-error   .ewu-toast-icon { color: #dc2626; filter: drop-shadow(0 0 4px rgba(248, 113, 113, 0.5)); }
+.ewu-toast-warning .ewu-toast-icon { color: #d97706; filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.5)); }
+.ewu-toast-info    .ewu-toast-icon { color: #4b5563; filter: drop-shadow(0 0 4px rgba(127, 127, 127, 0.4)); }
+
+.ewu-toast-icon svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 2.2px;
+}
+
+.ewu-toast-text {
+  color: #ffffff;
+  font-weight: 500;
+  line-height: 1.4;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+
+/* =============================================================
+   LOGIN HELPER
+   ============================================================= */
+
+#lblcaptchaAnswer.ewu-lh-filled {
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--ewu-success), 0 0 12px rgba(74, 222, 128, 0.25) !important;
+  border-color: var(--ewu-success) !important;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease !important;
+}
+
+
+/* =============================================================
+   ROUTINE GENERATOR - Generate Button
+   ============================================================= */
+
+#ewu-rg-btn-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
+  padding: 4px 0;
+}
+
+#ewu-rg-btn-wrapper-inline {
+  display: inline-block;
+  margin: 0 0 0 8px;
+  vertical-align: middle;
+}
+
+#ewu-rg-btn-generate {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 22px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--ewu-font-family);
+  color: #FFFFFF;
+  background-color: #1A73E8;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 1px 6px rgba(26, 115, 232, 0.18);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+  position: relative;
+  z-index: 1;
+}
+
+#ewu-rg-btn-generate:active {
+  transform: scale(0.96);
+  box-shadow: 0 1px 4px rgba(26, 115, 232, 0.20);
+}
+
+#ewu-rg-btn-generate:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  color: #94A3B8;
+  background-color: #F1F5F9;
+  box-shadow: none;
+  transform: none;
+}
+
+#ewu-rg-btn-generate.ewu-rg-btn-ready {
+  animation: ewu-btn-ready-glow 2.5s ease-in-out infinite;
+}
+
+@keyframes ewu-btn-ready-glow {
+  0%, 100% { box-shadow: 0 1px 6px rgba(26, 115, 232, 0.18); }
+  50%      { box-shadow: 0 2px 14px rgba(26, 115, 232, 0.35); }
+}
+
+#ewu-rg-btn-generate::before,
+#ewu-rg-btn-generate::after {
+  position: absolute;
+  content: "";
+  width: 150%;
+  left: 50%;
+  height: 100%;
+  transform: translateX(-50%);
+  z-index: -1;
+  background-repeat: no-repeat;
+}
+
+#ewu-rg-btn-generate:hover::before {
+  top: -70%;
+  background-image: radial-gradient(circle, #1A73E8 20%, transparent 20%),
+    radial-gradient(circle, transparent 20%, #1A73E8 20%, transparent 30%),
+    radial-gradient(circle, #1A73E8 20%, transparent 20%),
+    radial-gradient(circle, #1A73E8 20%, transparent 20%),
+    radial-gradient(circle, transparent 10%, #1A73E8 15%, transparent 20%),
+    radial-gradient(circle, #1A73E8 20%, transparent 20%),
+    radial-gradient(circle, #1A73E8 20%, transparent 20%),
+    radial-gradient(circle, #1A73E8 20%, transparent 20%),
+    radial-gradient(circle, #1A73E8 20%, transparent 20%);
+  background-size: 10% 10%, 20% 20%, 15% 15%, 20% 20%, 18% 18%, 10% 10%, 15% 15%, 10% 10%, 18% 18%;
+  background-position: 50% 120%;
+  animation: ewu-topBubbles 0.6s ease;
+}
+
+@keyframes ewu-topBubbles {
+  0% {
+    background-position: 5% 90%, 10% 90%, 10% 90%, 15% 90%, 25% 90%, 25% 90%, 40% 90%, 55% 90%, 70% 90%;
+  }
+  50% {
+    background-position: 0% 80%, 0% 20%, 10% 40%, 20% 0%, 30% 30%, 22% 50%, 50% 50%, 65% 20%, 90% 30%;
+  }
+  100% {
+    background-position: 0% 70%, 0% 10%, 10% 30%, 20% -10%, 30% 20%, 22% 40%, 50% 40%, 65% 10%, 90% 20%;
+    background-size: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%;
+  }
+}
+
+#ewu-rg-btn-generate:hover::after {
+  bottom: -70%;
+  background-image: radial-gradient(circle, #1A73E8 20%, transparent 20%),
+    radial-gradient(circle, #1A73E8 20%, transparent 20%),
+    radial-gradient(circle, transparent 10%, #1A73E8 15%, transparent 20%),
+    radial-gradient(circle, #1A73E8 20%, transparent 20%),
+    radial-gradient(circle, #1A73E8 20%, transparent 20%),
+    radial-gradient(circle, #1A73E8 20%, transparent 20%),
+    radial-gradient(circle, #1A73E8 20%, transparent 20%);
+  background-size: 15% 15%, 20% 20%, 18% 18%, 20% 20%, 15% 15%, 20% 20%, 18% 18%;
+  background-position: 50% 0%;
+  animation: ewu-bottomBubbles 0.6s ease;
+}
+
+@keyframes ewu-bottomBubbles {
+  0% {
+    background-position: 10% -10%, 30% 10%, 55% -10%, 70% -10%, 85% -10%, 70% -10%, 70% 0%;
+  }
+  50% {
+    background-position: 0% 80%, 20% 80%, 45% 60%, 60% 100%, 75% 70%, 95% 60%, 105% 0%;
+  }
+  100% {
+    background-position: 0% 90%, 20% 90%, 45% 70%, 60% 110%, 75% 80%, 95% 70%, 110% 10%;
+    background-size: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%;
+  }
+}
+
+
+/* =============================================================
+   ROUTINE GENERATOR - Preview Modal
+   ============================================================= */
+
+.ewu-rg-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--ewu-z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.ewu-rg-modal.ewu-rg-modal-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ewu-rg-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.ewu-rg-content {
+  position: relative;
+  width: 94vw;
+  max-width: 860px;
+  max-height: 90vh;
+  background: #FFFFFF;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.40);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: scale(0.95) translateY(10px);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ewu-rg-modal.ewu-rg-modal-open .ewu-rg-content {
+  transform: scale(1) translateY(0);
+}
+
+.ewu-rg-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: #F8FAFC;
+  border-bottom: 1px solid #E2E8F0;
+  flex-shrink: 0;
+}
+
+.ewu-rg-toolbar-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.ewu-rg-toolbar-actions { display: flex; gap: 8px; }
+
+.ewu-rg-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--ewu-font-family);
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  background: #FFFFFF;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.ewu-rg-btn:hover       { background: #F1F5F9; border-color: #CBD5E1; color: #1E293B; }
+.ewu-rg-btn svg         { flex-shrink: 0; }
+.ewu-rg-btn-pdf:hover   { border-color: #93C5FD; color: #1A73E8; background: #EFF6FF; }
+.ewu-rg-btn-img:hover   { border-color: #86EFAC; color: #16A34A; background: #F0FDF4; }
+
+.ewu-rg-btn-close {
+  padding: 7px 10px;
+  font-size: 18px;
+  line-height: 1;
+  color: #94A3B8;
+  border-color: transparent;
+  background: transparent;
+}
+
+.ewu-rg-btn-close:hover { color: #EF4444; background: #FEF2F2; border-color: transparent; }
+
+.ewu-rg-body {
+  flex: 1;
+  overflow: auto;
+  padding: 20px 24px 24px;
+  background: #FFFFFF;
+}
+
+.ewu-rg-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.ewu-rg-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #E2E8F0;
+  border-top-color: #1A73E8;
+  border-radius: 50%;
+  animation: ewu-spin 0.7s linear infinite;
+}
+
+@keyframes ewu-spin { to { transform: rotate(360deg); } }
+
+.ewu-rt-container {
+  display: inline-block;
+  min-width: 100%;
+  box-sizing: border-box;
+}
+
+.ewu-rt-table {
+  width: 100%;
+  table-layout: auto;
+}
+
+.ewu-rt-table th,
+.ewu-rt-table td { page-break-inside: avoid; }
+
+.ewu-rt-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748B;
+  font-size: 15px;
+}
+
+
+/* =============================================================
+   OFFERED COURSES - Controls Bar
+   ============================================================= */
+
+#ewu-oc-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 8px 0 14px;
+  padding: 10px 14px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.ewu-oc-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.ewu-oc-stats {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--ewu-font-family);
+  color: #1A73E8;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+  background: #EFF6FF;
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1.5px solid #BFDBFE;
+  box-shadow: 0 1px 6px rgba(26, 115, 232, 0.12);
+}
+
+.ewu-oc-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ewu-oc-toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.ewu-oc-toggle-track {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 20px;
+  background: #CBD5E1;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.ewu-oc-toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #FFFFFF;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.ewu-oc-toggle-input:checked + .ewu-oc-toggle-track { background: #1A73E8; }
+.ewu-oc-toggle-input:checked + .ewu-oc-toggle-track::after { transform: translateX(18px); }
+.ewu-oc-toggle-input:focus-visible + .ewu-oc-toggle-track { box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.25); }
+
+.ewu-oc-toggle-text {
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--ewu-font-family);
+  color: #475569;
+  white-space: nowrap;
+}
+
+.ewu-oc-toggle-input:checked ~ .ewu-oc-toggle-text { color: #1A73E8; }
+
+
+/* =============================================================
+   OFFERED COURSES - Search Box
+   ============================================================= */
+
+.ewu-oc-search-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  max-width: 420px;
+  min-width: 200px;
+}
+
+.ewu-oc-search-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #334155;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-family: var(--ewu-font-family);
+  padding-left: 1px;
+  margin-bottom: 4px;
+  display: block;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ewu-oc-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94A3B8;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  line-height: 1;
+  z-index: 1;
+}
+
+.ewu-oc-search-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
+
+.ewu-oc-search-input {
+  width: 100%;
+  padding: 9px 34px;
+  font-size: 13px;
+  font-family: var(--ewu-font-family);
+  color: #1E293B;
+  background: #FFFFFF;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.ewu-oc-search-input::placeholder { color: #94A3B8; }
+.ewu-oc-search-input:focus { border-color: #1A73E8; box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15); }
+
+.ewu-oc-search-clear {
+  position: absolute;
+  right: 5px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: #E2E8F0;
+  color: #64748B;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  padding: 0;
+}
+
+.ewu-oc-search-clear:hover { background: #CBD5E1; color: #334155; }
+
+
+/* =============================================================
+   OFFERED COURSES - PDF Export Button
+   ============================================================= */
+
+.ewu-oc-export-pdf-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 34px;
+  padding: 0 !important;
+  background: #FFFFFF !important;
+  color: #DC2626 !important;
+  border: 1.5px solid #DC2626 !important;
+  border-radius: 8px !important;
+  font-size: 15px !important;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease !important;
+  box-shadow: 0 1px 4px rgba(220, 38, 38, 0.15) !important;
+  vertical-align: middle;
+}
+
+.ewu-oc-export-pdf-btn:hover {
+  background: #DC2626 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.30) !important;
+  transform: translateY(-1px);
+}
+
+.ewu-oc-export-pdf-btn:active {
+  transform: translateY(0) scale(0.95);
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.20) !important;
+}
+
+.ewu-oc-export-pdf-btn .fa-file-pdf { pointer-events: none; }
+
+
+/* =============================================================
+   OFFERED COURSES - Table Scroll Container
+   ============================================================= */
+
+#courseTable {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  max-height: calc(100vh - 280px);
+  min-height: 300px;
+  position: relative;
+}
+
+
+/* =============================================================
+   OFFERED COURSES - Enhanced Table
+   ============================================================= */
+
+#divPrint {
+  min-width: fit-content;
+}
+
+.ewu-oc-table {
+  border-collapse: collapse !important;
+  width: max-content;
+  min-width: 100%;
+  font-size: 13px;
+  font-family: var(--ewu-font-family);
+  border: 1px solid #CBD5E1 !important;
+  animation: ewu-fade-in-up 0.3s ease;
+}
+
+.ewu-oc-table thead { position: relative; }
+
+.ewu-oc-th {
+  background: #1A73E8 !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  text-align: center !important;
+  padding: 10px 12px !important;
+  border: 1px solid #1565C0 !important;
+  white-space: nowrap;
+  position: relative;
+  z-index: 2;
+}
+
+.ewu-oc-th:first-child { text-align: left !important; }
+
+.ewu-oc-sticky-header {
+  position: sticky !important;
+  top: 0;
+  z-index: 5;
+}
+
+.ewu-oc-row { transition: background-color 0.1s ease; }
+.ewu-oc-row:hover { background-color: #EFF6FF !important; }
+.ewu-oc-row-even { background-color: #FFFFFF; }
+.ewu-oc-row-odd  { background-color: #F8FAFC; }
+
+.ewu-oc-td {
+  padding: 8px 12px !important;
+  border: 1px solid #E2E8F0 !important;
+  vertical-align: middle;
+  text-align: center;
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.4;
+}
+
+.ewu-oc-td-course   { font-weight: 600 !important; text-align: left !important; color: #1E293B !important; white-space: nowrap; font-size: 12px !important; letter-spacing: 0.2px; }
+.ewu-oc-td-section  { font-weight: 500 !important; white-space: nowrap; }
+.ewu-oc-td-faculty  { font-weight: 600 !important; color: #1f2937 !important; white-space: nowrap; }
+.ewu-oc-td-seats    { font-weight: 600 !important; white-space: nowrap; color: #374151 !important; font-size: 12px !important; }
+.ewu-oc-td-days     { white-space: nowrap; font-size: 12px !important; color: #1A73E8 !important; font-weight: 500 !important; }
+.ewu-oc-td-time     { white-space: nowrap; font-size: 12px !important; color: #475569 !important; }
+.ewu-oc-td-room     { white-space: nowrap; font-size: 12px !important; }
+.ewu-oc-td-dept     { white-space: nowrap; font-size: 12px !important; color: #475569 !important; }
+
+/* Legacy classes — kept for DOM-fallback compatibility */
+.ewu-oc-td-capacity { font-weight: 500 !important; white-space: nowrap; }
+.ewu-oc-td-timing   { white-space: nowrap; font-size: 12px !important; color: #475569 !important; }
+
+.ewu-oc-left         { font-weight: 700 !important; white-space: nowrap; border-radius: 0 !important; transition: color 0.15s ease, background-color 0.15s ease; }
+.ewu-oc-left-green   { color: #15803D !important; background-color: #F0FDF4 !important; }
+.ewu-oc-left-yellow  { color: #B45309 !important; background-color: #FFFBEB !important; }
+.ewu-oc-left-red     { color: #DC2626 !important; background-color: #FEF2F2 !important; }
+
+
+/* =============================================================
+   SCROLLBAR
+   ============================================================= */
+
+.ewu-rg-body::-webkit-scrollbar,
+#courseTable::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.ewu-rg-body::-webkit-scrollbar-track,
+#courseTable::-webkit-scrollbar-track { background: #F1F5F9; }
+
+.ewu-rg-body::-webkit-scrollbar-thumb,
+#courseTable::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+
+.ewu-rg-body::-webkit-scrollbar-thumb:hover,
+#courseTable::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+
+/* =============================================================
+   KEYFRAMES
+   ============================================================= */
+
+@keyframes ewu-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+
+@keyframes ewu-fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* =============================================================
+   RESPONSIVE
+   ============================================================= */
+
+@media (max-width: 480px) {
+  .ewu-oc-export-pdf-btn {
+    width: 32px;
+    height: 30px;
+    font-size: 13px !important;
+  }
+
+  #ewu-toast-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+    min-width: 0;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .ewu-toast-item {
+    max-width: 92vw;
+    font-size: 11.5px;
+    padding: 7px 11px;
+    gap: 8px;
+    border-radius: 10px;
+  }
+
+  .ewu-rg-content { width: 99vw; max-height: 94vh; border-radius: 12px; }
+  .ewu-rg-body    { padding: 14px; }
+  .ewu-rg-toolbar { padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
+  .ewu-rg-toolbar-title { font-size: 14px; }
+  .ewu-rg-btn     { padding: 6px 10px; font-size: 11px; }
+
+  #ewu-rg-btn-generate { padding: 8px 16px; font-size: 12px; }
+  #ewu-rg-btn-wrapper  { justify-content: center; }
+  #ewu-rg-btn-row      { flex-wrap: wrap; gap: 6px; }
+
+  #ewu-oc-controls        { flex-direction: column; align-items: stretch; gap: 8px; }
+  .ewu-oc-controls-right  { justify-content: space-between; gap: 12px; }
+  .ewu-oc-search-group    { max-width: 100%; min-width: 0; }
+  .ewu-oc-search-input    { font-size: 12px; padding: 8px 30px; }
+  .ewu-oc-table           { font-size: 11px; }
+  .ewu-oc-th              { padding: 7px 8px !important; font-size: 10px !important; }
+  .ewu-oc-td              { padding: 6px 8px !important; font-size: 11px !important; }
+  .ewu-oc-stats           { font-size: 12px; }
+
+  #courseTable {
+    max-height: calc(100vh - 240px);
+    min-height: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ewu-rg-content  { width: 97vw; }
+  .ewu-oc-table    { font-size: 12px; }
+  #ewu-rg-btn-wrapper { justify-content: flex-end; }
+
+  #courseTable {
+    max-height: calc(100vh - 260px);
+    min-height: 260px;
+  }
+}
+
+@media (min-width: 769px) {
+  #ewu-rg-btn-wrapper { justify-content: flex-end; }
+}
+
+
+/* =============================================================
+   ACCESSIBILITY
+   ============================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .ewu-rg-content,
+  .ewu-rg-modal,
+  .ewu-oc-table,
+  .ewu-oc-row,
+  .ewu-toast-item {
+    transition: none !important;
+  }
+
+  #ewu-rg-btn-generate.ewu-rg-btn-ready { animation: none !important; }
+  .ewu-rg-spinner { animation-duration: 2s !important; }
+}
+
+
+/* =============================================================
+   ADVISING OFFLINE - RECOMMENDED COURSE & COURSE PLANNER STYLES
+   ============================================================= */
+
+/* Buttons Container & Modern Buttons on Advising Offline page */
+.ewu-adv-offline-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 14px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.ewu-adv-offline-btn-modern {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  color: #ffffff !important;
+  background: #1e293b;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none !important;
+  user-select: none;
+}
+
+.ewu-adv-offline-btn-modern:hover {
+  border-color: #6366f1;
+  background: #334155;
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
+  color: #ffffff !important;
+}
+
+.ewu-adv-offline-btn-modern:active {
+  transform: translateY(0);
+}
+
+.ewu-adv-btn-planner svg {
+  color: #818cf8;
+}
+
+.ewu-adv-btn-recommended svg {
+  color: #38bdf8;
+}
+
+/* Container Swap & View Container */
+.ewu-feature-view-container {
+  width: 100%;
+  margin-top: 15px;
+  animation: ewu-fade-in-up 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Landing / Initial Options View */
+.ewu-landing-card {
+  background: #111827;
+  color: #f9fafb;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 800px;
+  margin: 20px auto;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.ewu-landing-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.ewu-landing-title {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+.ewu-landing-subtitle {
+  font-size: 14px;
+  color: #9ca3af;
+}
+.ewu-landing-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.ewu-option-card {
+  background: #1f2937;
+  border: 1.5px dashed rgba(99, 102, 241, 0.4);
+  border-radius: 10px;
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.ewu-option-card:hover {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.1);
+  transform: translateY(-2px);
+}
+.ewu-option-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+.ewu-option-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: #f3f4f6;
+}
+.ewu-option-desc {
+  font-size: 12px;
+  color: #9ca3af;
+  line-height: 1.4;
+}
+
+/* Modern General Buttons */
+.ewu-btn-modern {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  text-decoration: none !important;
+}
+.ewu-btn-modern-ghost {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+.ewu-btn-modern-ghost:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+.ewu-btn-modern-primary {
+  background: #4f46e5;
+  color: #ffffff;
+}
+.ewu-btn-modern-primary:hover {
+  background: #4338ca;
+  color: #ffffff;
+}
+.ewu-btn-modern-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+.ewu-btn-modern-danger:hover {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+/* Recommended Course Table */
+.ewu-rc-container {
+  background: #111827;
+  border-radius: 12px;
+  padding: 20px;
+  color: #f9fafb;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+}
+.ewu-rc-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.ewu-rc-title-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ewu-rc-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+}
+.ewu-rc-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ewu-rc-search-wrap {
+  position: relative;
+  min-width: 240px;
+}
+.ewu-rc-search-input {
+  width: 100%;
+  background: #1f2937;
+  border: 1px solid #374151;
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 36px 8px 12px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.ewu-rc-search-input:focus {
+  border-color: #6366f1;
+}
+.ewu-rc-search-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 14px;
+  display: none;
+}
+.ewu-rc-search-clear.visible { display: block; }
+
+.ewu-rc-select {
+  background: #1f2937;
+  border: 1px solid #374151;
+  color: #f3f4f6;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+}
+
+.ewu-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #d1d5db;
+  user-select: none;
+  cursor: pointer;
+}
+.ewu-toggle-switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: #374151;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+.ewu-toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+.ewu-toggle-wrap.active .ewu-toggle-switch {
+  background: #22c55e;
+}
+.ewu-toggle-wrap.active .ewu-toggle-switch::after {
+  transform: translateX(16px);
+}
+.ewu-toggle-wrap.active span:not(.ewu-toggle-switch) {
+  color: #f3f4f6;
+}
+
+.ewu-rc-table-wrapper {
+  overflow-x: auto;
+  max-height: calc(100vh - 280px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+.ewu-rc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+.ewu-rc-table th {
+  position: sticky;
+  top: 0;
+  background: #1e293b;
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #334155;
+  z-index: 10;
+}
+.ewu-rc-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+}
+.ewu-rc-table tbody tr:hover {
+  background: rgba(99, 102, 241, 0.06);
+}
+
+/* Badges */
+.ewu-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+.ewu-badge-course { background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
+.ewu-badge-sec { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.2); }
+.ewu-badge-green { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+.ewu-badge-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+.ewu-badge-red { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+/* Course Planner Split View */
+.ewu-cp-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #090d16;
+  border-radius: 12px;
+  padding: 16px;
+  color: #f9fafb;
+  min-height: 80vh;
+}
+.ewu-cp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #111827;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.ewu-cp-brand {
+  font-size: 18px;
+  font-weight: 700;
+  color: #818cf8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ewu-cp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 992px) {
+  .ewu-cp-grid { grid-template-columns: 1fr; }
+}
+
+.ewu-cp-panel {
+  background: #111827;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ewu-cp-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.ewu-cp-panel-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f3f4f6;
+}
+
+.ewu-cp-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: calc(100vh - 360px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.ewu-cp-card {
+  background: #1f2937;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+.ewu-cp-card:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+}
+.ewu-cp-card.in-plan {
+  border-color: rgba(34, 197, 94, 0.5);
+  background: rgba(34, 197, 94, 0.04);
+}
+
+.ewu-cp-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+.ewu-cp-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.ewu-cp-schedules {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  color: #cbd5e1;
+}
+.ewu-cp-schedule-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.sched-icon {
+  display: inline-block;
+  flex-shrink: 0;
+}
+.theory-icon {
+  color: #818cf8;
+}
+.lab-icon {
+  color: #f59e0b;
+}
+.tba-icon {
+  color: #ef4444;
+}
+
+/* Metrics Summary Grid */
+.ewu-cp-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.ewu-cp-metric-card {
+  background: #1f2937;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 10px 8px;
+  text-align: center;
+}
+.ewu-cp-metric-val {
+  font-size: 18px;
+  font-weight: 700;
+  color: #818cf8;
+}
+.ewu-cp-metric-lbl {
+  font-size: 10.5px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* Combination Tabs */
+.ewu-cp-combo-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.ewu-cp-combo-tab {
+  padding: 6px 12px;
+  background: #1f2937;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  font-size: 12px;
+  color: #9ca3af;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.ewu-cp-combo-tab.active {
+  background: #6366f1;
+  color: #fff;
+  border-color: #6366f1;
+  font-weight: 600;
+}
+.ewu-cp-add-tab {
+  padding: 4px 10px;
+  background: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+  border: 1px dashed rgba(99, 102, 241, 0.4);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+/* =============================================================
+   SCHEDULE ENHANCER MODULE STYLES (Class Schedule Page)
+   ============================================================= */
+
+.ewu-cs-summary-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 18px;
+  margin-top: 14px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body.ewu-theme-dark .ewu-cs-summary-card {
+  background: #111827;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.ewu-cs-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ewu-cs-stat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+body.ewu-theme-dark .ewu-cs-stat-label {
+  color: #94a3b8;
+}
+
+.ewu-cs-stat-value {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #1e293b;
+  background: #f1f5f9;
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+body.ewu-theme-dark .ewu-cs-stat-value {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.25);
+}
+
+.ewu-cs-stat-divider {
+  width: 1px;
+  height: 20px;
+  background: #cbd5e1;
+}
+
+body.ewu-theme-dark .ewu-cs-stat-divider {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Faculty Email Direct Link Button */
+.ewu-fac-email-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: transparent;
+  color: inherit !important;
+  border: 1px solid #3b82f6;
+  border-radius: 6px;
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: normal;
+  text-decoration: none !important;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.ewu-fac-email-link svg {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.ewu-fac-email-link:hover {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: #2563eb;
+  color: inherit !important;
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.15);
+}
+
+body.ewu-theme-dark .ewu-fac-email-link {
+  background: transparent;
+  color: #cbd5e1 !important;
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+body.ewu-theme-dark .ewu-fac-email-link svg {
+  color: #818cf8;
+}
+
+body.ewu-theme-dark .ewu-fac-email-link:hover {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: #818cf8;
+  color: #ffffff !important;
+}
+
+
+

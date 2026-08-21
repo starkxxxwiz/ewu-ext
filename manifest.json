@@ -1,0 +1,67 @@
+{
+  "manifest_version": 3,
+  "name": "EWU Portal Helper",
+  "version": "2.0",
+  "description": "Professional helper extension for East West University Student Portal. Auto-solves login captcha, generates class routines, and enhances offered courses table.",
+
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+
+  "host_permissions": [
+    "https://portal.ewubd.edu/*",
+    "https://*.workers.dev/*"
+  ],
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://portal.ewubd.edu/*"
+      ],
+      "js": [
+        "lib/html2canvas.min.js",
+        "lib/jspdf.umd.min.js",
+        "lib/pdf.min.js",
+        "lib/pdf.worker.min.js",
+        "content.js"
+      ],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "lib/html2canvas.min.js",
+        "lib/jspdf.umd.min.js",
+        "lib/pdf.min.js",
+        "lib/pdf.worker.min.js",
+        "pageHook.js"
+      ],
+      "matches": [
+        "https://portal.ewubd.edu/*"
+      ]
+    }
+  ]
+}
