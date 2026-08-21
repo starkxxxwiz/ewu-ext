@@ -231,12 +231,17 @@ async function handleActivate(request, env, corsHeaders) {
 
     // Register activation
     const actId = 'act_' + crypto.randomUUID();
-    await env.DB.prepare('INSERT INTO activations (id, license_id, device_id, activated_at, last_seen_at) VALUES (?, ?, ?, ?, ?)')
-      .bind(actId, license.id, deviceId, now, now).run();
+    const userAgent = request.headers.get('User-Agent') || 'Unknown';
+    const clientGeo = request.headers.get('CF-IPCountry') || 'Unknown';
+    await env.DB.prepare('INSERT INTO activations (id, license_id, device_id, activated_at, last_seen_at, device_user_agent, device_ip, device_geo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(actId, license.id, deviceId, now, now, userAgent, clientIP, clientGeo).run();
 
     await env.DB.prepare('UPDATE licenses SET activation_count = activation_count + 1 WHERE id = ?').bind(license.id).run();
   } else {
-    await env.DB.prepare('UPDATE activations SET last_seen_at = ? WHERE id = ?').bind(now, existingActivation.id).run();
+    const userAgent = request.headers.get('User-Agent') || 'Unknown';
+    const clientGeo = request.headers.get('CF-IPCountry') || 'Unknown';
+    await env.DB.prepare('UPDATE activations SET last_seen_at = ?, device_user_agent = ?, device_ip = ?, device_geo = ? WHERE id = ?')
+      .bind(now, userAgent, clientIP, clientGeo, existingActivation.id).run();
   }
 
   await clearRateLimit(clientIP, env);
@@ -287,7 +292,7 @@ async function handleVerify(request, env, corsHeaders) {
     return new Response(JSON.stringify({ valid: false, reason: 'License has expired.' }), { status: 401, headers: corsHeaders });
   }
 
-  return new Response(JSON.stringify({ valid: true, expiresAt: payload.exp }), { headers: corsHeaders });
+  return new Response(JSON.stringify({ valid: true, expiresAt: payload.exp, licenseExpiresAt: license.expires_at }), { headers: corsHeaders });
 }
 
 async function handleRefresh(request, env, corsHeaders) {
@@ -408,6 +413,19 @@ async function handleAdminAPI(path, request, env, corsHeaders) {
     const newExpiresAt = baseTime + (parseInt(additionalDays, 10) * 24 * 60 * 60 * 1000);
     await env.DB.prepare('UPDATE licenses SET expires_at = ?, status = "active" WHERE id = ?').bind(newExpiresAt, licenseId).run();
     return new Response(JSON.stringify({ success: true, newExpiresAt: newExpiresAt }), { headers: corsHeaders });
+  }
+
+  if (path === '/admin/api/licenses/delete' && request.method === 'POST') {
+    const { licenseId } = await request.json();
+    await env.DB.prepare('DELETE FROM licenses WHERE id = ?').bind(licenseId).run();
+    return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+  }
+
+  if (path === '/admin/api/licenses/details' && request.method === 'POST') {
+    const { licenseId } = await request.json();
+    const license = await env.DB.prepare('SELECT id, raw_key_prefix, status, created_at, expires_at, max_activations, activation_count, notes FROM licenses WHERE id = ?').bind(licenseId).first();
+    const { results: activations } = await env.DB.prepare('SELECT id, device_id, activated_at, last_seen_at, device_user_agent, device_ip, device_geo FROM activations WHERE license_id = ?').bind(licenseId).all();
+    return new Response(JSON.stringify({ success: true, license, activations: activations || [] }), { headers: corsHeaders });
   }
 
   if (path === '/admin/api/stats' && request.method === 'GET') {
@@ -632,6 +650,15 @@ function handleAdminUI() {
 
   <div class="toast-container" id="toastContainer"></div>
 
+  <div id="detailsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3,7,18,0.85); z-index:99999; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); align-items:center; justify-content:center; padding:20px;">
+    <div style="width:100%; max-width:620px; background:#0c101d; border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:30px; position:relative; box-shadow:0 25px 50px -12px rgba(0,0,0,0.8);">
+      <span onclick="closeDetailsModal()" style="position:absolute; top:20px; right:20px; font-size:22px; cursor:pointer; color:var(--text-muted);">&times;</span>
+      <h3 style="font-size:20px; font-weight:800; background:linear-gradient(135deg, #fff, #a5b4fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:12px;">License Diagnostics</h3>
+      <div id="modalMeta" style="margin-bottom:20px; font-size:13px; color:var(--text-muted); border-bottom:1px solid var(--border-color); padding-bottom:12px; line-height: 1.6;"></div>
+      <div id="modalActivations" style="max-height:350px; overflow-y:auto; display:flex; flex-direction:column; gap:12px;"></div>
+    </div>
+  </div>
+
   <script>
     let adminToken = localStorage.getItem('ewu_admin_secret') || '';
     let allLicenses = [];
@@ -710,21 +737,23 @@ function handleAdminUI() {
         if (l.status === 'revoked') badgeClass = 'badge-revoked';
         else if (l.status === 'expired') badgeClass = 'badge-expired';
 
-        return \`
-          <tr>
-            <td style="font-family:'JetBrains Mono', monospace; font-weight:700;">\${l.raw_key_prefix}</td>
-            <td>\${l.notes || '<span style="color:var(--text-muted); opacity:0.5;">None</span>'}</td>
-            <td><span class="badge \${badgeClass}">\${l.status}</span></td>
-            <td>\${l.activation_count} / \${l.max_activations}</td>
-            <td>\${l.expires_at ? new Date(l.expires_at).toLocaleDateString() : '<span style="color:var(--success);">Lifetime</span>'}</td>
-            <td>
-              \${l.status === 'active' 
-                ? \`<button class="btn-sm btn-danger" onclick="revoke('\${l.id}')">Revoke</button>\`
-                : \`<button class="btn-sm btn-success" onclick="reactivate('\${l.id}')">Reactivate</button>\`
-              }
-            </td>
-          </tr>
-        \`;
+        return '<tr>' +
+          '<td style="font-family:\'JetBrains Mono\', monospace; font-weight:700;">' + l.raw_key_prefix + '</td>' +
+          '<td>' + (l.notes || '<span style="color:var(--text-muted); opacity:0.5;">None</span>') + '</td>' +
+          '<td><span class="badge ' + badgeClass + '">' + l.status + '</span></td>' +
+          '<td>' + l.activation_count + ' / ' + l.max_activations + '</td>' +
+          '<td>' + (l.expires_at ? new Date(l.expires_at).toLocaleDateString() : '<span style="color:var(--success);">Lifetime</span>') + '</td>' +
+          '<td>' +
+            '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
+              (l.status === 'active' 
+                ? '<button class="btn-sm btn-danger" style="margin-top:0;" onclick="revoke(\'' + l.id + '\')">Revoke</button>'
+                : '<button class="btn-sm btn-success" style="margin-top:0;" onclick="reactivate(\'' + l.id + '\')">Reactivate</button>'
+              ) +
+              '<button class="btn-sm" style="margin-top:0; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#f87171;" onclick="deleteLicense(\'' + l.id + '\')">Delete</button>' +
+              '<button class="btn-sm" style="margin-top:0; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); color:#a5b4fc;" onclick="showDetails(\'' + l.id + '\')">Details</button>' +
+            '</div>' +
+          '</td>' +
+        '</tr>';
       }).join('');
     }
 
@@ -805,6 +834,70 @@ function handleAdminUI() {
       } catch (e) {
         showToast('Error reactivating license', 'error');
       }
+    }
+
+    async function deleteLicense(id) {
+      if (!confirm('CRITICAL WARNING: This will permanently delete the license and all activation records from the database. Are you sure you want to proceed?')) return;
+      try {
+        const res = await fetch('/admin/api/licenses/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+          body: JSON.stringify({ licenseId: id })
+        });
+        if (res.ok) {
+          showToast('License completely deleted');
+          loadDashboard();
+        } else {
+          showToast('Failed to delete license', 'error');
+        }
+      } catch (e) {
+        showToast('Error deleting license', 'error');
+      }
+    }
+
+    async function showDetails(id) {
+      try {
+        const res = await fetch('/admin/api/licenses/details', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+          body: JSON.stringify({ licenseId: id })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const l = data.license;
+          const acts = data.activations;
+          
+          document.getElementById('modalMeta').innerHTML = 
+            '<p><strong>License Key Prefix:</strong> ' + l.raw_key_prefix + '</p>' +
+            '<p><strong>Notes:</strong> ' + (l.notes || 'None') + '</p>' +
+            '<p><strong>Expires:</strong> ' + (l.expires_at ? new Date(l.expires_at).toLocaleString() : 'Lifetime') + '</p>';
+          
+          const list = document.getElementById('modalActivations');
+          if (acts.length === 0) {
+            list.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-muted); font-size:13px;">No active device activations recorded for this key.</p>';
+          } else {
+            list.innerHTML = acts.map(a => {
+              return '<div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); padding:16px; border-radius:12px; font-size:12px; line-height:1.5; margin-bottom: 8px;">' +
+                '<p><strong>Device ID:</strong> <span style="font-family:\'JetBrains Mono\',monospace; color:var(--accent); font-weight: 700;">' + a.device_id + '</span></p>' +
+                '<p><strong>Device IP:</strong> ' + (a.device_ip || 'Unknown') + ' | <strong>Country:</strong> ' + (a.device_geo || 'Unknown') + '</p>' +
+                '<p><strong>First Activated:</strong> ' + new Date(a.activated_at).toLocaleString() + '</p>' +
+                '<p><strong>Last Ping:</strong> ' + new Date(a.last_seen_at).toLocaleString() + '</p>' +
+                '<p><strong>User Agent:</strong> <span style="color:var(--text-muted); font-size:11px;">' + (a.device_user_agent || 'Unknown') + '</span></p>' +
+              '</div>';
+            }).join('');
+          }
+          
+          document.getElementById('detailsModal').style.display = 'flex';
+        } else {
+          showToast('Failed to load telemetry diagnostics', 'error');
+        }
+      } catch (e) {
+        showToast('Error communicating with Server', 'error');
+      }
+    }
+
+    function closeDetailsModal() {
+      document.getElementById('detailsModal').style.display = 'none';
     }
   </script>
 </body>

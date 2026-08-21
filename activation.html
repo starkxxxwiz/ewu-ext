@@ -191,33 +191,53 @@
       </div>
     </div>
 
-    <div class="welcome-text">
-      Welcome to EWU Portal Helper! Enter your license key below to activate full access to all features on your East West University Portal.
-    </div>
-
-    <div class="feature-list">
-      <div class="feature-item"><span class="feature-icon">✓</span> Automatic Captcha Auto-Fill on Login</div>
-      <div class="feature-item"><span class="feature-icon">✓</span> Routine Generator & Exportable Schedule Cards</div>
-      <div class="feature-item"><span class="feature-icon">✓</span> Enhanced Offered Courses Table & Live Search</div>
-      <div class="feature-item"><span class="feature-icon">✓</span> Offline Advising Course Planner & Conflict Solver</div>
-    </div>
-
-    <form id="activationForm">
-      <div class="input-group">
-        <label class="input-label" for="licenseKey">License Activation Key</label>
-        <input type="text" id="licenseKey" class="license-input" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" required spellcheck="false" maxlength="24">
+    <div id="activationMainView">
+      <div class="welcome-text">
+        Welcome to EWU Portal Helper! Enter your license key below to activate full access to all features on your East West University Portal.
       </div>
 
-      <button type="submit" id="btnActivate" class="activate-btn">
-        <span id="btnText">Activate Extension</span>
-        <div id="btnSpinner" class="spinner" style="display:none;"></div>
-      </button>
-    </form>
+      <div class="feature-list">
+        <div class="feature-item"><span class="feature-icon">✓</span> Automatic Captcha Auto-Fill on Login</div>
+        <div class="feature-item"><span class="feature-icon">✓</span> Routine Generator & Exportable Schedule Cards</div>
+        <div class="feature-item"><span class="feature-icon">✓</span> Enhanced Offered Courses Table & Live Search</div>
+        <div class="feature-item"><span class="feature-icon">✓</span> Offline Advising Course Planner & Conflict Solver</div>
+      </div>
 
-    <div id="statusBox" class="status-box"></div>
+      <form id="activationForm">
+        <div class="input-group">
+          <label class="input-label" for="licenseKey">License Activation Key</label>
+          <input type="text" id="licenseKey" class="license-input" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" required spellcheck="false" maxlength="24">
+        </div>
 
-    <div class="contact-owner">
-      Don't have a license key? <a href="mailto:support@ewubuddy.com?subject=License%20Key%20Request" class="contact-link">Contact Developer / Request Access</a>
+        <button type="submit" id="btnActivate" class="activate-btn">
+          <span id="btnText">Activate Extension</span>
+          <div id="btnSpinner" class="spinner" style="display:none;"></div>
+        </button>
+      </form>
+
+      <div id="statusBox" class="status-box"></div>
+
+      <div class="contact-owner" style="font-size: 13.5px; margin-top: 24px; text-align: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 18px;">
+        Don't have a license key? <br/>
+        <a href="https://t.me/AftabKabir" target="_blank" class="contact-link" style="font-size: 15px; font-weight: 700; color: #818cf8; text-decoration: none; display: inline-block; margin-top: 6px;">Get a license from the owner / Contact</a>
+      </div>
+    </div>
+
+    <!-- Subscribed State UI -->
+    <div id="subscribedView" style="display:none; text-align:center; padding:10px 0;">
+      <div style="font-size: 54px; margin-bottom: 16px; filter: drop-shadow(0 0 10px rgba(99,102,241,0.4));">🎉</div>
+      <h2 style="font-size:22px; font-weight:800; background:linear-gradient(135deg,#a5b4fc,#6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:12px;">Thank You for Subscribing!</h2>
+      <p style="color:var(--text-muted); font-size:13.5px; line-height:1.6; margin-bottom:24px; font-family:sans-serif;">Your subscription is active and your copy of EWU Portal Helper is fully unlocked. Access all premium features on the portal.</p>
+      
+      <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:18px; text-align:left; font-size:13px; margin-bottom:28px; line-height: 1.8; font-family:sans-serif;">
+        <p style="margin-bottom:8px; display:flex; justify-content:space-between;"><strong>License Key:</strong> <span id="subKeyPrefix" style="font-family:monospace; color:var(--text-muted);">XXXX-...</span></p>
+        <p style="margin-bottom:8px; display:flex; justify-content:space-between;"><strong>Status:</strong> <span style="color:#34d399; font-weight:700;">ACTIVE</span></p>
+        <p style="display:flex; justify-content:space-between;"><strong>Expiry:</strong> <span style="color:#10b981; font-weight:700;">Lifetime Access</span></p>
+      </div>
+
+      <a href="https://t.me/AftabKabir" target="_blank" class="activate-btn" style="text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px; font-size: 14px;">
+        <span>Contact Developer / Support</span>
+      </a>
     </div>
   </div>
 

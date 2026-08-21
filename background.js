@@ -42,7 +42,7 @@ async function verifyLicenseToken() {
         });
         var data = await response.json();
         if (response.ok && data.valid) {
-          resolve({ authorized: true, expiresAt: data.expiresAt });
+          resolve({ authorized: true, expiresAt: data.expiresAt, licenseExpiresAt: data.licenseExpiresAt });
         } else {
           chrome.storage.local.remove(['ewu_license_token', 'ewu_license_exp']);
           resolve({ authorized: false, reason: data.reason || 'License token invalidated by server.' });

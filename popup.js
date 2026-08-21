@@ -510,10 +510,14 @@
           <div style="width:100%; max-width:320px; background:rgba(15,23,42,0.95); border:1px solid rgba(99,102,241,0.25); border-radius:12px; padding:24px 20px; text-align:center; box-shadow:0 12px 32px rgba(0,0,0,0.6); box-sizing:border-box;">
             <div style="font-size:32px; margin-bottom:12px; filter:drop-shadow(0 0 10px rgba(99,102,241,0.3));">🔑</div>
             <h3 style="color:#f3f4f6; font-size:14px; font-weight:700; margin-bottom:6px; font-family:sans-serif;">Activate EWU Buddy</h3>
-            <p style="color:#9ca3af; font-size:11px; margin-bottom:18px; line-height:1.4; font-family:sans-serif;">Enter a valid license key to unlock your cyber settings console and portal features.</p>
+            <p style="color:#9ca3af; font-size:11px; margin-bottom:14px; line-height:1.4; font-family:sans-serif;">Enter a valid license key to unlock your settings console and premium features.</p>
             <input type="text" id="popupLicenseKey" placeholder="XXXX-XXXX-XXXX-XXXX" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); background:rgba(0,0,0,0.4); color:#fff; font-family:monospace; font-size:14px; text-align:center; outline:none; text-transform:uppercase; box-sizing:border-box;" />
             <div id="popupVerifyStatus" style="font-size:11px; color:#ef4444; margin-top:8px; display:none; font-family:sans-serif;"></div>
             <button id="btnPopupVerify" class="cyber-btn" style="width:100%; margin-top:14px; background:linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; border:none; border-radius:8px; font-weight:600; padding:10px; cursor:pointer; font-size:12px;">Verify & Activate</button>
+            <div style="font-size:11px; margin-top:16px; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px; line-height:1.4; font-family:sans-serif;">
+              <span style="color:#6b7280;">Don't have a license key? Get a free license from owner:</span><br/>
+              <a href="https://t.me/AftabKabir" target="_blank" style="color:#818cf8; font-weight:800; text-decoration:none; display:inline-block; margin-top:4px;">https://t.me/AftabKabir</a>
+            </div>
           </div>
         `;
         
@@ -596,7 +600,8 @@
       } else {
         if (dot) dot.style.background = '#34d399';
         if (text) text.textContent = 'Active Production License';
-        if (sub) sub.textContent = res.expiresAt ? `Valid until ${new Date(res.expiresAt).toLocaleDateString()}` : 'Full extension access unlocked';
+        const expStr = res.licenseExpiresAt ? `Valid until ${new Date(res.licenseExpiresAt).toLocaleDateString()}` : 'Lifetime Access';
+        if (sub) sub.textContent = expStr;
       }
     });
   }

@@ -19,6 +19,9 @@ CREATE TABLE IF NOT EXISTS activations (
     activated_at INTEGER NOT NULL,
     last_seen_at INTEGER NOT NULL,
     revoked_at INTEGER DEFAULT NULL,
+    device_user_agent TEXT DEFAULT NULL,
+    device_ip TEXT DEFAULT NULL,
+    device_geo TEXT DEFAULT NULL,
     FOREIGN KEY (license_id) REFERENCES licenses(id) ON DELETE CASCADE
 );
 
