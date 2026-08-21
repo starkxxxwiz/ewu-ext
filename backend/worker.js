@@ -753,11 +753,11 @@ function handleAdminUI() {
           '<td>' +
             '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
               (l.status === 'active' 
-                ? '<button class="btn-sm btn-danger" style="margin-top:0;" onclick="revoke(\'' + l.id + '\')">Revoke</button>'
-                : '<button class="btn-sm btn-success" style="margin-top:0;" onclick="reactivate(\'' + l.id + '\')">Reactivate</button>'
+                ? '<button class="btn-sm btn-danger" style="margin-top:0;" onclick="revoke(&#39;' + l.id + '&#39;)">Revoke</button>'
+                : '<button class="btn-sm btn-success" style="margin-top:0;" onclick="reactivate(&#39;' + l.id + '&#39;)">Reactivate</button>'
               ) +
-              '<button class="btn-sm" style="margin-top:0; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#f87171;" onclick="deleteLicense(\'' + l.id + '\')">Delete</button>' +
-              '<button class="btn-sm" style="margin-top:0; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); color:#a5b4fc;" onclick="showDetails(\'' + l.id + '\')">Details</button>' +
+              '<button class="btn-sm" style="margin-top:0; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#f87171;" onclick="deleteLicense(&#39;' + l.id + '&#39;)">Delete</button>' +
+              '<button class="btn-sm" style="margin-top:0; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); color:#a5b4fc;" onclick="showDetails(&#39;' + l.id + '&#39;)">Details</button>' +
             '</div>' +
           '</td>' +
         '</tr>';
