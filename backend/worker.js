@@ -661,7 +661,7 @@ function handleAdminUI() {
 
   <script>
     window.onerror = function(message, source, lineno, colno, error) {
-      alert("JavaScript Error: " + message + " at line " + lineno + "\nSource: " + source);
+      alert("JavaScript Error: " + message + " at line " + lineno + "\\nSource: " + source);
       console.error(error);
       return false;
     };
