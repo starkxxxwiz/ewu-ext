@@ -660,6 +660,12 @@ function handleAdminUI() {
   </div>
 
   <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      alert("JavaScript Error: " + message + " at line " + lineno + "\nSource: " + source);
+      console.error(error);
+      return false;
+    };
+
     let adminToken = localStorage.getItem('ewu_admin_secret') || '';
     let allLicenses = [];
 
@@ -700,11 +706,12 @@ function handleAdminUI() {
           document.getElementById('dashboardSection').style.display = 'block';
           loadDashboard();
         } else {
-          showToast('Invalid Secret Key', 'error');
+          const text = await res.text();
+          showToast('Access Denied (' + res.status + '): ' + text, 'error');
           localStorage.removeItem('ewu_admin_secret');
         }
       } catch (e) {
-        showToast('Connection to server failed', 'error');
+        showToast('Connection to server failed: ' + e.message, 'error');
       }
     }
 
