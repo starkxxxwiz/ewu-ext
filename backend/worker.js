@@ -745,7 +745,7 @@ function handleAdminUI() {
         else if (l.status === 'expired') badgeClass = 'badge-expired';
 
         return '<tr>' +
-          '<td style="font-family:\'JetBrains Mono\', monospace; font-weight:700;">' + l.raw_key_prefix + '</td>' +
+          '<td style="font-family:monospace; font-weight:700;">' + l.raw_key_prefix + '</td>' +
           '<td>' + (l.notes || '<span style="color:var(--text-muted); opacity:0.5;">None</span>') + '</td>' +
           '<td><span class="badge ' + badgeClass + '">' + l.status + '</span></td>' +
           '<td>' + l.activation_count + ' / ' + l.max_activations + '</td>' +
@@ -885,7 +885,7 @@ function handleAdminUI() {
           } else {
             list.innerHTML = acts.map(a => {
               return '<div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); padding:16px; border-radius:12px; font-size:12px; line-height:1.5; margin-bottom: 8px;">' +
-                '<p><strong>Device ID:</strong> <span style="font-family:\'JetBrains Mono\',monospace; color:var(--accent); font-weight: 700;">' + a.device_id + '</span></p>' +
+                '<p><strong>Device ID:</strong> <span style="font-family:monospace; color:var(--accent); font-weight: 700;">' + a.device_id + '</span></p>' +
                 '<p><strong>Device IP:</strong> ' + (a.device_ip || 'Unknown') + ' | <strong>Country:</strong> ' + (a.device_geo || 'Unknown') + '</p>' +
                 '<p><strong>First Activated:</strong> ' + new Date(a.activated_at).toLocaleString() + '</p>' +
                 '<p><strong>Last Ping:</strong> ' + new Date(a.last_seen_at).toLocaleString() + '</p>' +
