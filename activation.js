@@ -42,14 +42,34 @@ function getDeviceId() {
 
 function checkExistingActivation() {
   if (typeof chrome === 'undefined' || !chrome.storage) return;
-  chrome.storage.local.get(['ewu_license_token', 'ewu_license_exp'], function (res) {
+  chrome.storage.local.get(['ewu_license_token', 'ewu_license_exp', 'ewu_license_prefix', 'ewu_device_id'], async function (res) {
     if (res.ewu_license_token && res.ewu_license_exp && Date.now() < res.ewu_license_exp) {
-      showStatus('Extension is currently activated! You can close this tab and return to the portal.', 'success');
+      try {
+        var deviceId = res.ewu_device_id || await getDeviceId();
+        var response = await fetch(WORKER_URL + '/api/license/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: res.ewu_license_token, deviceId: deviceId })
+        });
+        var data = await response.json();
+        if (response.ok && data.valid) {
+          document.getElementById('activationMainView').style.display = 'none';
+          document.getElementById('subscribedView').style.display = 'block';
+          document.getElementById('subKeyPrefix').textContent = res.ewu_license_prefix || 'XXXX-...';
+        }
+      } catch (err) {}
     }
   });
 }
 
 checkExistingActivation();
+
+const btnGetLicensePage = document.getElementById('btnGetLicensePage');
+if (btnGetLicensePage) {
+  btnGetLicensePage.addEventListener('click', function() {
+    window.open('https://t.me/AftabKabir', '_blank');
+  });
+}
 
 form.addEventListener('submit', async function (e) {
   e.preventDefault();
@@ -82,8 +102,10 @@ form.addEventListener('submit', async function (e) {
       showStatus('🎉 License activated successfully! Thank you for using EWU Portal Helper.', 'success');
       keyInput.value = '';
       setTimeout(function () {
-        window.close();
-      }, 3000);
+        document.getElementById('activationMainView').style.display = 'none';
+        document.getElementById('subscribedView').style.display = 'block';
+        document.getElementById('subKeyPrefix').textContent = data.licenseInfo ? data.licenseInfo.keyPrefix : 'XXXX-...';
+      }, 1500);
     } else {
       showStatus(data.message || 'Invalid or inactive license key. Please check your key or contact the owner.', 'error');
     }
@@ -100,13 +122,14 @@ function setLoading(loading) {
   btnSpinner.style.display = loading ? 'inline-block' : 'none';
 }
 
-function showStatus(message, type) {
-  statusBox.textContent = message;
-  statusBox.className = 'status-box status-' + type;
+function showStatus(msg, type) {
+  statusBox.textContent = msg;
+  statusBox.className = 'status-box ' + type;
   statusBox.style.display = 'block';
 }
 
 function hideStatus() {
   statusBox.style.display = 'none';
+  statusBox.className = 'status-box';
 }
 })();

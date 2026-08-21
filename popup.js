@@ -515,13 +515,20 @@
             <div id="popupVerifyStatus" style="font-size:11px; color:#ef4444; margin-top:8px; display:none; font-family:sans-serif;"></div>
             <button id="btnPopupVerify" class="cyber-btn" style="width:100%; margin-top:14px; background:linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; border:none; border-radius:8px; font-weight:600; padding:10px; cursor:pointer; font-size:12px;">Verify & Activate</button>
             <div style="font-size:11px; margin-top:16px; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px; line-height:1.4; font-family:sans-serif;">
-              <span style="color:#6b7280;">Don't have a license key? Get a free license from owner:</span><br/>
-              <a href="https://t.me/AftabKabir" target="_blank" style="color:#818cf8; font-weight:800; text-decoration:none; display:inline-block; margin-top:4px;">https://t.me/AftabKabir</a>
+              <span style="color:#6b7280;">Don't have a license key?</span><br/>
+              <button id="btnGetLicense" class="cyber-btn" style="width:100%; margin-top:8px; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.4); color:#a5b4fc; border-radius:8px; font-weight:600; padding:8px; cursor:pointer; font-size:11px;">Get License / Contact Owner</button>
             </div>
           </div>
         `;
         
         document.body.appendChild(overlay);
+
+        const btnGetLicense = document.getElementById('btnGetLicense');
+        if (btnGetLicense) {
+          btnGetLicense.addEventListener('click', () => {
+            window.open('https://t.me/AftabKabir', '_blank');
+          });
+        }
 
         // Format input key automatically
         const keyInput = document.getElementById('popupLicenseKey');
