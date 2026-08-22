@@ -13,6 +13,7 @@ dist/
 .DS_Store
 Thumbs.db
 
-# Source and build script
+# Source, build, and internal setup scripts
 src/
 build.js
+SETUP.md
