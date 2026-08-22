@@ -95,50 +95,50 @@ function getDeviceId() {
 
 async function verifyLicenseToken() {
   return new Promise(function (resolve) {
-    chrome.storage.local.get(['ewu_license_token', 'ewu_license_exp', 'ewu_device_id'], async function (res) {
+    chrome.storage.local.get(['ewu_license_token', 'ewu_license_exp', 'ewu_device_id'], function (res) {
       var token = res.ewu_license_token;
       var exp = res.ewu_license_exp;
-      var deviceId = res.ewu_device_id || await getDeviceId();
+      var deviceId = res.ewu_device_id;
       if (!token || !exp || Date.now() > exp) {
         resolve({ authorized: false, reason: 'No active license token found.' });
         return;
       }
-      try {
-        var response = await fetch(WORKER_URL + '/api/license/verify', {
+
+      // Resolve immediately for 0ms latency in UI
+      resolve({ authorized: true, expiresAt: exp });
+
+      // Async background server sync
+      var checkServer = function (devId) {
+        fetch(WORKER_URL + '/api/license/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: token, deviceId: deviceId })
-        });
-        var data = await response.json();
-        if (response.ok && data.valid) {
-          if (data.system) {
-            var shutdown = data.system.shutdown || { enabled: false };
-            var notice = data.system.notice || { enabled: false };
-            var update = data.system.update || { is_mandatory: false, min_version: '2.0.0' };
-            chrome.storage.local.set({
-              ewu_system_shutdown: shutdown,
-              ewu_system_notice: notice,
-              ewu_system_update: {
-                minVersion: update.min_version,
-                latestVersion: update.latest_version,
-                title: update.title,
-                changelog: update.changelog,
-                updateUrl: update.update_url,
-                isMandatory: Boolean(update.is_mandatory)
-              }
-            });
+          body: JSON.stringify({ token: token, deviceId: devId })
+        }).then(function (r) { return r.json(); }).then(function (data) {
+          if (data && data.valid) {
+            if (data.system) {
+              chrome.storage.local.set({
+                ewu_system_shutdown: data.system.shutdown || { enabled: false },
+                ewu_system_notice: data.system.notice || { enabled: false },
+                ewu_system_update: {
+                  minVersion: data.system.update?.min_version || '2.0.0',
+                  latestVersion: data.system.update?.latest_version || '2.0.0',
+                  title: data.system.update?.title || '',
+                  changelog: data.system.update?.changelog || '',
+                  updateUrl: data.system.update?.update_url || '',
+                  isMandatory: Boolean(data.system.update?.is_mandatory)
+                }
+              });
+            }
+          } else if (data && !data.valid) {
+            chrome.storage.local.remove(['ewu_license_token', 'ewu_license_exp']);
           }
-          resolve({ authorized: true, expiresAt: data.expiresAt, licenseExpiresAt: data.licenseExpiresAt });
-        } else {
-          chrome.storage.local.remove(['ewu_license_token', 'ewu_license_exp']);
-          resolve({ authorized: false, reason: data.reason || 'License token invalidated by server.' });
-        }
-      } catch (err) {
-        if (Date.now() < exp) {
-          resolve({ authorized: true, offlineFallback: true });
-        } else {
-          resolve({ authorized: false, reason: 'Server verification unavailable.' });
-        }
+        }).catch(function () {});
+      };
+
+      if (!deviceId) {
+        getDeviceId().then(checkServer);
+      } else {
+        checkServer(deviceId);
       }
     });
   });

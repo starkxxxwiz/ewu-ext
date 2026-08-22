@@ -11,6 +11,7 @@
   var btnCancelChange = document.getElementById('btnCancelChange');
   var btnChangeLicense = document.getElementById('btnChangeLicense');
   var btnGetLicensePage = document.getElementById('btnGetLicensePage');
+  var btnVisitPortal = document.getElementById('btnVisitPortal');
 
   var currentLicenseState = null;
 
@@ -71,6 +72,13 @@
     if (typeof chrome === 'undefined' || !chrome.storage) return;
     chrome.storage.local.get(['ewu_license_token', 'ewu_license_exp', 'ewu_license_prefix', 'ewu_device_id'], async function (res) {
       if (res.ewu_license_token && res.ewu_license_exp && Date.now() < res.ewu_license_exp) {
+        currentLicenseState = {
+          prefix: res.ewu_license_prefix || 'XXXX-...',
+          expiresAt: res.ewu_license_exp
+        };
+        renderSubscribedView(currentLicenseState.prefix, currentLicenseState.expiresAt);
+
+        // Revalidate in background
         try {
           var deviceId = res.ewu_device_id || await getDeviceId();
           var response = await fetch(WORKER_URL + '/api/license/verify', {
@@ -80,18 +88,25 @@
           });
           var data = await response.json();
           if (response.ok && data.valid) {
-            currentLicenseState = {
-              prefix: res.ewu_license_prefix || 'XXXX-...',
-              expiresAt: data.licenseExpiresAt
-            };
+            currentLicenseState.expiresAt = data.licenseExpiresAt;
             renderSubscribedView(currentLicenseState.prefix, currentLicenseState.expiresAt);
           }
-        } catch (err) {}
+        } catch (_) {}
       }
     });
   }
 
   checkExistingActivation();
+
+  if (btnVisitPortal) {
+    btnVisitPortal.addEventListener('click', function () {
+      if (typeof chrome !== 'undefined' && chrome.tabs) {
+        chrome.tabs.create({ url: 'https://portal.ewubd.edu' });
+      } else {
+        window.open('https://portal.ewubd.edu', '_blank');
+      }
+    });
+  }
 
   if (btnChangeLicense) {
     btnChangeLicense.addEventListener('click', function () {
@@ -165,7 +180,7 @@
         keyInput.value = '';
         setTimeout(function () {
           renderSubscribedView(currentLicenseState.prefix, currentLicenseState.expiresAt);
-        }, 1200);
+        }, 1000);
       } else {
         showStatus(data.message || 'Invalid or inactive license key. Please check your key or contact the owner.', 'error');
       }
