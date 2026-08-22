@@ -4269,7 +4269,7 @@
             '</div>' +
             '<div>' +
               (isAdded
-                ? '<button type="button" class="ewu-btn-modern" disabled style="background:#22c55e; color:#fff; font-size:12px; padding:6px 12px; cursor:default;">Added ✓</button>'
+                ? '<button type="button" class="ewu-btn-modern" disabled style="background:#22c55e; color:#fff; font-size:12px; padding:6px 12px; cursor:default; display:inline-flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Added</button>'
                 : '<button type="button" class="ewu-btn-modern ewu-btn-modern-primary ewu-cp-btn-add-sec" data-id="' + item.id + '" style="font-size:12px; padding:6px 12px;">+ Add</button>'
               ) +
             '</div>' +

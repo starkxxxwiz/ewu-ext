@@ -518,7 +518,9 @@
         overlay.style.cssText = 'position:absolute; top:120px; left:0; width:100%; height:calc(100% - 120px); background:rgba(7,10,19,0.7); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(2px); box-sizing:border-box;';
         overlay.innerHTML = `
           <div style="width:100%; max-width:320px; background:rgba(15,23,42,0.95); border:1px solid rgba(99,102,241,0.25); border-radius:12px; padding:24px 20px; text-align:center; box-shadow:0 12px 32px rgba(0,0,0,0.6); box-sizing:border-box;">
-            <div style="font-size:32px; margin-bottom:12px; filter:drop-shadow(0 0 10px rgba(99,102,241,0.3));">🔑</div>
+            <div style="display:flex; justify-content:center; margin-bottom:14px; filter:drop-shadow(0 0 10px rgba(99,102,241,0.3));">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-1.5 1.5L14 9m-1.5 1.5L10 13l-4 4-4-4 4-4 2.5-2.5m1.5-1.5L16.5 3.5 18 2z"/><circle cx="7.5" cy="16.5" r="1.5"/></svg>
+            </div>
             <h3 style="color:#f3f4f6; font-size:14px; font-weight:700; margin-bottom:6px; font-family:sans-serif;">Activate EWU Buddy</h3>
             <p style="color:#9ca3af; font-size:11px; margin-bottom:14px; line-height:1.4; font-family:sans-serif;">Enter a valid license key to unlock your settings console and premium features.</p>
             <input type="text" id="popupLicenseKey" placeholder="XXXX-XXXX-XXXX-XXXX" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); background:rgba(0,0,0,0.4); color:#fff; font-family:monospace; font-size:14px; text-align:center; outline:none; text-transform:uppercase; box-sizing:border-box;" />

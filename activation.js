@@ -161,7 +161,7 @@
           expiresAt: licExp
         };
 
-        showStatus('🎉 License activated successfully! Thank you for using EWU Portal Helper.', 'success');
+        showStatus('License activated successfully! Thank you for using EWU Portal Helper.', 'success');
         keyInput.value = '';
         setTimeout(function () {
           renderSubscribedView(currentLicenseState.prefix, currentLicenseState.expiresAt);

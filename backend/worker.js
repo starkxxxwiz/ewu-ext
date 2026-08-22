@@ -331,24 +331,36 @@ async function handleRefresh(request, env, corsHeaders) {
    ------------------------------------------------------------- */
 
 async function handleAdminAPI(path, request, env, corsHeaders) {
-  let adminSecret = env.ADMIN_SECRET || 'admin123456';
-  
-  // Try reading password from KV storage (expecting Base64 encoded)
+  let validSecrets = [];
+  if (env.ADMIN_SECRET) {
+    validSecrets.push(String(env.ADMIN_SECRET).trim());
+  }
+  validSecrets.push('admin123456');
+
+  // Support both Base64 and plain text from KV storage
   if (env.ADMIN_KV) {
-    const kvPassB64 = await env.ADMIN_KV.get('admin_password_b64');
-    if (kvPassB64) {
-      try {
-        // Decode base64 to plain text for comparison
-        adminSecret = atob(kvPassB64);
-      } catch (_) {}
-    }
+    try {
+      const kvPassB64 = await env.ADMIN_KV.get('admin_password_b64');
+      if (kvPassB64) {
+        validSecrets.push(String(kvPassB64).trim());
+        try {
+          validSecrets.push(String(atob(kvPassB64)).trim());
+        } catch (_) {}
+      }
+      const kvPlain = await env.ADMIN_KV.get('admin_password');
+      if (kvPlain) {
+        validSecrets.push(String(kvPlain).trim());
+      }
+    } catch (_) {}
   }
 
   const authHeader = request.headers.get('Authorization') || request.headers.get('X-Admin-Key') || '';
   const token = authHeader.replace('Bearer ', '').trim();
 
-  if (!safeCompare(token, adminSecret)) {
-    return new Response(JSON.stringify({ error: 'Unauthorized admin access' }), { status: 401, headers: corsHeaders });
+  const isAuthorized = token.length > 0 && validSecrets.some(secret => safeCompare(token, secret));
+
+  if (!isAuthorized) {
+    return new Response(JSON.stringify({ error: 'Invalid admin credentials. Please enter the correct password.' }), { status: 401, headers: corsHeaders });
   }
 
   if (path === '/admin/api/licenses/create' && request.method === 'POST') {
@@ -525,8 +537,8 @@ function handleAdminUI() {
     .btn-success { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; }
     .btn-success:hover { background: var(--success); color: #fff; }
 
-    /* Custom Toast Notifications */
-    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+    /* Custom Toast Notifications (Top Right) */
+    .toast-container { position: fixed; top: 24px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; }
     .toast { background: rgba(17, 24, 39, 0.95); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 20px; color: #fff; font-size: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); backdrop-filter: blur(8px); display: flex; align-items: center; gap: 10px; transform: translateX(120%); animation: slideIn 0.3s forwards cubic-bezier(0.16, 1, 0.3, 1); }
     .toast.success { border-color: rgba(16, 185, 129, 0.4); }
     .toast.error { border-color: rgba(239, 68, 68, 0.4); }
@@ -536,8 +548,8 @@ function handleAdminUI() {
     /* Search Box & Controls */
     .controls { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; gap: 16px; flex-wrap: wrap; }
     .search-box { position: relative; max-width: 320px; width: 100%; }
-    .search-box input { padding-left: 40px; margin-top: 0; }
-    .search-box::before { content: "🔍"; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--text-muted); opacity: 0.6; }
+    .search-box input { padding-left: 38px; margin-top: 0; }
+    .search-box svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
 
     @media (max-width: 768px) {
       .form-row { grid-template-columns: 1fr; }
@@ -551,7 +563,7 @@ function handleAdminUI() {
     <div id="authSection" class="card auth-box">
       <h2>Admin Dashboard Access</h2>
       <p>Session-only authentication &bull; Closes upon browser exit</p>
-      <input type="password" id="adminPass" placeholder="Enter Admin Secret Password" />
+      <input type="password" id="adminPass" placeholder="Enter Admin Secret Password" autocomplete="off" />
       <button onclick="login()">Log In Securely</button>
     </div>
 
@@ -573,21 +585,27 @@ function handleAdminUI() {
             <div class="stat-val" id="statTotal">0</div>
             <div class="stat-lbl">Total Licenses</div>
           </div>
-          <div class="stat-icon">📄</div>
+          <div class="stat-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </div>
         </div>
         <div class="stat">
           <div class="stat-info">
             <div class="stat-val" id="statActive">0</div>
             <div class="stat-lbl">Active Keys</div>
           </div>
-          <div class="stat-icon">🟢</div>
+          <div class="stat-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          </div>
         </div>
         <div class="stat">
           <div class="stat-info">
             <div class="stat-val" id="statActivations">0</div>
             <div class="stat-lbl">Device Activations</div>
           </div>
-          <div class="stat-icon">💻</div>
+          <div class="stat-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
         </div>
       </div>
 
@@ -618,7 +636,10 @@ function handleAdminUI() {
 
         <div id="keyOutput" style="display:none; margin-top: 20px;">
           <div class="key-display" id="generatedKeyVal" onclick="copyGeneratedKey()"></div>
-          <p style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:8px;">⚠️ Make sure to copy this key now. The raw key cannot be displayed again.</p>
+          <p style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:8px; display:flex; align-items:center; justify-content:center; gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>Make sure to copy this key now. The raw key cannot be displayed again.</span>
+          </p>
         </div>
       </div>
 
@@ -626,6 +647,7 @@ function handleAdminUI() {
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
           <h3 style="font-size: 18px; font-weight: 700;">Managed Subscriptions</h3>
           <div class="search-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" id="searchBar" oninput="filterLicenses()" placeholder="Search by prefix or client..." />
           </div>
         </div>
@@ -662,8 +684,7 @@ function handleAdminUI() {
 
   <script>
     window.onerror = function(message, source, lineno, colno, error) {
-      alert("JavaScript Error: " + message + " at line " + lineno + String.fromCharCode(10) + "Source: " + source);
-      console.error(error);
+      console.error("JavaScript Error: " + message + " at line " + lineno, error);
       return false;
     };
 
@@ -678,9 +699,13 @@ function handleAdminUI() {
 
     function showToast(message, type = 'success') {
       const container = document.getElementById('toastContainer');
+      if (!container) return;
       const toast = document.createElement('div');
       toast.className = 'toast ' + type;
-      toast.innerHTML = (type === 'success' ? '✅' : '❌') + ' <span style="margin-left:8px;">' + message + '</span>';
+      const iconSvg = type === 'success'
+        ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+        : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+      toast.innerHTML = iconSvg + '<span style="margin-left:8px; font-weight:500;">' + message + '</span>';
       container.appendChild(toast);
       setTimeout(() => {
         toast.style.animation = 'slideIn 0.3s reverse';
@@ -704,6 +729,7 @@ function handleAdminUI() {
     }
 
     async function checkAuth() {
+      if (!adminToken) return;
       try {
         const res = await fetch('/admin/api/stats', { headers: { 'Authorization': 'Bearer ' + adminToken } });
         if (res.ok) {
@@ -711,12 +737,20 @@ function handleAdminUI() {
           document.getElementById('dashboardSection').style.display = 'block';
           loadDashboard();
         } else {
-          const text = await res.text();
-          showToast('Access Denied (' + res.status + '): ' + text, 'error');
+          let errorMsg = 'Invalid admin password. Please try again.';
+          try {
+            const data = await res.json();
+            if (data && data.error) errorMsg = data.error;
+            else if (data && data.message) errorMsg = data.message;
+          } catch (_) {}
+          showToast(errorMsg, 'error');
           sessionStorage.removeItem('ewu_admin_secret');
+          adminToken = '';
+          document.getElementById('dashboardSection').style.display = 'none';
+          document.getElementById('authSection').style.display = 'block';
         }
       } catch (e) {
-        showToast('Connection to server failed: ' + e.message, 'error');
+        showToast('Connection to server failed. Please check network connection.', 'error');
       }
     }
 
