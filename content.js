@@ -111,9 +111,16 @@
       if (shutdown.enabled) {
         var sBanner = document.createElement('div');
         sBanner.id = 'ewu-portal-system-banner';
-        sBanner.style.cssText = 'position:fixed; top:12px; right:16px; z-index:999999; max-width:400px; background:rgba(15,23,42,0.95); border:1px solid rgba(244,63,94,0.5); border-radius:12px; padding:14px 18px; box-shadow:0 10px 30px rgba(0,0,0,0.7), 0 0 20px rgba(244,63,94,0.25); color:#fff; font-family:sans-serif; backdrop-filter:blur(8px);';
-        sBanner.innerHTML = '<div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;"><span style="color:#f43f5e; font-weight:800; font-size:13px;">' + (shutdown.title || 'System Temporarily Offline') + '</span></div><div style="font-size:12px; color:#cbd5e1; line-height:1.5;">' + (shutdown.message || 'EWU Portal Helper is currently disabled by administrator.') + '</div>';
+        sBanner.style.cssText = 'position:fixed; top:16px; right:16px; z-index:999999; max-width:380px; background:rgba(15,23,42,0.95); border:1px solid rgba(244,63,94,0.5); border-radius:12px; padding:14px 18px; box-shadow:0 10px 30px rgba(0,0,0,0.7), 0 0 20px rgba(244,63,94,0.25); color:#fff; font-family:sans-serif; backdrop-filter:blur(8px); transition:opacity 0.4s ease;';
+        sBanner.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;"><span style="color:#f43f5e; font-weight:800; font-size:13px;">' + (shutdown.title || 'System Temporarily Offline') + '</span><button style="background:transparent; border:none; color:#94a3b8; font-size:14px; cursor:pointer; padding:0 4px;" onclick="this.closest(\'#ewu-portal-system-banner\').remove()">✕</button></div><div style="font-size:12px; color:#cbd5e1; line-height:1.5;">' + (shutdown.message || 'EWU Portal Helper is currently disabled by administrator.') + '</div>';
         document.body.appendChild(sBanner);
+
+        setTimeout(function () {
+          if (sBanner && sBanner.parentNode) {
+            sBanner.style.opacity = '0';
+            setTimeout(function () { if (sBanner.parentNode) sBanner.remove(); }, 400);
+          }
+        }, 7000);
         return;
       }
 
@@ -121,9 +128,16 @@
       if (update.isMandatory && isVersionOutdated(manifestVer, update.minVersion)) {
         var uBanner = document.createElement('div');
         uBanner.id = 'ewu-portal-system-banner';
-        uBanner.style.cssText = 'position:fixed; top:12px; right:16px; z-index:999999; max-width:400px; background:rgba(15,23,42,0.95); border:1px solid rgba(99,102,241,0.5); border-radius:12px; padding:14px 18px; box-shadow:0 10px 30px rgba(0,0,0,0.7), 0 0 20px rgba(99,102,241,0.25); color:#fff; font-family:sans-serif; backdrop-filter:blur(8px);';
-        uBanner.innerHTML = '<div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;"><span style="color:#818cf8; font-weight:800; font-size:13px;">' + (update.title || 'Extension Update Required') + '</span></div><div style="font-size:12px; color:#cbd5e1; line-height:1.5; margin-bottom:10px;">Please update EWU Buddy (v' + (update.latestVersion || update.minVersion) + ') to continue.</div><a href="' + (update.updateUrl || 'https://t.me/AftabKabir') + '" target="_blank" style="display:inline-block; padding:6px 12px; background:#6366f1; color:#fff; font-size:11px; font-weight:700; border-radius:6px; text-decoration:none;">Update Now &rarr;</a>';
+        uBanner.style.cssText = 'position:fixed; top:16px; right:16px; z-index:999999; max-width:380px; background:rgba(15,23,42,0.95); border:1px solid rgba(99,102,241,0.5); border-radius:12px; padding:14px 18px; box-shadow:0 10px 30px rgba(0,0,0,0.7), 0 0 20px rgba(99,102,241,0.25); color:#fff; font-family:sans-serif; backdrop-filter:blur(8px); transition:opacity 0.4s ease;';
+        uBanner.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;"><span style="color:#818cf8; font-weight:800; font-size:13px;">' + (update.title || 'Extension Update Required') + '</span><button style="background:transparent; border:none; color:#94a3b8; font-size:14px; cursor:pointer; padding:0 4px;" onclick="this.closest(\'#ewu-portal-system-banner\').remove()">✕</button></div><div style="font-size:12px; color:#cbd5e1; line-height:1.5; margin-bottom:10px;">Please update EWU Buddy (v' + (update.latestVersion || update.minVersion) + ') to continue.</div><a href="' + (update.updateUrl || 'https://t.me/AftabKabir') + '" target="_blank" style="display:inline-block; padding:6px 12px; background:#6366f1; color:#fff; font-size:11px; font-weight:700; border-radius:6px; text-decoration:none;">Update Now &rarr;</a>';
         document.body.appendChild(uBanner);
+
+        setTimeout(function () {
+          if (uBanner && uBanner.parentNode) {
+            uBanner.style.opacity = '0';
+            setTimeout(function () { if (uBanner.parentNode) uBanner.remove(); }, 400);
+          }
+        }, 8000);
         return;
       }
 
@@ -134,7 +148,7 @@
 
         var nBanner = document.createElement('div');
         nBanner.id = 'ewu-portal-system-banner';
-        nBanner.style.cssText = 'width:100%; background:' + nBg + '; border-bottom:1px solid ' + nBorder + '; padding:8px 16px; color:#f8fafc; font-size:12px; font-family:sans-serif; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box; z-index:99999;';
+        nBanner.style.cssText = 'width:100%; background:' + nBg + '; border-bottom:1px solid ' + nBorder + '; padding:8px 16px; color:#f8fafc; font-size:12px; font-family:sans-serif; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box; z-index:99999; transition:opacity 0.4s ease;';
         nBanner.innerHTML = '<div>' + (notice.title ? '<strong style="color:' + nColor + '; margin-right:8px;">' + notice.title + '</strong>' : '') + '<span>' + notice.message + '</span></div><button style="background:transparent; border:none; color:#94a3b8; font-size:14px; cursor:pointer; padding:0 4px;" onclick="this.parentElement.remove()">✕</button>';
         
         var topBar = document.body.firstElementChild;
@@ -143,6 +157,13 @@
         } else {
           document.body.appendChild(nBanner);
         }
+
+        setTimeout(function () {
+          if (nBanner && nBanner.parentNode) {
+            nBanner.style.opacity = '0';
+            setTimeout(function () { if (nBanner.parentNode) nBanner.remove(); }, 400);
+          }
+        }, 10000);
       }
     });
   }

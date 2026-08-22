@@ -116,16 +116,17 @@ async function verifyLicenseToken() {
         }).then(function (r) { return r.json(); }).then(function (data) {
           if (data && data.valid) {
             if (data.system) {
+              var u = data.system.update || {};
               chrome.storage.local.set({
                 ewu_system_shutdown: data.system.shutdown || { enabled: false },
                 ewu_system_notice: data.system.notice || { enabled: false },
                 ewu_system_update: {
-                  minVersion: data.system.update?.min_version || '2.0.0',
-                  latestVersion: data.system.update?.latest_version || '2.0.0',
-                  title: data.system.update?.title || '',
-                  changelog: data.system.update?.changelog || '',
-                  updateUrl: data.system.update?.update_url || '',
-                  isMandatory: Boolean(data.system.update?.is_mandatory)
+                  minVersion: u.min_version || '2.0.0',
+                  latestVersion: u.latest_version || '2.0.0',
+                  title: u.title || '',
+                  changelog: u.changelog || '',
+                  updateUrl: u.update_url || '',
+                  isMandatory: Boolean(u.is_mandatory)
                 }
               });
             }
