@@ -32,6 +32,12 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     blocked_until INTEGER NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS system_config (
+    config_key TEXT PRIMARY KEY,
+    config_value TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_licenses_hash ON licenses(license_key_hash);
 CREATE INDEX IF NOT EXISTS idx_activations_license ON activations(license_id);
 CREATE INDEX IF NOT EXISTS idx_activations_device ON activations(device_id);

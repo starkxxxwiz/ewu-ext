@@ -32,6 +32,9 @@ export default {
       if (path === '/api/license/refresh' && request.method === 'POST') {
         return await handleRefresh(request, env, corsHeaders);
       }
+      if (path === '/api/system/status' && request.method === 'GET') {
+        return await handleSystemStatus(env, corsHeaders);
+      }
       if (path === '/admin') {
         return handleAdminUI();
       }
@@ -270,6 +273,72 @@ async function handleActivate(request, env, corsHeaders) {
   }), { headers: corsHeaders });
 }
 
+async function ensureSystemConfigTable(env) {
+  try {
+    await env.DB.prepare(`
+      CREATE TABLE IF NOT EXISTS system_config (
+        config_key TEXT PRIMARY KEY,
+        config_value TEXT NOT NULL,
+        updated_at INTEGER NOT NULL
+      )
+    `).run();
+  } catch (_) {}
+}
+
+async function getSystemConfig(env, key, defaultVal = {}) {
+  await ensureSystemConfigTable(env);
+  try {
+    const row = await env.DB.prepare('SELECT config_value FROM system_config WHERE config_key = ?').bind(key).first();
+    if (row && row.config_value) {
+      return JSON.parse(row.config_value);
+    }
+  } catch (_) {}
+  return defaultVal;
+}
+
+async function setSystemConfig(env, key, valObj) {
+  await ensureSystemConfigTable(env);
+  const jsonStr = JSON.stringify(valObj);
+  const now = Date.now();
+  await env.DB.prepare(`
+    INSERT INTO system_config (config_key, config_value, updated_at) 
+    VALUES (?, ?, ?) 
+    ON CONFLICT(config_key) DO UPDATE SET config_value = excluded.config_value, updated_at = excluded.updated_at
+  `).bind(key, jsonStr, now).run();
+}
+
+async function handleSystemStatus(env, corsHeaders) {
+  const shutdown = await getSystemConfig(env, 'shutdown', {
+    enabled: false,
+    title: 'System Offline',
+    message: 'EWU Portal Helper is currently disabled by administrator.'
+  });
+
+  const notice = await getSystemConfig(env, 'broadcast_notice', {
+    enabled: false,
+    type: 'info',
+    title: '',
+    message: ''
+  });
+
+  const update = await getSystemConfig(env, 'app_update', {
+    min_version: '2.0.0',
+    latest_version: '2.0.0',
+    title: 'Update Available',
+    changelog: '',
+    update_url: 'https://t.me/AftabKabir',
+    is_mandatory: false
+  });
+
+  return new Response(JSON.stringify({
+    success: true,
+    serverTime: Date.now(),
+    shutdown,
+    notice,
+    update
+  }), { headers: corsHeaders });
+}
+
 async function handleVerify(request, env, corsHeaders) {
   let body;
   try { body = await request.json(); } catch (_) {}
@@ -292,7 +361,16 @@ async function handleVerify(request, env, corsHeaders) {
     return new Response(JSON.stringify({ valid: false, reason: 'License has expired.' }), { status: 401, headers: corsHeaders });
   }
 
-  return new Response(JSON.stringify({ valid: true, expiresAt: payload.exp, licenseExpiresAt: license.expires_at }), { headers: corsHeaders });
+  const shutdown = await getSystemConfig(env, 'shutdown', { enabled: false, title: '', message: '' });
+  const notice = await getSystemConfig(env, 'broadcast_notice', { enabled: false, type: 'info', title: '', message: '' });
+  const update = await getSystemConfig(env, 'app_update', { min_version: '2.0.0', latest_version: '2.0.0', title: '', changelog: '', update_url: '', is_mandatory: false });
+
+  return new Response(JSON.stringify({
+    valid: true,
+    expiresAt: payload.exp,
+    licenseExpiresAt: license.expires_at,
+    system: { shutdown, notice, update }
+  }), { headers: corsHeaders });
 }
 
 async function handleRefresh(request, env, corsHeaders) {
@@ -361,6 +439,95 @@ async function handleAdminAPI(path, request, env, corsHeaders) {
 
   if (!isAuthorized) {
     return new Response(JSON.stringify({ error: 'Invalid admin credentials. Please enter the correct password.' }), { status: 401, headers: corsHeaders });
+  }
+
+  if (path === '/admin/api/system' && request.method === 'GET') {
+    const shutdown = await getSystemConfig(env, 'shutdown', {
+      enabled: false,
+      title: 'System Temporarily Offline',
+      message: 'EWU Portal Helper is currently undergoing maintenance. Please check back shortly.'
+    });
+    const notice = await getSystemConfig(env, 'broadcast_notice', {
+      enabled: false,
+      type: 'info',
+      title: '',
+      message: ''
+    });
+    const update = await getSystemConfig(env, 'app_update', {
+      min_version: '2.0.0',
+      latest_version: '2.0.0',
+      title: 'New Extension Update Available',
+      changelog: '',
+      update_url: 'https://t.me/AftabKabir',
+      is_mandatory: false
+    });
+    return new Response(JSON.stringify({ success: true, shutdown, notice, update }), { headers: corsHeaders });
+  }
+
+  if (path === '/admin/api/system/shutdown' && request.method === 'POST') {
+    const { enabled, title, message } = await request.json();
+    await setSystemConfig(env, 'shutdown', {
+      enabled: Boolean(enabled),
+      title: title || 'System Temporarily Offline',
+      message: message || 'EWU Portal Helper has been temporarily shut down by the administrator.'
+    });
+    return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+  }
+
+  if (path === '/admin/api/system/notice' && request.method === 'POST') {
+    const { enabled, type, title, message } = await request.json();
+    await setSystemConfig(env, 'broadcast_notice', {
+      enabled: Boolean(enabled),
+      type: type || 'info',
+      title: title || '',
+      message: message || ''
+    });
+    return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+  }
+
+  if (path === '/admin/api/system/update' && request.method === 'POST') {
+    const { min_version, latest_version, title, changelog, update_url, is_mandatory } = await request.json();
+    await setSystemConfig(env, 'app_update', {
+      min_version: min_version || '2.0.0',
+      latest_version: latest_version || '2.0.0',
+      title: title || 'New Extension Update Available',
+      changelog: changelog || '',
+      update_url: update_url || 'https://t.me/AftabKabir',
+      is_mandatory: Boolean(is_mandatory)
+    });
+    return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+  }
+
+  if (path === '/admin/api/devices/export' && request.method === 'GET') {
+    const { results } = await env.DB.prepare(`
+      SELECT 
+        a.id as activation_id,
+        a.device_id,
+        a.device_ip,
+        a.device_geo,
+        a.device_user_agent,
+        a.activated_at,
+        a.last_seen_at,
+        l.id as license_id,
+        l.raw_key_prefix,
+        l.status as license_status,
+        l.notes as client_note,
+        l.expires_at as license_expires_at
+      FROM activations a
+      LEFT JOIN licenses l ON a.license_id = l.id
+      ORDER BY a.last_seen_at DESC
+    `).all();
+    return new Response(JSON.stringify({ success: true, devices: results || [] }), { headers: corsHeaders });
+  }
+
+  if (path === '/admin/api/licenses/purge-all' && request.method === 'POST') {
+    const { confirmation } = await request.json();
+    if (confirmation !== 'DELETE ALL') {
+      return new Response(JSON.stringify({ success: false, message: 'Invalid confirmation phrase. Type DELETE ALL to confirm.' }), { status: 400, headers: corsHeaders });
+    }
+    await env.DB.prepare('DELETE FROM activations').run();
+    await env.DB.prepare('DELETE FROM licenses').run();
+    return new Response(JSON.stringify({ success: true, message: 'All licenses and device activations have been permanently purged.' }), { headers: corsHeaders });
   }
 
   if (path === '/admin/api/licenses/create' && request.method === 'POST') {
@@ -521,8 +688,8 @@ function handleAdminUI() {
   <style>
     :root {
       --bg: #030712;
-      --card-bg: rgba(11, 15, 25, 0.7);
-      --card-hover: rgba(17, 24, 39, 0.85);
+      --card-bg: rgba(11, 15, 25, 0.75);
+      --card-hover: rgba(17, 24, 39, 0.9);
       --border: rgba(255, 255, 255, 0.08);
       --border-focus: rgba(99, 102, 241, 0.5);
       --accent: #6366f1;
@@ -540,7 +707,6 @@ function handleAdminUI() {
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
     body { background: var(--bg); color: var(--text); padding: 24px; min-height: 100vh; overflow-x: hidden; position: relative; }
     
-    /* Cyber Minimal Grid Background */
     body::before {
       content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background-image: 
@@ -554,10 +720,9 @@ function handleAdminUI() {
 
     .container { max-width: 1280px; margin: 0 auto; position: relative; z-index: 1; }
 
-    /* Header Nav */
     header {
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border);
+      margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border);
       flex-wrap: wrap; gap: 16px;
     }
     .brand-group { display: flex; align-items: center; gap: 14px; }
@@ -580,15 +745,24 @@ function handleAdminUI() {
     }
     .sys-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 8px var(--emerald); }
 
-    .header-actions { display: flex; align-items: center; gap: 10px; }
+    .header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .btn-nav {
       background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border);
       color: var(--text-muted); padding: 8px 14px; border-radius: 10px;
       font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex;
-      align-items: center; gap: 8px; text-decoration: none;
+      align-items: center; gap: 7px; text-decoration: none;
     }
     .btn-nav:hover { background: rgba(255, 255, 255, 0.08); color: #fff; border-color: rgba(255, 255, 255, 0.2); }
     .btn-nav.danger:hover { background: rgba(244, 63, 94, 0.1); border-color: var(--rose); color: var(--rose); }
+
+    /* Nav Tabs */
+    .nav-tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 12px; overflow-x: auto; }
+    .nav-tab {
+      background: transparent; border: none; color: var(--text-muted); font-size: 13.5px; font-weight: 700;
+      padding: 8px 16px; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .nav-tab:hover { color: #fff; background: rgba(255,255,255,0.03); }
+    .nav-tab.active { color: #fff; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); }
 
     /* Auth Form Box */
     .auth-wrap {
@@ -679,7 +853,6 @@ function handleAdminUI() {
     }
     .key-display:hover { background: rgba(16, 185, 129, 0.05); border-color: var(--emerald); }
 
-    /* Bulk Key Display Box */
     .bulk-box {
       font-family: 'JetBrains Mono', monospace; background: rgba(0, 0, 0, 0.6);
       border: 1px solid var(--border); border-radius: 12px; padding: 14px;
@@ -736,7 +909,6 @@ function handleAdminUI() {
     .status-revoked { background: rgba(244, 63, 94, 0.1); color: var(--rose); border: 1px solid rgba(244, 63, 94, 0.25); }
     .status-expired { background: rgba(245, 158, 11, 0.1); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.25); }
 
-    /* Action Buttons in Table */
     .btn-action {
       background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border);
       color: var(--text-muted); padding: 5px 10px; border-radius: 7px;
@@ -746,6 +918,14 @@ function handleAdminUI() {
     .btn-action:hover { background: rgba(255, 255, 255, 0.09); color: #fff; border-color: rgba(255, 255, 255, 0.2); }
     .btn-action.success:hover { background: rgba(16, 185, 129, 0.15); border-color: var(--emerald); color: var(--emerald); }
     .btn-action.danger:hover { background: rgba(244, 63, 94, 0.15); border-color: var(--rose); color: var(--rose); }
+
+    /* Custom Switch Toggle */
+    .switch { position: relative; display: inline-block; width: 46px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); border: 1px solid var(--border); border-radius: 24px; transition: .3s; }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: .3s; }
+    input:checked + .slider { background-color: var(--rose); border-color: var(--rose); }
+    input:checked + .slider:before { transform: translateX(22px); }
 
     /* Top-Right Toast Notifications */
     .toast-container { position: fixed; top: 24px; right: 24px; z-index: 100000; display: flex; flex-direction: column; gap: 10px; }
@@ -764,7 +944,7 @@ function handleAdminUI() {
     /* Modal Styling */
     .modal-backdrop {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(3, 7, 18, 0.8); z-index: 99999; backdrop-filter: blur(12px);
+      background: rgba(3, 7, 18, 0.85); z-index: 99999; backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px); align-items: center; justify-content: center; padding: 20px;
     }
     .modal-box {
@@ -814,9 +994,9 @@ function handleAdminUI() {
           <div>
             <div style="display:flex; align-items:center; gap:8px;">
               <h1>License Command Center</h1>
-              <span class="sys-pill"><span class="sys-dot"></span> Online</span>
+              <span class="sys-pill" id="liveStatusBadge"><span class="sys-dot"></span> Online</span>
             </div>
-            <p style="font-size:12.5px; color:var(--text-muted); margin-top:2px;">EWU Portal Helper License Management &amp; Device Telemetry</p>
+            <p style="font-size:12.5px; color:var(--text-muted); margin-top:2px;">EWU Portal Helper License Management &amp; Remote Command Hub</p>
           </div>
         </div>
 
@@ -825,157 +1005,358 @@ function handleAdminUI() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             Refresh
           </button>
-          <button class="btn-nav" onclick="exportData('json')" title="Export Database JSON">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export JSON
-          </button>
           <button class="btn-nav danger" onclick="logout()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             Sign Out
           </button>
         </div>
       </header>
 
-      <!-- KPI Metrics Cards -->
-      <div class="metrics-grid">
-        <div class="metric-card">
-          <div class="metric-header">
-            <span class="metric-title">Total Issued</span>
-            <div class="metric-icon" style="background:rgba(99,102,241,0.12); color:#818cf8;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            </div>
-          </div>
-          <div class="metric-value" id="kpiTotal">0</div>
-          <div class="metric-sub">Generated licenses</div>
-        </div>
-
-        <div class="metric-card">
-          <div class="metric-header">
-            <span class="metric-title">Active Licenses</span>
-            <div class="metric-icon" style="background:rgba(16,185,129,0.12); color:var(--emerald);">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-            </div>
-          </div>
-          <div class="metric-value" id="kpiActive" style="color:var(--emerald);">0</div>
-          <div class="metric-sub" id="kpiPerpetual">0 Lifetime / Perpetual</div>
-        </div>
-
-        <div class="metric-card">
-          <div class="metric-header">
-            <span class="metric-title">Active Devices</span>
-            <div class="metric-icon" style="background:rgba(56,189,248,0.12); color:var(--cyan);">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            </div>
-          </div>
-          <div class="metric-value" id="kpiActivations" style="color:var(--cyan);">0</div>
-          <div class="metric-sub" id="kpiCapacity">Max Allowed: 0</div>
-        </div>
-
-        <div class="metric-card">
-          <div class="metric-header">
-            <span class="metric-title">Revoked Keys</span>
-            <div class="metric-icon" style="background:rgba(244,63,94,0.12); color:var(--rose);">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-            </div>
-          </div>
-          <div class="metric-value" id="kpiRevoked" style="color:var(--rose);">0</div>
-          <div class="metric-sub">Blocked / Suspended</div>
-        </div>
-      </div>
-
-      <!-- Generator Card -->
-      <div class="card">
-        <div class="form-header">
-          <div>
-            <h3 style="font-size: 16px; font-weight: 800; color: #fff;">Issue License Key</h3>
-            <p style="font-size: 12.5px; color: var(--text-muted);">CSPRNG cryptographically secure bitmask generation ($2^{80}$ entropy)</p>
-          </div>
-          <div class="mode-switch">
-            <button class="mode-btn active" id="btnSingleMode" onclick="setGenMode('single')">Single Key</button>
-            <button class="mode-btn" id="btnBulkMode" onclick="setGenMode('bulk')">Batch / Bulk</button>
-          </div>
-        </div>
-
-        <div class="form-grid">
-          <div class="form-group" style="grid-column: span 2;">
-            <label>Client Note / Batch Identifier</label>
-            <input type="text" id="licNote" class="form-control" placeholder="e.g. Student John Doe (Spring 2026)" />
-          </div>
-          <div class="form-group" id="bulkCountGroup" style="display:none;">
-            <label>Batch Quantity (Max 25)</label>
-            <input type="number" id="licCount" class="form-control" value="5" min="1" max="25" />
-          </div>
-          <div class="form-group">
-            <label>Max Device Activations</label>
-            <input type="number" id="licMax" class="form-control" value="1" min="1" />
-          </div>
-          <div class="form-group">
-            <label>License Validity Duration</label>
-            <select id="licExpiry" class="form-control">
-              <option value="">Perpetual (Never Expires)</option>
-              <option value="30">30 Days</option>
-              <option value="90">90 Days</option>
-              <option value="180">6 Months</option>
-              <option value="365">1 Year</option>
-            </select>
-          </div>
-        </div>
-
-        <button class="btn-primary" style="max-width: 220px;" onclick="executeGeneration()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-1.5 1.5L14 9m-1.5 1.5L10 13l-4 4-4-4 4-4 2.5-2.5m1.5-1.5L16.5 3.5 18 2z"/><circle cx="7.5" cy="16.5" r="1.5"/></svg>
-          <span id="genBtnText">Generate Key</span>
+      <!-- Navigation Tabs -->
+      <div class="nav-tabs">
+        <button class="nav-tab active" id="tabBtnLicenses" onclick="switchMainTab('licenses')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+          Licenses &amp; Telemetry
         </button>
+        <button class="nav-tab" id="tabBtnRemote" onclick="switchMainTab('remote')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+          Remote Controls &amp; Notices
+        </button>
+        <button class="nav-tab" id="tabBtnExport" onclick="switchMainTab('export')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Users &amp; Devices
+        </button>
+        <button class="nav-tab" id="tabBtnDanger" onclick="switchMainTab('danger')" style="color:var(--rose);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Danger Zone
+        </button>
+      </div>
 
-        <div id="singleOutput" style="display:none;">
-          <div class="key-display" id="generatedKeyVal" onclick="copyKeyText('generatedKeyVal')">
-            <span id="keyValText">XXXX-XXXX-XXXX-XXXX</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <!-- VIEW 1: LICENSES & TELEMETRY -->
+      <div id="viewLicenses">
+        <!-- KPI Metrics Cards -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Total Issued</span>
+              <div class="metric-icon" style="background:rgba(99,102,241,0.12); color:#818cf8;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="kpiTotal">0</div>
+            <div class="metric-sub">Generated licenses</div>
           </div>
-          <p style="font-size:12px; color:var(--amber); text-align:center; margin-top:8px; display:flex; align-items:center; justify-content:center; gap:6px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            Copy this key now. The un-hashed raw key is not stored in plaintext on the server.
-          </p>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Active Licenses</span>
+              <div class="metric-icon" style="background:rgba(16,185,129,0.12); color:var(--emerald);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="kpiActive" style="color:var(--emerald);">0</div>
+            <div class="metric-sub" id="kpiPerpetual">0 Lifetime / Perpetual</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Active Devices</span>
+              <div class="metric-icon" style="background:rgba(56,189,248,0.12); color:var(--cyan);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="kpiActivations" style="color:var(--cyan);">0</div>
+            <div class="metric-sub" id="kpiCapacity">Max Allowed: 0</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Revoked Keys</span>
+              <div class="metric-icon" style="background:rgba(244,63,94,0.12); color:var(--rose);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="kpiRevoked" style="color:var(--rose);">0</div>
+            <div class="metric-sub">Blocked / Suspended</div>
+          </div>
         </div>
 
-        <div id="bulkOutput" style="display:none;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
-            <span style="font-size:12px; font-weight:700; color:var(--text-muted);">Generated Batch Keys:</span>
-            <button class="btn-action success" onclick="copyBulkKeys()">Copy All Keys</button>
+        <!-- Generator Card -->
+        <div class="card">
+          <div class="form-header">
+            <div>
+              <h3 style="font-size: 16px; font-weight: 800; color: #fff;">Issue License Key</h3>
+              <p style="font-size: 12.5px; color: var(--text-muted);">CSPRNG cryptographically secure bitmask generation ($2^{80}$ entropy)</p>
+            </div>
+            <div class="mode-switch">
+              <button class="mode-btn active" id="btnSingleMode" onclick="setGenMode('single')">Single Key</button>
+              <button class="mode-btn" id="btnBulkMode" onclick="setGenMode('bulk')">Batch / Bulk</button>
+            </div>
           </div>
-          <div class="bulk-box" id="bulkKeysList"></div>
+
+          <div class="form-grid">
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Client Note / Batch Identifier</label>
+              <input type="text" id="licNote" class="form-control" placeholder="e.g. Student John Doe (Spring 2026)" />
+            </div>
+            <div class="form-group" id="bulkCountGroup" style="display:none;">
+              <label>Batch Quantity (Max 25)</label>
+              <input type="number" id="licCount" class="form-control" value="5" min="1" max="25" />
+            </div>
+            <div class="form-group">
+              <label>Max Device Activations</label>
+              <input type="number" id="licMax" class="form-control" value="1" min="1" />
+            </div>
+            <div class="form-group">
+              <label>License Validity Duration</label>
+              <select id="licExpiry" class="form-control">
+                <option value="">Perpetual (Never Expires)</option>
+                <option value="30">30 Days</option>
+                <option value="90">90 Days</option>
+                <option value="180">6 Months</option>
+                <option value="365">1 Year</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="btn-primary" style="max-width: 220px;" onclick="executeGeneration()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-1.5 1.5L14 9m-1.5 1.5L10 13l-4 4-4-4 4-4 2.5-2.5m1.5-1.5L16.5 3.5 18 2z"/><circle cx="7.5" cy="16.5" r="1.5"/></svg>
+            <span id="genBtnText">Generate Key</span>
+          </button>
+
+          <div id="singleOutput" style="display:none;">
+            <div class="key-display" id="generatedKeyVal" onclick="copyKeyText('generatedKeyVal')">
+              <span id="keyValText">XXXX-XXXX-XXXX-XXXX</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </div>
+            <p style="font-size:12px; color:var(--amber); text-align:center; margin-top:8px; display:flex; align-items:center; justify-content:center; gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Copy this key now. The un-hashed raw key is not stored in plaintext on the server.
+            </p>
+          </div>
+
+          <div id="bulkOutput" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
+              <span style="font-size:12px; font-weight:700; color:var(--text-muted);">Generated Batch Keys:</span>
+              <button class="btn-action success" onclick="copyBulkKeys()">Copy All Keys</button>
+            </div>
+            <div class="bulk-box" id="bulkKeysList"></div>
+          </div>
+        </div>
+
+        <!-- Subscriptions Management Table -->
+        <div class="card">
+          <div class="table-toolbar">
+            <div class="filter-tabs">
+              <button class="tab-pill active" data-filter="all" onclick="setFilter('all', this)">All (<span id="countAll">0</span>)</button>
+              <button class="tab-pill" data-filter="active" onclick="setFilter('active', this)">Active</button>
+              <button class="tab-pill" data-filter="perpetual" onclick="setFilter('perpetual', this)">Perpetual</button>
+              <button class="tab-pill" data-filter="revoked" onclick="setFilter('revoked', this)">Revoked</button>
+            </div>
+
+            <div class="search-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="searchBar" oninput="filterLicenses()" placeholder="Search key, client note, or prefix..." />
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>License Prefix</th>
+                  <th>Client Note</th>
+                  <th>Status</th>
+                  <th>Device Activations</th>
+                  <th>Expiration</th>
+                  <th style="text-align:right;">Management</th>
+                </tr>
+              </thead>
+              <tbody id="licTable"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <!-- Subscriptions Management Table -->
-      <div class="card">
-        <div class="table-toolbar">
-          <div class="filter-tabs">
-            <button class="tab-pill active" data-filter="all" onclick="setFilter('all', this)">All (<span id="countAll">0</span>)</button>
-            <button class="tab-pill" data-filter="active" onclick="setFilter('active', this)">Active</button>
-            <button class="tab-pill" data-filter="perpetual" onclick="setFilter('perpetual', this)">Perpetual</button>
-            <button class="tab-pill" data-filter="revoked" onclick="setFilter('revoked', this)">Revoked</button>
+      <!-- VIEW 2: REMOTE CONTROLS & BROADCAST -->
+      <div id="viewRemote" style="display:none;">
+        <!-- Emergency Remote Killswitch -->
+        <div class="card" style="border-color: rgba(244, 63, 94, 0.3);">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <h3 style="font-size: 16px; font-weight: 800; color: #fff;">Emergency Remote Killswitch / Shutdown</h3>
+                <span class="status-badge status-revoked" id="shutdownStatusBadge" style="display:none;">ACTIVE LOCKDOWN</span>
+              </div>
+              <p style="font-size: 12.5px; color: var(--text-muted); margin-top:2px;">Instantly disable all extension functionality globally. Features will be locked with your custom notice.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="shutdownToggle" />
+              <span class="slider"></span>
+            </label>
           </div>
 
-          <div class="search-wrap">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="searchBar" oninput="filterLicenses()" placeholder="Search key, client note, or prefix..." />
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>Shutdown Notice Title</label>
+            <input type="text" id="shutdownTitle" class="form-control" placeholder="e.g. System Under Maintenance" />
           </div>
+
+          <div class="form-group" style="margin-bottom:14px;">
+            <label>Custom Shutdown Message for Users</label>
+            <textarea id="shutdownMsg" class="form-control" rows="3" placeholder="Explain the reason (e.g. Portal is currently under official maintenance for advising. EWU Buddy is temporarily offline.)"></textarea>
+          </div>
+
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+            <button class="btn-action" onclick="setShutdownPreset('maintenance')">Preset: Advising Maintenance</button>
+            <button class="btn-action" onclick="setShutdownPreset('emergency')">Preset: Critical Fix</button>
+            <button class="btn-action" onclick="setShutdownPreset('default')">Reset to Default</button>
+          </div>
+
+          <button class="btn-primary" style="max-width: 240px; background: linear-gradient(135deg, var(--rose), #be123c);" onclick="saveShutdownConfig()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+            Apply Killswitch State
+          </button>
         </div>
 
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>License Prefix</th>
-                <th>Client Note</th>
-                <th>Status</th>
-                <th>Device Activations</th>
-                <th>Expiration</th>
-                <th style="text-align:right;">Management</th>
-              </tr>
-            </thead>
-            <tbody id="licTable"></tbody>
-          </table>
+        <!-- Global Broadcast Notice -->
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+            <div>
+              <h3 style="font-size: 16px; font-weight: 800; color: #fff;">Global Broadcast Notice</h3>
+              <p style="font-size: 12.5px; color: var(--text-muted); margin-top:2px;">Display an announcement banner on the portal and popup settings console for all users.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="noticeToggle" />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="form-grid" style="margin-bottom:14px;">
+            <div class="form-group">
+              <label>Notice Type / Severity</label>
+              <select id="noticeType" class="form-control">
+                <option value="info">Information (Blue)</option>
+                <option value="warning">Important Warning (Amber)</option>
+                <option value="alert">Critical Announcement (Red)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Notice Title</label>
+              <input type="text" id="noticeTitle" class="form-control" placeholder="e.g. Spring 2026 Advising Schedule Released!" />
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom:16px;">
+            <label>Notice Content</label>
+            <textarea id="noticeMsg" class="form-control" rows="2" placeholder="Enter broadcast text for students..."></textarea>
+          </div>
+
+          <button class="btn-primary" style="max-width: 220px;" onclick="saveNoticeConfig()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            Save Broadcast Notice
+          </button>
+        </div>
+
+        <!-- Extension Update Release Manager -->
+        <div class="card">
+          <h3 style="font-size: 16px; font-weight: 800; color: #fff; margin-bottom:4px;">Extension Update Enforcer</h3>
+          <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom:18px;">Publish new version releases, changelogs, and enforce mandatory updates.</p>
+
+          <div class="form-grid" style="margin-bottom:14px;">
+            <div class="form-group">
+              <label>Latest Released Version</label>
+              <input type="text" id="updateLatestVer" class="form-control" placeholder="e.g. 2.1.0" />
+            </div>
+            <div class="form-group">
+              <label>Minimum Required Version</label>
+              <input type="text" id="updateMinVer" class="form-control" placeholder="e.g. 2.0.0" />
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom:14px;">
+            <label>Release Title</label>
+            <input type="text" id="updateTitle" class="form-control" placeholder="e.g. EWU Buddy v2.1 Performance &amp; Advising Update" />
+          </div>
+
+          <div class="form-group" style="margin-bottom:14px;">
+            <label>Release Changelog / What's New</label>
+            <textarea id="updateChangelog" class="form-control" rows="3" placeholder="Describe the updates, bugfixes, and new features..."></textarea>
+          </div>
+
+          <div class="form-group" style="margin-bottom:16px;">
+            <label>Download / Update Link URL</label>
+            <input type="text" id="updateUrl" class="form-control" placeholder="e.g. https://t.me/AftabKabir or custom download URL" />
+          </div>
+
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:18px;">
+            <input type="checkbox" id="updateMandatory" style="width:auto; margin:0;" />
+            <label for="updateMandatory" style="font-size:13px; font-weight:600; color:#fff; cursor:pointer;">
+              Enforce Mandatory Update (Outdated versions will be locked out until updated)
+            </label>
+          </div>
+
+          <button class="btn-primary" style="max-width: 220px;" onclick="saveUpdateConfig()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+            Publish Update Release
+          </button>
+        </div>
+      </div>
+
+      <!-- VIEW 3: EXPORT USERS & DEVICES -->
+      <div id="viewExport" style="display:none;">
+        <div class="card">
+          <h3 style="font-size: 16px; font-weight: 800; color: #fff; margin-bottom:4px;">Connected Users &amp; Telemetry Export</h3>
+          <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom:20px;">Download complete device logs, IP records, geolocation, and associated license metadata.</p>
+
+          <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px;">
+            <button class="btn-primary" style="max-width:200px; margin-top:0;" onclick="exportUsersData('csv')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export as CSV Spreadsheet
+            </button>
+            <button class="btn-primary" style="max-width:200px; margin-top:0; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.4); color:#a5b4fc;" onclick="exportUsersData('json')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+              Export as Raw JSON
+            </button>
+          </div>
+
+          <div id="exportPreviewWrapper" style="display:none;">
+            <h4 style="font-size:13px; font-weight:700; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">Recent Device Telemetry Log</h4>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Device ID</th>
+                    <th>License Prefix</th>
+                    <th>Client Note</th>
+                    <th>IP / Country</th>
+                    <th>First Activated</th>
+                    <th>Last Ping</th>
+                  </tr>
+                </thead>
+                <tbody id="exportPreviewTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 4: DANGER ZONE -->
+      <div id="viewDanger" style="display:none;">
+        <div class="card" style="border-color: rgba(244, 63, 94, 0.4); background: rgba(244, 63, 94, 0.03);">
+          <h3 style="font-size: 17px; font-weight: 800; color: var(--rose); margin-bottom:4px; display:flex; align-items:center; gap:8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Danger Zone — Database Purge
+          </h3>
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom:20px;">Irreversible administrative actions. Please proceed with extreme caution.</p>
+
+          <div style="background:rgba(0,0,0,0.5); border:1px solid rgba(244, 63, 94, 0.3); border-radius:12px; padding:18px; margin-bottom:20px;">
+            <h4 style="font-size:14px; font-weight:700; color:#fff; margin-bottom:6px;">Purge All Licenses &amp; Device Activations</h4>
+            <p style="font-size:12.5px; color:var(--text-dim); line-height:1.6; margin-bottom:14px;">This will permanently wipe all generated license keys, user subscriptions, and registered device activations from Cloudflare D1. All existing extensions will immediately lose authorization.</p>
+            <button class="btn-action danger" style="padding:10px 18px; font-size:13px; font-weight:700;" onclick="openPurgeModal()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Delete All Keys &amp; Activations
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1019,8 +1400,24 @@ function handleAdminUI() {
     </div>
   </div>
 
+  <!-- Purge All Confirmation Modal -->
+  <div id="purgeModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width:480px; border-color:var(--rose);">
+      <span class="modal-close" onclick="closeModal('purgeModal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </span>
+      <h3 style="font-size:18px; font-weight:800; color:var(--rose); margin-bottom:8px;">Confirm Total Database Purge</h3>
+      <p style="font-size:13px; color:var(--text-muted); line-height:1.5; margin-bottom:16px;">This action will permanently delete ALL license keys and connected device records. To proceed, please type <strong style="color:#fff;">DELETE ALL</strong> in the box below:</p>
+      
+      <input type="text" id="purgeConfirmInput" class="form-control" placeholder="Type DELETE ALL" style="margin-bottom:16px; font-family:monospace; text-align:center;" />
+      
+      <button class="btn-primary" style="background:var(--rose); margin-top:0;" onclick="confirmPurgeAll()">
+        Permanently Purge Database
+      </button>
+    </div>
+  </div>
+
   <script>
-    // Tab/Session Persistence
     let adminToken = sessionStorage.getItem('ewu_admin_secret') || '';
     let allLicenses = [];
     let currentFilter = 'all';
@@ -1028,6 +1425,30 @@ function handleAdminUI() {
     let targetExtendLicenseId = null;
 
     if (adminToken) checkAuth();
+
+    function switchMainTab(tab) {
+      document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+      document.getElementById('viewLicenses').style.display = 'none';
+      document.getElementById('viewRemote').style.display = 'none';
+      document.getElementById('viewExport').style.display = 'none';
+      document.getElementById('viewDanger').style.display = 'none';
+
+      if (tab === 'licenses') {
+        document.getElementById('tabBtnLicenses').classList.add('active');
+        document.getElementById('viewLicenses').style.display = 'block';
+      } else if (tab === 'remote') {
+        document.getElementById('tabBtnRemote').classList.add('active');
+        document.getElementById('viewRemote').style.display = 'block';
+        loadRemoteConfig();
+      } else if (tab === 'export') {
+        document.getElementById('tabBtnExport').classList.add('active');
+        document.getElementById('viewExport').style.display = 'block';
+        loadExportPreview();
+      } else if (tab === 'danger') {
+        document.getElementById('tabBtnDanger').classList.add('active');
+        document.getElementById('viewDanger').style.display = 'block';
+      }
+    }
 
     function togglePassVisibility() {
       const input = document.getElementById('adminPass');
@@ -1099,9 +1520,10 @@ function handleAdminUI() {
 
     async function loadDashboard() {
       try {
-        const [statsRes, licRes] = await Promise.all([
+        const [statsRes, licRes, sysRes] = await Promise.all([
           fetch('/admin/api/stats', { headers: { 'Authorization': 'Bearer ' + adminToken } }),
-          fetch('/admin/api/licenses', { headers: { 'Authorization': 'Bearer ' + adminToken } })
+          fetch('/admin/api/licenses', { headers: { 'Authorization': 'Bearer ' + adminToken } }),
+          fetch('/admin/api/system', { headers: { 'Authorization': 'Bearer ' + adminToken } })
         ]);
 
         if (statsRes.ok) {
@@ -1120,9 +1542,216 @@ function handleAdminUI() {
           document.getElementById('countAll').textContent = allLicenses.length;
           filterLicenses();
         }
+
+        if (sysRes.ok) {
+          const sysData = await sysRes.json();
+          const badge = document.getElementById('liveStatusBadge');
+          if (sysData.shutdown && sysData.shutdown.enabled) {
+            badge.className = 'sys-pill';
+            badge.style.color = 'var(--rose)';
+            badge.style.background = 'rgba(244,63,94,0.1)';
+            badge.style.borderColor = 'rgba(244,63,94,0.3)';
+            badge.innerHTML = '<span class="sys-dot" style="background:var(--rose); box-shadow:0 0 8px var(--rose);"></span> Lockdown';
+          } else {
+            badge.className = 'sys-pill';
+            badge.style.color = 'var(--emerald)';
+            badge.style.background = 'rgba(16,185,129,0.1)';
+            badge.style.borderColor = 'rgba(16,185,129,0.25)';
+            badge.innerHTML = '<span class="sys-dot"></span> Online';
+          }
+        }
       } catch (e) {
         showToast('Failed to refresh dashboard data', 'error');
       }
+    }
+
+    async function loadRemoteConfig() {
+      try {
+        const res = await fetch('/admin/api/system', { headers: { 'Authorization': 'Bearer ' + adminToken } });
+        if (res.ok) {
+          const data = await res.json();
+          const s = data.shutdown || {};
+          document.getElementById('shutdownToggle').checked = Boolean(s.enabled);
+          document.getElementById('shutdownTitle').value = s.title || '';
+          document.getElementById('shutdownMsg').value = s.message || '';
+          document.getElementById('shutdownStatusBadge').style.display = s.enabled ? 'inline-flex' : 'none';
+
+          const n = data.notice || {};
+          document.getElementById('noticeToggle').checked = Boolean(n.enabled);
+          document.getElementById('noticeType').value = n.type || 'info';
+          document.getElementById('noticeTitle').value = n.title || '';
+          document.getElementById('noticeMsg').value = n.message || '';
+
+          const u = data.update || {};
+          document.getElementById('updateLatestVer').value = u.latest_version || '2.0.0';
+          document.getElementById('updateMinVer').value = u.min_version || '2.0.0';
+          document.getElementById('updateTitle').value = u.title || '';
+          document.getElementById('updateChangelog').value = u.changelog || '';
+          document.getElementById('updateUrl').value = u.update_url || '';
+          document.getElementById('updateMandatory').checked = Boolean(u.is_mandatory);
+        }
+      } catch (_) { showToast('Error loading remote configuration', 'error'); }
+    }
+
+    function setShutdownPreset(preset) {
+      if (preset === 'maintenance') {
+        document.getElementById('shutdownTitle').value = 'Advising Server Maintenance';
+        document.getElementById('shutdownMsg').value = 'East West University portal is currently undergoing official advising maintenance. EWU Portal Helper is temporarily offline to safeguard course records.';
+      } else if (preset === 'emergency') {
+        document.getElementById('shutdownTitle').value = 'Critical System Maintenance';
+        document.getElementById('shutdownMsg').value = 'An urgent maintenance patch is being deployed. All extension features will be restored shortly.';
+      } else {
+        document.getElementById('shutdownTitle').value = 'System Temporarily Offline';
+        document.getElementById('shutdownMsg').value = 'EWU Portal Helper is currently disabled by administrator.';
+      }
+    }
+
+    async function saveShutdownConfig() {
+      const enabled = document.getElementById('shutdownToggle').checked;
+      const title = document.getElementById('shutdownTitle').value.trim();
+      const message = document.getElementById('shutdownMsg').value.trim();
+      try {
+        const res = await fetch('/admin/api/system/shutdown', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+          body: JSON.stringify({ enabled, title, message })
+        });
+        if (res.ok) {
+          showToast(enabled ? 'Emergency shutdown ENABLED' : 'Emergency shutdown DISABLED');
+          loadDashboard();
+          loadRemoteConfig();
+        }
+      } catch (_) { showToast('Failed to apply shutdown state', 'error'); }
+    }
+
+    async function saveNoticeConfig() {
+      const enabled = document.getElementById('noticeToggle').checked;
+      const type = document.getElementById('noticeType').value;
+      const title = document.getElementById('noticeTitle').value.trim();
+      const message = document.getElementById('noticeMsg').value.trim();
+      try {
+        const res = await fetch('/admin/api/system/notice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+          body: JSON.stringify({ enabled, type, title, message })
+        });
+        if (res.ok) {
+          showToast('Broadcast notice successfully saved');
+        }
+      } catch (_) { showToast('Failed to save notice', 'error'); }
+    }
+
+    async function saveUpdateConfig() {
+      const latest_version = document.getElementById('updateLatestVer').value.trim();
+      const min_version = document.getElementById('updateMinVer').value.trim();
+      const title = document.getElementById('updateTitle').value.trim();
+      const changelog = document.getElementById('updateChangelog').value.trim();
+      const update_url = document.getElementById('updateUrl').value.trim();
+      const is_mandatory = document.getElementById('updateMandatory').checked;
+      try {
+        const res = await fetch('/admin/api/system/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+          body: JSON.stringify({ latest_version, min_version, title, changelog, update_url, is_mandatory })
+        });
+        if (res.ok) {
+          showToast('Update release successfully published');
+        }
+      } catch (_) { showToast('Failed to publish update', 'error'); }
+    }
+
+    async function loadExportPreview() {
+      try {
+        const res = await fetch('/admin/api/devices/export', { headers: { 'Authorization': 'Bearer ' + adminToken } });
+        if (res.ok) {
+          const data = await res.json();
+          const devices = data.devices || [];
+          const tbody = document.getElementById('exportPreviewTable');
+          if (devices.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-dim);">No device registrations recorded yet</td></tr>';
+          } else {
+            tbody.innerHTML = devices.slice(0, 15).map(d => {
+              return '<tr>' +
+                '<td><span style="font-family:monospace; color:var(--cyan);">' + (d.device_id || 'Unknown') + '</span></td>' +
+                '<td><span class="key-badge">' + (d.raw_key_prefix || 'None') + '</span></td>' +
+                '<td>' + (d.client_note || '<span style="color:var(--text-dim);">None</span>') + '</td>' +
+                '<td>' + (d.device_ip || 'N/A') + ' (' + (d.device_geo || 'N/A') + ')</td>' +
+                '<td>' + new Date(d.activated_at).toLocaleDateString() + '</td>' +
+                '<td>' + new Date(d.last_seen_at).toLocaleDateString() + '</td>' +
+              '</tr>';
+            }).join('');
+          }
+          document.getElementById('exportPreviewWrapper').style.display = 'block';
+        }
+      } catch (_) {}
+    }
+
+    async function exportUsersData(format = 'csv') {
+      try {
+        const res = await fetch('/admin/api/devices/export', { headers: { 'Authorization': 'Bearer ' + adminToken } });
+        if (!res.ok) return showToast('Failed to fetch user telemetry for export', 'error');
+        const data = await res.json();
+        const devices = data.devices || [];
+
+        if (format === 'json') {
+          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(devices, null, 2));
+          downloadFile(dataStr, "ewu_users_telemetry_" + Date.now() + ".json");
+        } else {
+          let csv = "Activation ID,Device ID,Key Prefix,Client Note,IP,Country,First Activated,Last Seen,User Agent\\n";
+          devices.forEach(d => {
+            csv += [
+              d.activation_id,
+              d.device_id,
+              d.raw_key_prefix,
+              '"' + (d.client_note || '').replace(/"/g, '""') + '"',
+              d.device_ip,
+              d.device_geo,
+              new Date(d.activated_at).toISOString(),
+              new Date(d.last_seen_at).toISOString(),
+              '"' + (d.device_user_agent || '').replace(/"/g, '""') + '"'
+            ].join(",") + "\\n";
+          });
+          const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+          downloadFile(dataStr, "ewu_users_telemetry_" + Date.now() + ".csv");
+        }
+        showToast('Users telemetry exported successfully');
+      } catch (_) { showToast('Export error', 'error'); }
+    }
+
+    function downloadFile(uri, filename) {
+      const a = document.createElement('a');
+      a.setAttribute('href', uri);
+      a.setAttribute('download', filename);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function openPurgeModal() {
+      document.getElementById('purgeConfirmInput').value = '';
+      document.getElementById('purgeModal').style.display = 'flex';
+    }
+
+    async function confirmPurgeAll() {
+      const confirmation = document.getElementById('purgeConfirmInput').value.trim();
+      if (confirmation !== 'DELETE ALL') {
+        return showToast('Please type DELETE ALL exactly to confirm', 'error');
+      }
+      try {
+        const res = await fetch('/admin/api/licenses/purge-all', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+          body: JSON.stringify({ confirmation })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('All licenses & devices permanently purged');
+          closeModal('purgeModal');
+          loadDashboard();
+        } else {
+          showToast(data.message || 'Purge failed', 'error');
+        }
+      } catch (_) { showToast('Server communication error', 'error'); }
     }
 
     function setGenMode(mode) {
@@ -1379,17 +2008,6 @@ function handleAdminUI() {
 
     function closeModal(id) {
       document.getElementById(id).style.display = 'none';
-    }
-
-    function exportData(format = 'json') {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allLicenses, null, 2));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", "ewu_helper_licenses_" + Date.now() + ".json");
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-      showToast('Exported licenses as JSON file');
     }
   </script>
 </body>

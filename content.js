@@ -86,17 +86,98 @@
     return null;
   }
 
+  function isVersionOutdated(currentVer, minVer) {
+    if (!minVer || !currentVer) return false;
+    var cParts = currentVer.split('.').map(function (n) { return parseInt(n, 10) || 0; });
+    var mParts = minVer.split('.').map(function (n) { return parseInt(n, 10) || 0; });
+    for (var i = 0; i < Math.max(cParts.length, mParts.length); i++) {
+      var c = cParts[i] || 0;
+      var m = mParts[i] || 0;
+      if (c < m) return true;
+      if (c > m) return false;
+    }
+    return false;
+  }
+
+  function renderSystemBanners() {
+    chrome.storage.local.get(['ewu_system_shutdown', 'ewu_system_update', 'ewu_system_notice'], function (res) {
+      var shutdown = res.ewu_system_shutdown || { enabled: false };
+      var update = res.ewu_system_update || { isMandatory: false, minVersion: '2.0.0' };
+      var notice = res.ewu_system_notice || { enabled: false };
+
+      var existingBanner = document.getElementById('ewu-portal-system-banner');
+      if (existingBanner) existingBanner.remove();
+
+      if (shutdown.enabled) {
+        var sBanner = document.createElement('div');
+        sBanner.id = 'ewu-portal-system-banner';
+        sBanner.style.cssText = 'position:fixed; top:12px; right:16px; z-index:999999; max-width:400px; background:rgba(15,23,42,0.95); border:1px solid rgba(244,63,94,0.5); border-radius:12px; padding:14px 18px; box-shadow:0 10px 30px rgba(0,0,0,0.7), 0 0 20px rgba(244,63,94,0.25); color:#fff; font-family:sans-serif; backdrop-filter:blur(8px);';
+        sBanner.innerHTML = '<div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;"><span style="color:#f43f5e; font-weight:800; font-size:13px;">' + (shutdown.title || 'System Temporarily Offline') + '</span></div><div style="font-size:12px; color:#cbd5e1; line-height:1.5;">' + (shutdown.message || 'EWU Portal Helper is currently disabled by administrator.') + '</div>';
+        document.body.appendChild(sBanner);
+        return;
+      }
+
+      var manifestVer = (chrome.runtime.getManifest && chrome.runtime.getManifest().version) || '2.0.0';
+      if (update.isMandatory && isVersionOutdated(manifestVer, update.minVersion)) {
+        var uBanner = document.createElement('div');
+        uBanner.id = 'ewu-portal-system-banner';
+        uBanner.style.cssText = 'position:fixed; top:12px; right:16px; z-index:999999; max-width:400px; background:rgba(15,23,42,0.95); border:1px solid rgba(99,102,241,0.5); border-radius:12px; padding:14px 18px; box-shadow:0 10px 30px rgba(0,0,0,0.7), 0 0 20px rgba(99,102,241,0.25); color:#fff; font-family:sans-serif; backdrop-filter:blur(8px);';
+        uBanner.innerHTML = '<div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;"><span style="color:#818cf8; font-weight:800; font-size:13px;">' + (update.title || 'Extension Update Required') + '</span></div><div style="font-size:12px; color:#cbd5e1; line-height:1.5; margin-bottom:10px;">Please update EWU Buddy (v' + (update.latestVersion || update.minVersion) + ') to continue.</div><a href="' + (update.updateUrl || 'https://t.me/AftabKabir') + '" target="_blank" style="display:inline-block; padding:6px 12px; background:#6366f1; color:#fff; font-size:11px; font-weight:700; border-radius:6px; text-decoration:none;">Update Now &rarr;</a>';
+        document.body.appendChild(uBanner);
+        return;
+      }
+
+      if (notice.enabled && (notice.title || notice.message)) {
+        var nColor = notice.type === 'alert' ? '#f43f5e' : (notice.type === 'warning' ? '#f59e0b' : '#38bdf8');
+        var nBg = notice.type === 'alert' ? 'rgba(244,63,94,0.1)' : (notice.type === 'warning' ? 'rgba(245,158,11,0.1)' : 'rgba(56,189,248,0.1)');
+        var nBorder = notice.type === 'alert' ? 'rgba(244,63,94,0.3)' : (notice.type === 'warning' ? 'rgba(245,158,11,0.3)' : 'rgba(56,189,248,0.3)');
+
+        var nBanner = document.createElement('div');
+        nBanner.id = 'ewu-portal-system-banner';
+        nBanner.style.cssText = 'width:100%; background:' + nBg + '; border-bottom:1px solid ' + nBorder + '; padding:8px 16px; color:#f8fafc; font-size:12px; font-family:sans-serif; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box; z-index:99999;';
+        nBanner.innerHTML = '<div>' + (notice.title ? '<strong style="color:' + nColor + '; margin-right:8px;">' + notice.title + '</strong>' : '') + '<span>' + notice.message + '</span></div><button style="background:transparent; border:none; color:#94a3b8; font-size:14px; cursor:pointer; padding:0 4px;" onclick="this.parentElement.remove()">✕</button>';
+        
+        var topBar = document.body.firstElementChild;
+        if (topBar) {
+          document.body.insertBefore(nBanner, topBar);
+        } else {
+          document.body.appendChild(nBanner);
+        }
+      }
+    });
+  }
+
   function checkLicense(callback) {
     if (typeof chrome === 'undefined' || !chrome.runtime) {
       callback(false);
       return;
     }
-    chrome.runtime.sendMessage({ type: 'GET_LICENSE_STATUS' }, function (res) {
-      if (chrome.runtime.lastError || !res || !res.authorized) {
+    chrome.storage.local.get(['ewu_system_shutdown', 'ewu_system_update'], function (res) {
+      var shutdown = res.ewu_system_shutdown || { enabled: false };
+      var update = res.ewu_system_update || { isMandatory: false, minVersion: '2.0.0' };
+      var manifestVer = (chrome.runtime.getManifest && chrome.runtime.getManifest().version) || '2.0.0';
+
+      renderSystemBanners();
+
+      if (shutdown.enabled) {
+        log('System Shutdown active. Enhancement halted.');
         callback(false);
-      } else {
-        callback(true);
+        return;
       }
+
+      if (update.isMandatory && isVersionOutdated(manifestVer, update.minVersion)) {
+        log('Mandatory update required. Enhancement halted.');
+        callback(false);
+        return;
+      }
+
+      chrome.runtime.sendMessage({ type: 'GET_LICENSE_STATUS' }, function (res) {
+        if (chrome.runtime.lastError || !res || !res.authorized) {
+          callback(false);
+        } else {
+          callback(true);
+        }
+      });
     });
   }
 

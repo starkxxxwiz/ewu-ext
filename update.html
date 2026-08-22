@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EWU Portal Helper — Update Required</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #030712;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --cyan: #38bdf8;
+      --emerald: #10b981;
+      --rose: #f43f5e;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
+    body {
+      background: var(--bg); color: var(--text); min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px; position: relative; overflow-x: hidden;
+    }
+
+    body::before {
+      content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background-image: 
+        radial-gradient(circle at 50% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+      pointer-events: none; z-index: 0;
+    }
+
+    .container {
+      max-width: 580px; width: 100%; position: relative; z-index: 1;
+      background: var(--card-bg); border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 24px; padding: 36px 32px; backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px); box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px var(--accent-glow);
+      text-align: center;
+    }
+
+    .icon-badge {
+      width: 60px; height: 60px; border-radius: 16px; margin: 0 auto 20px;
+      background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(56,189,248,0.15));
+      border: 1px solid rgba(99,102,241,0.4); display: flex; align-items: center; justify-content: center;
+      color: var(--cyan); box-shadow: 0 0 25px var(--accent-glow);
+    }
+
+    h1 {
+      font-size: 24px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px;
+      background: linear-gradient(135deg, #ffffff 40%, #a5b4fc);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .version-pills {
+      display: inline-flex; align-items: center; gap: 8px; font-size: 12px;
+      font-weight: 700; color: var(--cyan); background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.2); padding: 5px 14px; border-radius: 20px;
+      margin-bottom: 20px; font-family: 'JetBrains Mono', monospace;
+    }
+
+    .desc { font-size: 13.5px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; }
+
+    .changelog-box {
+      background: rgba(0, 0, 0, 0.5); border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px; text-align: left; margin-bottom: 24px;
+      max-height: 200px; overflow-y: auto;
+    }
+    .changelog-title { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+    .changelog-content { font-size: 13px; color: #cbd5e1; line-height: 1.7; white-space: pre-wrap; }
+
+    .btn-update {
+      width: 100%; padding: 15px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      border: none; color: #fff; font-size: 15px; font-weight: 800;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.35); text-decoration: none;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-update:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(99, 102, 241, 0.5); color: #fff; }
+
+    .footer-note { font-size: 12px; color: var(--text-muted); margin-top: 18px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon-badge">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+    </div>
+
+    <h1 id="updateTitle">Extension Update Required</h1>
+    
+    <div class="version-pills">
+      <span id="currentVerText">v2.0.0</span> &rarr; <span id="latestVerText" style="color:var(--emerald);">v2.1.0</span>
+    </div>
+
+    <p class="desc" id="updateDesc">A critical new version of EWU Portal Helper is required to ensure stability, compatibility, and compliance with the latest portal changes.</p>
+
+    <div class="changelog-box" id="changelogSection" style="display:none;">
+      <div class="changelog-title">What's New in this Release</div>
+      <div class="changelog-content" id="changelogText"></div>
+    </div>
+
+    <a href="#" id="updateBtn" target="_blank" class="btn-update">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download &amp; Install Update
+    </a>
+
+    <p class="footer-note">Once updated, reload the portal page to continue using all features seamlessly.</p>
+  </div>
+
+  <script src="update.js"></script>
+</body>
+</html>
