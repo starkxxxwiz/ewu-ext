@@ -678,19 +678,12 @@
 
       if (hasValidToken) {
         if (els.licBadgeDot) els.licBadgeDot.style.background = '#34d399';
-        if (els.licStatusText) els.licStatusText.textContent = 'Active Production License';
-        if (els.licSubText) {
-          const exp = Number(res.ewu_license_exp);
-          if (exp && exp > Date.now() && exp < (Date.now() + (365 * 10 * 24 * 60 * 60 * 1000))) {
-            els.licSubText.textContent = 'Valid until ' + new Date(exp).toLocaleDateString();
-          } else {
-            els.licSubText.textContent = 'Lifetime Access (Never Expires)';
-          }
-        }
+        if (els.licStatusText) els.licStatusText.textContent = 'License Active';
+        if (els.licSubText) els.licSubText.style.display = 'none';
       } else {
         if (els.licBadgeDot) els.licBadgeDot.style.background = '#f87171';
-        if (els.licStatusText) els.licStatusText.textContent = 'Unactivated License';
-        if (els.licSubText) els.licSubText.textContent = 'Click Manage to activate key';
+        if (els.licStatusText) els.licStatusText.textContent = 'License Inactive';
+        if (els.licSubText) els.licSubText.style.display = 'none';
       }
     });
   }
