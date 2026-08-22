@@ -402,6 +402,39 @@ async function handleAdminAPI(path, request, env, corsHeaders) {
     }), { headers: corsHeaders });
   }
 
+  if (path === '/admin/api/licenses/bulk' && request.method === 'POST') {
+    const body = await request.json();
+    const { count, notePrefix, maxActivations, expiresInDays } = body || {};
+    const totalToGenerate = Math.min(Math.max(parseInt(count || '1', 10), 1), 25);
+    const days = (expiresInDays !== undefined && expiresInDays !== null && expiresInDays !== '') ? parseInt(expiresInDays, 10) : 0;
+    const now = Date.now();
+    const expiresAt = (days && !isNaN(days) && days > 0) ? (now + (days * 24 * 60 * 60 * 1000)) : null;
+    const maxActs = parseInt(maxActivations || '1', 10);
+    const createdKeys = [];
+
+    for (let i = 0; i < totalToGenerate; i++) {
+      let rawKey = '';
+      let keyHash = '';
+      let exists = true;
+      for (let attempts = 0; attempts < 5 && exists; attempts++) {
+        rawKey = generateRandomKey();
+        keyHash = await hashKey(rawKey);
+        const row = await env.DB.prepare('SELECT id FROM licenses WHERE license_key_hash = ?').bind(keyHash).first();
+        if (!row) exists = false;
+      }
+      if (!exists) {
+        const licId = 'lic_' + crypto.randomUUID();
+        const note = (notePrefix ? `${notePrefix} #${i + 1}` : `Batch #${i + 1}`).trim();
+        await env.DB.prepare(
+          'INSERT INTO licenses (id, license_key_hash, raw_key_prefix, status, created_at, expires_at, max_activations, notes) VALUES (?, ?, ?, "active", ?, ?, ?, ?)'
+        ).bind(licId, keyHash, rawKey.substring(0, 9) + '...', now, expiresAt, maxActs, note).run();
+        createdKeys.push({ key: rawKey, note, expiresAt });
+      }
+    }
+
+    return new Response(JSON.stringify({ success: true, keys: createdKeys }), { headers: corsHeaders });
+  }
+
   if (path === '/admin/api/licenses' && request.method === 'GET') {
     const { results } = await env.DB.prepare('SELECT id, raw_key_prefix, status, created_at, expires_at, max_activations, activation_count, notes FROM licenses ORDER BY created_at DESC').all();
     return new Response(JSON.stringify({ licenses: results || [] }), { headers: corsHeaders });
@@ -420,17 +453,30 @@ async function handleAdminAPI(path, request, env, corsHeaders) {
   }
 
   if (path === '/admin/api/licenses/extend' && request.method === 'POST') {
-    const { licenseId, additionalDays } = await request.json();
-    const lic = await env.DB.prepare('SELECT expires_at FROM licenses WHERE id = ?').bind(licenseId).first();
-    const baseTime = (lic && lic.expires_at && lic.expires_at > Date.now()) ? lic.expires_at : Date.now();
-    const newExpiresAt = baseTime + (parseInt(additionalDays, 10) * 24 * 60 * 60 * 1000);
+    const { licenseId, additionalDays, setPerpetual } = await request.json();
+    let newExpiresAt = null;
+    if (!setPerpetual) {
+      const lic = await env.DB.prepare('SELECT expires_at FROM licenses WHERE id = ?').bind(licenseId).first();
+      const baseTime = (lic && lic.expires_at && lic.expires_at > Date.now()) ? lic.expires_at : Date.now();
+      newExpiresAt = baseTime + (parseInt(additionalDays || '30', 10) * 24 * 60 * 60 * 1000);
+    }
     await env.DB.prepare('UPDATE licenses SET expires_at = ?, status = "active" WHERE id = ?').bind(newExpiresAt, licenseId).run();
     return new Response(JSON.stringify({ success: true, newExpiresAt: newExpiresAt }), { headers: corsHeaders });
   }
 
   if (path === '/admin/api/licenses/delete' && request.method === 'POST') {
     const { licenseId } = await request.json();
+    await env.DB.prepare('DELETE FROM activations WHERE license_id = ?').bind(licenseId).run();
     await env.DB.prepare('DELETE FROM licenses WHERE id = ?').bind(licenseId).run();
+    return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+  }
+
+  if (path === '/admin/api/activations/delete' && request.method === 'POST') {
+    const { activationId, licenseId } = await request.json();
+    await env.DB.prepare('DELETE FROM activations WHERE id = ?').bind(activationId).run();
+    if (licenseId) {
+      await env.DB.prepare('UPDATE licenses SET activation_count = MAX(0, activation_count - 1) WHERE id = ?').bind(licenseId).run();
+    }
     return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
   }
 
@@ -444,11 +490,18 @@ async function handleAdminAPI(path, request, env, corsHeaders) {
   if (path === '/admin/api/stats' && request.method === 'GET') {
     const totalLic = await env.DB.prepare('SELECT COUNT(*) as count FROM licenses').first();
     const activeLic = await env.DB.prepare('SELECT COUNT(*) as count FROM licenses WHERE status = "active"').first();
+    const revokedLic = await env.DB.prepare('SELECT COUNT(*) as count FROM licenses WHERE status = "revoked"').first();
+    const perpetualLic = await env.DB.prepare('SELECT COUNT(*) as count FROM licenses WHERE status = "active" AND expires_at IS NULL').first();
     const totalAct = await env.DB.prepare('SELECT COUNT(*) as count FROM activations').first();
+    const totalCap = await env.DB.prepare('SELECT SUM(max_activations) as count FROM licenses WHERE status = "active"').first();
+    
     return new Response(JSON.stringify({
-      totalLicenses: totalLic.count,
-      activeLicenses: activeLic.count,
-      totalActivations: totalAct.count
+      totalLicenses: totalLic?.count || 0,
+      activeLicenses: activeLic?.count || 0,
+      revokedLicenses: revokedLic?.count || 0,
+      perpetualLicenses: perpetualLic?.count || 0,
+      totalActivations: totalAct?.count || 0,
+      totalCapacity: totalCap?.count || 0
     }), { headers: corsHeaders });
   }
 
@@ -460,208 +513,465 @@ function handleAdminUI() {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>EWU Portal Helper - License Admin Hub</title>
+  <title>EWU Portal Helper — Cyber Command Admin Console</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #030712;
-      --card-bg: rgba(17, 24, 39, 0.65);
-      --border-color: rgba(255, 255, 255, 0.06);
-      --border-hover: rgba(255, 255, 255, 0.12);
+      --card-bg: rgba(11, 15, 25, 0.7);
+      --card-hover: rgba(17, 24, 39, 0.85);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.5);
       --accent: #6366f1;
-      --accent-glow: rgba(99, 102, 241, 0.15);
-      --text: #f3f4f6;
-      --text-muted: #9ca3af;
-      --success: #10b981;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-      --glass-glow: radial-gradient(circle at top left, rgba(99,102,241,0.08), transparent 70%);
+      --accent-hover: #4f46e5;
+      --accent-glow: rgba(99, 102, 241, 0.2);
+      --cyan: #38bdf8;
+      --emerald: #10b981;
+      --rose: #f43f5e;
+      --amber: #f59e0b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; transition: background-color 0.25s, border-color 0.25s; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
     body { background: var(--bg); color: var(--text); padding: 24px; min-height: 100vh; overflow-x: hidden; position: relative; }
-    body::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--glass-glow); pointer-events: none; z-index: 0; }
-    .container { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
-
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; }
-    h1 { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, #a5b4fc, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     
-    .btn-logout { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 8px 16px; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-    .btn-logout:hover { border-color: var(--danger); color: #fff; background: rgba(239, 68, 68, 0.05); }
+    /* Cyber Minimal Grid Background */
+    body::before {
+      content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(56, 189, 248, 0.06) 0%, transparent 40%),
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+      pointer-events: none; z-index: 0;
+    }
 
-    .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; margin-bottom: 24px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5); }
-    .card:hover { border-color: var(--border-hover); }
+    .container { max-width: 1280px; margin: 0 auto; position: relative; z-index: 1; }
+
+    /* Header Nav */
+    header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border);
+      flex-wrap: wrap; gap: 16px;
+    }
+    .brand-group { display: flex; align-items: center; gap: 14px; }
+    .brand-logo {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(56,189,248,0.1));
+      border: 1px solid rgba(99,102,241,0.3); display: flex; align-items: center; justify-content: center;
+      color: var(--cyan); box-shadow: 0 0 20px var(--accent-glow);
+    }
+    h1 {
+      font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 40%, #a5b4fc);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .sys-pill {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 11px;
+      font-weight: 700; color: var(--emerald); background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25); padding: 3px 10px; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .sys-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 8px var(--emerald); }
+
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+    .btn-nav {
+      background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border);
+      color: var(--text-muted); padding: 8px 14px; border-radius: 10px;
+      font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex;
+      align-items: center; gap: 8px; text-decoration: none;
+    }
+    .btn-nav:hover { background: rgba(255, 255, 255, 0.08); color: #fff; border-color: rgba(255, 255, 255, 0.2); }
+    .btn-nav.danger:hover { background: rgba(244, 63, 94, 0.1); border-color: var(--rose); color: var(--rose); }
+
+    /* Auth Form Box */
+    .auth-wrap {
+      max-width: 400px; margin: 100px auto; padding: 36px 30px;
+      background: var(--card-bg); border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 20px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px var(--accent-glow);
+      text-align: center;
+    }
+    .auth-logo { margin: 0 auto 16px; }
+    .auth-wrap h2 { font-size: 20px; font-weight: 800; margin-bottom: 6px; color: #fff; }
+    .auth-wrap p { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+
+    .input-with-icon { position: relative; width: 100%; text-align: left; }
+    .input-with-icon input {
+      width: 100%; padding: 13px 44px 13px 16px; border-radius: 12px;
+      border: 1px solid var(--border); background: rgba(15, 23, 42, 0.6);
+      color: #fff; font-size: 14px; outline: none;
+    }
+    .input-with-icon input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .eye-btn {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: transparent; border: none; cursor: pointer; color: var(--text-dim);
+      padding: 6px; display: flex; align-items: center; justify-content: center;
+    }
+    .eye-btn:hover { color: #fff; }
+
+    .btn-primary {
+      width: 100%; padding: 13px; margin-top: 18px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      border: none; color: #fff; font-size: 14px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 25px rgba(99, 102, 241, 0.4); }
+
+    /* KPI Metrics Grid */
+    .metrics-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px; margin-bottom: 28px;
+    }
+    .metric-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px; backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px); display: flex; flex-direction: column;
+      justify-content: space-between; position: relative; overflow: hidden;
+    }
+    .metric-card:hover { border-color: rgba(255, 255, 255, 0.16); transform: translateY(-2px); }
+    .metric-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .metric-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; }
+    .metric-icon {
+      width: 34px; height: 34px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .metric-value { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; color: #fff; line-height: 1; }
+    .metric-sub { font-size: 12px; color: var(--text-dim); margin-top: 8px; font-weight: 500; }
+
+    /* Glass Cards */
+    .card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 18px; padding: 24px; margin-bottom: 24px;
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Generator Forms */
+    .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .mode-switch { display: flex; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border); border-radius: 10px; padding: 3px; }
+    .mode-btn { background: transparent; border: none; color: var(--text-muted); font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 8px; cursor: pointer; }
+    .mode-btn.active { background: var(--accent); color: #fff; }
+
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-control {
+      width: 100%; padding: 11px 14px; border-radius: 10px;
+      border: 1px solid var(--border); background: rgba(15, 23, 42, 0.5);
+      color: #fff; font-size: 13.5px; outline: none;
+    }
+    .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+
+    /* Generated Output Display */
+    .key-display {
+      font-family: 'JetBrains Mono', monospace; background: rgba(0, 0, 0, 0.6);
+      border: 1px dashed rgba(16, 185, 129, 0.4); padding: 16px; border-radius: 12px;
+      font-size: 18px; font-weight: 700; color: var(--emerald); text-align: center;
+      margin-top: 16px; user-select: all; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .key-display:hover { background: rgba(16, 185, 129, 0.05); border-color: var(--emerald); }
+
+    /* Bulk Key Display Box */
+    .bulk-box {
+      font-family: 'JetBrains Mono', monospace; background: rgba(0, 0, 0, 0.6);
+      border: 1px solid var(--border); border-radius: 12px; padding: 14px;
+      font-size: 12px; max-height: 180px; overflow-y: auto; color: #a5b4fc;
+      line-height: 1.8; margin-top: 16px; white-space: pre-wrap;
+    }
+
+    /* Controls & Filter Tabs */
+    .table-toolbar {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 16px; margin-bottom: 20px;
+    }
+    .filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tab-pill {
+      background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border);
+      color: var(--text-muted); font-size: 12px; font-weight: 600;
+      padding: 6px 12px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .tab-pill.active { background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.4); color: #a5b4fc; }
+
+    .search-wrap { position: relative; min-width: 260px; }
+    .search-wrap input {
+      width: 100%; padding: 9px 36px 9px 34px; border-radius: 10px;
+      border: 1px solid var(--border); background: rgba(15, 23, 42, 0.5);
+      color: #fff; font-size: 13px; outline: none;
+    }
+    .search-wrap input:focus { border-color: var(--accent); }
+    .search-wrap svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-dim); }
+
+    /* Modern Table */
+    .table-wrapper { overflow-x: auto; border: 1px solid var(--border); border-radius: 14px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+    th {
+      padding: 14px 16px; font-weight: 700; color: var(--text-muted);
+      background: rgba(15, 23, 42, 0.8); border-bottom: 1px solid var(--border);
+      text-transform: uppercase; font-size: 11px; letter-spacing: 0.6px;
+    }
+    td { padding: 14px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    .key-badge {
+      font-family: 'JetBrains Mono', monospace; font-weight: 700;
+      color: #fff; background: rgba(255, 255, 255, 0.04);
+      padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.08);
+    }
     
-    .auth-box { max-width: 420px; margin: 120px auto; text-align: center; border-radius: 20px; padding: 40px 30px; border-color: rgba(99, 102, 241, 0.25); box-shadow: 0 20px 40px -15px rgba(99, 102, 241, 0.1); }
-    .auth-box h2 { font-size: 24px; margin-bottom: 8px; font-weight: 700; color: #fff; }
-    .auth-box p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .status-active { background: rgba(16, 185, 129, 0.1); color: var(--emerald); border: 1px solid rgba(16, 185, 129, 0.25); }
+    .status-revoked { background: rgba(244, 63, 94, 0.1); color: var(--rose); border: 1px solid rgba(244, 63, 94, 0.25); }
+    .status-expired { background: rgba(245, 158, 11, 0.1); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.25); }
 
-    input, select, button { width: 100%; padding: 12px 16px; margin-top: 8px; border-radius: 10px; border: 1px solid var(--border-color); background: rgba(31, 41, 55, 0.5); color: #fff; font-size: 14px; outline: none; }
-    input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
-    button { background: var(--accent); border: none; font-weight: 600; cursor: pointer; color: #fff; transform: translateY(0); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); margin-top: 16px; }
-    button:hover { background: #4f46e5; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
-    button:active { transform: translateY(0); }
+    /* Action Buttons in Table */
+    .btn-action {
+      background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border);
+      color: var(--text-muted); padding: 5px 10px; border-radius: 7px;
+      font-size: 11.5px; font-weight: 600; cursor: pointer; display: inline-flex;
+      align-items: center; gap: 5px;
+    }
+    .btn-action:hover { background: rgba(255, 255, 255, 0.09); color: #fff; border-color: rgba(255, 255, 255, 0.2); }
+    .btn-action.success:hover { background: rgba(16, 185, 129, 0.15); border-color: var(--emerald); color: var(--emerald); }
+    .btn-action.danger:hover { background: rgba(244, 63, 94, 0.15); border-color: var(--rose); color: var(--rose); }
 
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 24px; }
-    .stat { background: var(--card-bg); border: 1px solid var(--border-color); padding: 24px; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; backdrop-filter: blur(12px); }
-    .stat-info { display: flex; flex-direction: column; }
-    .stat-val { font-size: 32px; font-weight: 800; color: #fff; background: linear-gradient(135deg, #fff, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .stat-lbl { font-size: 14px; color: var(--text-muted); margin-top: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-    .stat-icon { width: 48px; height: 48px; border-radius: 12px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); display: flex; align-items: center; justify-content: center; color: var(--accent); }
-
-    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 16px; align-items: end; }
-    .form-group { display: flex; flex-direction: column; }
-    .form-group label { font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .form-group input, .form-group select { margin-top: 0; }
-
-    .key-display { font-family: 'JetBrains Mono', monospace; background: rgba(0, 0, 0, 0.4); border: 1px dashed rgba(16, 185, 129, 0.3); padding: 14px; border-radius: 10px; font-size: 18px; color: var(--success); text-align: center; margin-top: 16px; user-select: all; cursor: pointer; font-weight: 700; position: relative; }
-    .key-display::after { content: "Click to copy"; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 11px; font-family: 'Outfit', sans-serif; background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.2); font-weight: 500; pointer-events: none; }
-
-    .table-container { overflow-x: auto; margin-top: 20px; }
-    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-    th, td { padding: 16px; border-bottom: 1px solid var(--border-color); }
-    th { font-weight: 600; color: var(--text-muted); background: rgba(31, 41, 55, 0.2); }
-    tr:hover td { background: rgba(255, 255, 255, 0.015); }
-    
-    .badge { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
-    .badge-active { background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.15); }
-    .badge-revoked { background: rgba(239, 68, 68, 0.12); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.15); }
-    .badge-expired { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.15); }
-
-    .btn-sm { width: auto; padding: 6px 12px; font-size: 12px; border-radius: 6px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin-top: 0; }
-    .btn-danger { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; }
-    .btn-danger:hover { background: var(--danger); color: #fff; }
-    .btn-success { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; }
-    .btn-success:hover { background: var(--success); color: #fff; }
-
-    /* Custom Toast Notifications (Top Right) */
-    .toast-container { position: fixed; top: 24px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; }
-    .toast { background: rgba(17, 24, 39, 0.95); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 20px; color: #fff; font-size: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); backdrop-filter: blur(8px); display: flex; align-items: center; gap: 10px; transform: translateX(120%); animation: slideIn 0.3s forwards cubic-bezier(0.16, 1, 0.3, 1); }
+    /* Top-Right Toast Notifications */
+    .toast-container { position: fixed; top: 24px; right: 24px; z-index: 100000; display: flex; flex-direction: column; gap: 10px; }
+    .toast {
+      background: rgba(15, 23, 42, 0.95); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 18px; color: #fff; font-size: 13px;
+      font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      display: flex; align-items: center; gap: 10px; transform: translateX(120%);
+      animation: toastIn 0.3s forwards cubic-bezier(0.16, 1, 0.3, 1);
+    }
     .toast.success { border-color: rgba(16, 185, 129, 0.4); }
-    .toast.error { border-color: rgba(239, 68, 68, 0.4); }
-    
-    @keyframes slideIn { to { transform: translateX(0); } }
+    .toast.error { border-color: rgba(244, 63, 94, 0.4); }
+    @keyframes toastIn { to { transform: translateX(0); } }
 
-    /* Search Box & Controls */
-    .controls { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; gap: 16px; flex-wrap: wrap; }
-    .search-box { position: relative; max-width: 320px; width: 100%; }
-    .search-box input { padding-left: 38px; margin-top: 0; }
-    .search-box svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+    /* Modal Styling */
+    .modal-backdrop {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(3, 7, 18, 0.8); z-index: 99999; backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px); align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-box {
+      width: 100%; max-width: 650px; background: #0c111d; border: 1px solid var(--border);
+      border-radius: 20px; padding: 28px; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+    }
+    .modal-close { position: absolute; top: 20px; right: 20px; cursor: pointer; color: var(--text-dim); }
+    .modal-close:hover { color: #fff; }
 
     @media (max-width: 768px) {
-      .form-row { grid-template-columns: 1fr; }
-      th, td { padding: 12px; }
-      table { font-size: 13px; }
+      body { padding: 16px; }
+      .metrics-grid { grid-template-columns: 1fr 1fr; }
+      .table-toolbar { flex-direction: column; align-items: stretch; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div id="authSection" class="card auth-box">
-      <h2>Admin Dashboard Access</h2>
-      <p>Session-only authentication &bull; Closes upon browser exit</p>
-      <input type="password" id="adminPass" placeholder="Enter Admin Secret Password" autocomplete="off" />
-      <button onclick="login()">Log In Securely</button>
+    <!-- Auth Section -->
+    <div id="authSection" class="auth-wrap">
+      <div class="brand-logo auth-logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <h2>Cyber Command Access</h2>
+      <p>Enter administrator authorization secret</p>
+
+      <div class="input-with-icon">
+        <input type="password" id="adminPass" placeholder="Admin Secret Password" autocomplete="off" onkeydown="if(event.key==='Enter') login();" />
+        <button type="button" class="eye-btn" onclick="togglePassVisibility()" title="Show/Hide Password">
+          <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+
+      <button class="btn-primary" onclick="login()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        Authenticate Session
+      </button>
     </div>
 
+    <!-- Dashboard Section -->
     <div id="dashboardSection" style="display:none;">
       <header>
-        <div>
-          <h1>License Hub</h1>
-          <p style="font-size: 14px; color: var(--text-muted); margin-top: 4px;">EWU Portal Helper Administration Console</p>
+        <div class="brand-group">
+          <div class="brand-logo">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          </div>
+          <div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <h1>License Command Center</h1>
+              <span class="sys-pill"><span class="sys-dot"></span> Online</span>
+            </div>
+            <p style="font-size:12.5px; color:var(--text-muted); margin-top:2px;">EWU Portal Helper License Management &amp; Device Telemetry</p>
+          </div>
         </div>
-        <button class="btn-logout" onclick="logout()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          Sign Out
-        </button>
+
+        <div class="header-actions">
+          <button class="btn-nav" onclick="loadDashboard()" title="Refresh Data">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Refresh
+          </button>
+          <button class="btn-nav" onclick="exportData('json')" title="Export Database JSON">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export JSON
+          </button>
+          <button class="btn-nav danger" onclick="logout()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sign Out
+          </button>
+        </div>
       </header>
-      
-      <div class="grid">
-        <div class="stat">
-          <div class="stat-info">
-            <div class="stat-val" id="statTotal">0</div>
-            <div class="stat-lbl">Total Licenses</div>
+
+      <!-- KPI Metrics Cards -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Total Issued</span>
+            <div class="metric-icon" style="background:rgba(99,102,241,0.12); color:#818cf8;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
           </div>
-          <div class="stat-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          </div>
+          <div class="metric-value" id="kpiTotal">0</div>
+          <div class="metric-sub">Generated licenses</div>
         </div>
-        <div class="stat">
-          <div class="stat-info">
-            <div class="stat-val" id="statActive">0</div>
-            <div class="stat-lbl">Active Keys</div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Active Licenses</span>
+            <div class="metric-icon" style="background:rgba(16,185,129,0.12); color:var(--emerald);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            </div>
           </div>
-          <div class="stat-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-          </div>
+          <div class="metric-value" id="kpiActive" style="color:var(--emerald);">0</div>
+          <div class="metric-sub" id="kpiPerpetual">0 Lifetime / Perpetual</div>
         </div>
-        <div class="stat">
-          <div class="stat-info">
-            <div class="stat-val" id="statActivations">0</div>
-            <div class="stat-lbl">Device Activations</div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Active Devices</span>
+            <div class="metric-icon" style="background:rgba(56,189,248,0.12); color:var(--cyan);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </div>
           </div>
-          <div class="stat-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <div class="metric-value" id="kpiActivations" style="color:var(--cyan);">0</div>
+          <div class="metric-sub" id="kpiCapacity">Max Allowed: 0</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Revoked Keys</span>
+            <div class="metric-icon" style="background:rgba(244,63,94,0.12); color:var(--rose);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            </div>
           </div>
+          <div class="metric-value" id="kpiRevoked" style="color:var(--rose);">0</div>
+          <div class="metric-sub">Blocked / Suspended</div>
         </div>
       </div>
 
+      <!-- Generator Card -->
       <div class="card">
-        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">Generate Unique License Key</h3>
-        <p style="font-size: 13px; color: var(--text-muted);">CSPRNG bitmask generation with automatic uniqueness verification.</p>
-        
-        <div class="form-row">
-          <div class="form-group" style="flex: 2;">
-            <label>Client Note / Identifier</label>
-            <input type="text" id="licNote" placeholder="e.g. Student John Doe (Spring 2026)" />
+        <div class="form-header">
+          <div>
+            <h3 style="font-size: 16px; font-weight: 800; color: #fff;">Issue License Key</h3>
+            <p style="font-size: 12.5px; color: var(--text-muted);">CSPRNG cryptographically secure bitmask generation ($2^{80}$ entropy)</p>
+          </div>
+          <div class="mode-switch">
+            <button class="mode-btn active" id="btnSingleMode" onclick="setGenMode('single')">Single Key</button>
+            <button class="mode-btn" id="btnBulkMode" onclick="setGenMode('bulk')">Batch / Bulk</button>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group" style="grid-column: span 2;">
+            <label>Client Note / Batch Identifier</label>
+            <input type="text" id="licNote" class="form-control" placeholder="e.g. Student John Doe (Spring 2026)" />
+          </div>
+          <div class="form-group" id="bulkCountGroup" style="display:none;">
+            <label>Batch Quantity (Max 25)</label>
+            <input type="number" id="licCount" class="form-control" value="5" min="1" max="25" />
           </div>
           <div class="form-group">
-            <label>Device Limit</label>
-            <input type="number" id="licMax" value="1" min="1" />
+            <label>Max Device Activations</label>
+            <input type="number" id="licMax" class="form-control" value="1" min="1" />
           </div>
           <div class="form-group">
-            <label>Validity Duration</label>
-            <select id="licExpiry">
+            <label>License Validity Duration</label>
+            <select id="licExpiry" class="form-control">
               <option value="">Perpetual (Never Expires)</option>
               <option value="30">30 Days</option>
               <option value="90">90 Days</option>
+              <option value="180">6 Months</option>
               <option value="365">1 Year</option>
             </select>
           </div>
         </div>
-        <button onclick="generateKey()" style="max-width: 220px; width: 100%;">Create New License</button>
 
-        <div id="keyOutput" style="display:none; margin-top: 20px;">
-          <div class="key-display" id="generatedKeyVal" onclick="copyGeneratedKey()"></div>
-          <p style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:8px; display:flex; align-items:center; justify-content:center; gap:6px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            <span>Make sure to copy this key now. The raw key cannot be displayed again.</span>
+        <button class="btn-primary" style="max-width: 220px;" onclick="executeGeneration()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-1.5 1.5L14 9m-1.5 1.5L10 13l-4 4-4-4 4-4 2.5-2.5m1.5-1.5L16.5 3.5 18 2z"/><circle cx="7.5" cy="16.5" r="1.5"/></svg>
+          <span id="genBtnText">Generate Key</span>
+        </button>
+
+        <div id="singleOutput" style="display:none;">
+          <div class="key-display" id="generatedKeyVal" onclick="copyKeyText('generatedKeyVal')">
+            <span id="keyValText">XXXX-XXXX-XXXX-XXXX</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </div>
+          <p style="font-size:12px; color:var(--amber); text-align:center; margin-top:8px; display:flex; align-items:center; justify-content:center; gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Copy this key now. The un-hashed raw key is not stored in plaintext on the server.
           </p>
+        </div>
+
+        <div id="bulkOutput" style="display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
+            <span style="font-size:12px; font-weight:700; color:var(--text-muted);">Generated Batch Keys:</span>
+            <button class="btn-action success" onclick="copyBulkKeys()">Copy All Keys</button>
+          </div>
+          <div class="bulk-box" id="bulkKeysList"></div>
         </div>
       </div>
 
+      <!-- Subscriptions Management Table -->
       <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
-          <h3 style="font-size: 18px; font-weight: 700;">Managed Subscriptions</h3>
-          <div class="search-box">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="searchBar" oninput="filterLicenses()" placeholder="Search by prefix or client..." />
+        <div class="table-toolbar">
+          <div class="filter-tabs">
+            <button class="tab-pill active" data-filter="all" onclick="setFilter('all', this)">All (<span id="countAll">0</span>)</button>
+            <button class="tab-pill" data-filter="active" onclick="setFilter('active', this)">Active</button>
+            <button class="tab-pill" data-filter="perpetual" onclick="setFilter('perpetual', this)">Perpetual</button>
+            <button class="tab-pill" data-filter="revoked" onclick="setFilter('revoked', this)">Revoked</button>
+          </div>
+
+          <div class="search-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="searchBar" oninput="filterLicenses()" placeholder="Search key, client note, or prefix..." />
           </div>
         </div>
 
-        <div class="table-container">
+        <div class="table-wrapper">
           <table>
             <thead>
               <tr>
-                <th>Prefix</th>
+                <th>License Prefix</th>
                 <th>Client Note</th>
                 <th>Status</th>
-                <th>Devices</th>
-                <th>Expires</th>
-                <th>Actions</th>
+                <th>Device Activations</th>
+                <th>Expiration</th>
+                <th style="text-align:right;">Management</th>
               </tr>
             </thead>
             <tbody id="licTable"></tbody>
@@ -671,31 +981,65 @@ function handleAdminUI() {
     </div>
   </div>
 
+  <!-- Toast Notification Container -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <div id="detailsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3,7,18,0.85); z-index:99999; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); align-items:center; justify-content:center; padding:20px;">
-    <div style="width:100%; max-width:620px; background:#0c101d; border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:30px; position:relative; box-shadow:0 25px 50px -12px rgba(0,0,0,0.8);">
-      <span onclick="closeDetailsModal()" style="position:absolute; top:20px; right:20px; font-size:22px; cursor:pointer; color:var(--text-muted);">&times;</span>
-      <h3 style="font-size:20px; font-weight:800; background:linear-gradient(135deg, #fff, #a5b4fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:12px;">License Diagnostics</h3>
-      <div id="modalMeta" style="margin-bottom:20px; font-size:13px; color:var(--text-muted); border-bottom:1px solid var(--border-color); padding-bottom:12px; line-height: 1.6;"></div>
-      <div id="modalActivations" style="max-height:350px; overflow-y:auto; display:flex; flex-direction:column; gap:12px;"></div>
+  <!-- Details & Device Management Modal -->
+  <div id="detailsModal" class="modal-backdrop">
+    <div class="modal-box">
+      <span class="modal-close" onclick="closeModal('detailsModal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </span>
+      <h3 style="font-size:18px; font-weight:800; color:#fff; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        License &amp; Device Telemetry
+      </h3>
+      <div id="modalMeta" style="background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:18px; font-size:12.5px; line-height:1.7;"></div>
+      <h4 style="font-size:13px; font-weight:700; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">Connected Devices</h4>
+      <div id="modalActivations" style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;"></div>
+    </div>
+  </div>
+
+  <!-- Extend Expiration Modal -->
+  <div id="extendModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width:440px;">
+      <span class="modal-close" onclick="closeModal('extendModal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </span>
+      <h3 style="font-size:18px; font-weight:800; color:#fff; margin-bottom:8px;">Extend License Duration</h3>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Choose extension interval for this license:</p>
+      
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+        <button class="btn-action" style="padding:10px; justify-content:center;" onclick="confirmExtend(30)">+30 Days</button>
+        <button class="btn-action" style="padding:10px; justify-content:center;" onclick="confirmExtend(90)">+90 Days</button>
+        <button class="btn-action" style="padding:10px; justify-content:center;" onclick="confirmExtend(180)">+6 Months</button>
+        <button class="btn-action" style="padding:10px; justify-content:center;" onclick="confirmExtend(365)">+1 Year</button>
+      </div>
+      <button class="btn-action success" style="width:100%; padding:11px; justify-content:center; font-weight:700;" onclick="confirmExtend(0, true)">Convert to Perpetual (Lifetime)</button>
     </div>
   </div>
 
   <script>
-    window.onerror = function(message, source, lineno, colno, error) {
-      console.error("JavaScript Error: " + message + " at line " + lineno, error);
-      return false;
-    };
-
-    // Clean up any legacy localStorage tokens so closed browsers are strictly unauthorized
-    try { localStorage.removeItem('ewu_admin_secret'); } catch (_) {}
-
-    // Use sessionStorage for tab/session-only persistence
+    // Tab/Session Persistence
     let adminToken = sessionStorage.getItem('ewu_admin_secret') || '';
     let allLicenses = [];
+    let currentFilter = 'all';
+    let currentGenMode = 'single';
+    let targetExtendLicenseId = null;
 
     if (adminToken) checkAuth();
+
+    function togglePassVisibility() {
+      const input = document.getElementById('adminPass');
+      const icon = document.getElementById('eyeIcon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+      } else {
+        input.type = 'password';
+        icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+      }
+    }
 
     function showToast(message, type = 'success') {
       const container = document.getElementById('toastContainer');
@@ -704,18 +1048,18 @@ function handleAdminUI() {
       toast.className = 'toast ' + type;
       const iconSvg = type === 'success'
         ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
-        : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
-      toast.innerHTML = iconSvg + '<span style="margin-left:8px; font-weight:500;">' + message + '</span>';
+        : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+      toast.innerHTML = iconSvg + '<span>' + message + '</span>';
       container.appendChild(toast);
       setTimeout(() => {
-        toast.style.animation = 'slideIn 0.3s reverse';
+        toast.style.animation = 'toastIn 0.3s reverse';
         setTimeout(() => toast.remove(), 300);
       }, 3500);
     }
 
     async function login() {
       adminToken = document.getElementById('adminPass').value.trim();
-      if (!adminToken) return showToast('Please enter your secret password', 'error');
+      if (!adminToken) return showToast('Please enter the admin password', 'error');
       sessionStorage.setItem('ewu_admin_secret', adminToken);
       checkAuth();
     }
@@ -725,7 +1069,7 @@ function handleAdminUI() {
       adminToken = '';
       document.getElementById('dashboardSection').style.display = 'none';
       document.getElementById('authSection').style.display = 'block';
-      showToast('Logged out successfully');
+      showToast('Logged out cleanly');
     }
 
     async function checkAuth() {
@@ -741,7 +1085,6 @@ function handleAdminUI() {
           try {
             const data = await res.json();
             if (data && data.error) errorMsg = data.error;
-            else if (data && data.message) errorMsg = data.message;
           } catch (_) {}
           showToast(errorMsg, 'error');
           sessionStorage.removeItem('ewu_admin_secret');
@@ -750,116 +1093,174 @@ function handleAdminUI() {
           document.getElementById('authSection').style.display = 'block';
         }
       } catch (e) {
-        showToast('Connection to server failed. Please check network connection.', 'error');
+        showToast('Connection to server failed. Please check network.', 'error');
       }
     }
 
     async function loadDashboard() {
       try {
-        const statsRes = await fetch('/admin/api/stats', { headers: { 'Authorization': 'Bearer ' + adminToken } });
-        if (!statsRes.ok) return;
-        const stats = await statsRes.json();
-        document.getElementById('statTotal').textContent = stats.totalLicenses || 0;
-        document.getElementById('statActive').textContent = stats.activeLicenses || 0;
-        document.getElementById('statActivations').textContent = stats.totalActivations || 0;
+        const [statsRes, licRes] = await Promise.all([
+          fetch('/admin/api/stats', { headers: { 'Authorization': 'Bearer ' + adminToken } }),
+          fetch('/admin/api/licenses', { headers: { 'Authorization': 'Bearer ' + adminToken } })
+        ]);
 
-        const licRes = await fetch('/admin/api/licenses', { headers: { 'Authorization': 'Bearer ' + adminToken } });
-        const licData = await licRes.json();
-        allLicenses = licData.licenses || [];
-        renderLicenses(allLicenses);
+        if (statsRes.ok) {
+          const stats = await statsRes.json();
+          document.getElementById('kpiTotal').textContent = stats.totalLicenses || 0;
+          document.getElementById('kpiActive').textContent = stats.activeLicenses || 0;
+          document.getElementById('kpiPerpetual').textContent = (stats.perpetualLicenses || 0) + ' Lifetime / Perpetual';
+          document.getElementById('kpiActivations').textContent = stats.totalActivations || 0;
+          document.getElementById('kpiCapacity').textContent = 'Max Allowed: ' + (stats.totalCapacity || 0);
+          document.getElementById('kpiRevoked').textContent = stats.revokedLicenses || 0;
+        }
+
+        if (licRes.ok) {
+          const licData = await licRes.json();
+          allLicenses = licData.licenses || [];
+          document.getElementById('countAll').textContent = allLicenses.length;
+          filterLicenses();
+        }
       } catch (e) {
-        showToast('Failed to load dashboard data', 'error');
+        showToast('Failed to refresh dashboard data', 'error');
       }
     }
 
+    function setGenMode(mode) {
+      currentGenMode = mode;
+      document.getElementById('btnSingleMode').className = 'mode-btn ' + (mode === 'single' ? 'active' : '');
+      document.getElementById('btnBulkMode').className = 'mode-btn ' + (mode === 'bulk' ? 'active' : '');
+      document.getElementById('bulkCountGroup').style.display = mode === 'bulk' ? 'flex' : 'none';
+      document.getElementById('genBtnText').textContent = mode === 'bulk' ? 'Generate Batch Keys' : 'Generate Key';
+      document.getElementById('singleOutput').style.display = 'none';
+      document.getElementById('bulkOutput').style.display = 'none';
+    }
+
+    async function executeGeneration() {
+      const note = document.getElementById('licNote').value;
+      const maxActivations = document.getElementById('licMax').value;
+      const expiresInDays = document.getElementById('licExpiry').value;
+
+      if (currentGenMode === 'bulk') {
+        const count = document.getElementById('licCount').value;
+        try {
+          const res = await fetch('/admin/api/licenses/bulk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+            body: JSON.stringify({ count, notePrefix: note, maxActivations, expiresInDays })
+          });
+          const data = await res.json();
+          if (data.success) {
+            const rawKeys = data.keys.map(k => k.key).join('\\n');
+            document.getElementById('bulkKeysList').textContent = rawKeys;
+            document.getElementById('bulkOutput').style.display = 'block';
+            showToast('Generated batch of ' + data.keys.length + ' keys!');
+            loadDashboard();
+          } else {
+            showToast(data.message || 'Batch generation failed', 'error');
+          }
+        } catch (e) {
+          showToast('Error communicating with server', 'error');
+        }
+      } else {
+        try {
+          const res = await fetch('/admin/api/licenses/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+            body: JSON.stringify({ note, maxActivations, expiresInDays })
+          });
+          const data = await res.json();
+          if (data.success) {
+            document.getElementById('keyValText').textContent = data.licenseKey;
+            document.getElementById('singleOutput').style.display = 'block';
+            showToast('Unique license key created!');
+            loadDashboard();
+          } else {
+            showToast(data.message || 'Key generation failure', 'error');
+          }
+        } catch (e) {
+          showToast('Error communicating with server', 'error');
+        }
+      }
+    }
+
+    function copyKeyText(id) {
+      const text = document.getElementById('keyValText').textContent;
+      navigator.clipboard.writeText(text).then(() => showToast('Key copied to clipboard!'));
+    }
+
+    function copyBulkKeys() {
+      const text = document.getElementById('bulkKeysList').textContent;
+      navigator.clipboard.writeText(text).then(() => showToast('Batch keys copied to clipboard!'));
+    }
+
+    function setFilter(filter, el) {
+      currentFilter = filter;
+      document.querySelectorAll('.tab-pill').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      filterLicenses();
+    }
+
     function formatExpiryDisplay(exp) {
-      if (!exp || exp === null || exp === 0 || exp === 'null' || isNaN(Number(exp))) {
-        return '<span style="color:var(--success); font-weight:700;">Never (Perpetual)</span>';
+      if (!exp || exp === null || exp === 0 || isNaN(Number(exp))) {
+        return '<span style="color:var(--emerald); font-weight:700;">Never (Perpetual)</span>';
       }
-      const num = Number(exp);
-      if (num <= 0) return '<span style="color:var(--success); font-weight:700;">Never (Perpetual)</span>';
-      const d = new Date(num);
+      const d = new Date(Number(exp));
       if (isNaN(d.getTime()) || d.getFullYear() >= 2099) {
-        return '<span style="color:var(--success); font-weight:700;">Never (Perpetual)</span>';
+        return '<span style="color:var(--emerald); font-weight:700;">Never (Perpetual)</span>';
       }
-      return d.toLocaleDateString();
+      const isPast = d.getTime() < Date.now();
+      return isPast 
+        ? '<span style="color:var(--rose); font-weight:600;">' + d.toLocaleDateString() + ' (Expired)</span>'
+        : '<span>' + d.toLocaleDateString() + '</span>';
+    }
+
+    function filterLicenses() {
+      const q = document.getElementById('searchBar').value.toLowerCase().trim();
+      const filtered = allLicenses.filter(l => {
+        const matchesQuery = l.raw_key_prefix.toLowerCase().includes(q) || (l.notes && l.notes.toLowerCase().includes(q));
+        if (!matchesQuery) return false;
+        if (currentFilter === 'active') return l.status === 'active';
+        if (currentFilter === 'revoked') return l.status === 'revoked';
+        if (currentFilter === 'perpetual') return l.status === 'active' && (!l.expires_at || l.expires_at === 0);
+        return true;
+      });
+      renderLicenses(filtered);
     }
 
     function renderLicenses(licenses) {
       const tbody = document.getElementById('licTable');
       if (licenses.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No matching licenses found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:32px; color:var(--text-dim);">No matching license records found</td></tr>';
         return;
       }
       tbody.innerHTML = licenses.map(l => {
-        let badgeClass = 'badge-active';
-        if (l.status === 'revoked') badgeClass = 'badge-revoked';
-        else if (l.status === 'expired') badgeClass = 'badge-expired';
+        let badgeClass = 'status-active';
+        if (l.status === 'revoked') badgeClass = 'status-revoked';
+        else if (l.expires_at && Number(l.expires_at) < Date.now()) badgeClass = 'status-expired';
 
         return '<tr>' +
-          '<td style="font-family:monospace; font-weight:700;">' + l.raw_key_prefix + '</td>' +
-          '<td>' + (l.notes || '<span style="color:var(--text-muted); opacity:0.5;">None</span>') + '</td>' +
-          '<td><span class="badge ' + badgeClass + '">' + l.status + '</span></td>' +
-          '<td>' + l.activation_count + ' / ' + l.max_activations + '</td>' +
+          '<td><span class="key-badge">' + l.raw_key_prefix + '</span></td>' +
+          '<td>' + (l.notes || '<span style="color:var(--text-dim);">None</span>') + '</td>' +
+          '<td><span class="status-badge ' + badgeClass + '">' + l.status + '</span></td>' +
+          '<td><span style="font-weight:600;">' + l.activation_count + '</span> <span style="color:var(--text-dim);">/ ' + l.max_activations + '</span></td>' +
           '<td>' + formatExpiryDisplay(l.expires_at) + '</td>' +
-          '<td>' +
-            '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
+          '<td style="text-align:right;">' +
+            '<div style="display:inline-flex; gap:6px;">' +
               (l.status === 'active' 
-                ? '<button class="btn-sm btn-danger" style="margin-top:0;" onclick="revoke(&#39;' + l.id + '&#39;)">Revoke</button>'
-                : '<button class="btn-sm btn-success" style="margin-top:0;" onclick="reactivate(&#39;' + l.id + '&#39;)">Reactivate</button>'
+                ? '<button class="btn-action danger" onclick="revoke(&#39;' + l.id + '&#39;)">Revoke</button>'
+                : '<button class="btn-action success" onclick="reactivate(&#39;' + l.id + '&#39;)">Reactivate</button>'
               ) +
-              '<button class="btn-sm" style="margin-top:0; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#f87171;" onclick="deleteLicense(&#39;' + l.id + '&#39;)">Delete</button>' +
-              '<button class="btn-sm" style="margin-top:0; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); color:#a5b4fc;" onclick="showDetails(&#39;' + l.id + '&#39;)">Details</button>' +
+              '<button class="btn-action" onclick="openExtendModal(&#39;' + l.id + '&#39;)">Extend</button>' +
+              '<button class="btn-action" onclick="showDetails(&#39;' + l.id + '&#39;)">Telemetry</button>' +
+              '<button class="btn-action danger" onclick="deleteLicense(&#39;' + l.id + '&#39;)">Delete</button>' +
             '</div>' +
           '</td>' +
         '</tr>';
       }).join('');
     }
 
-    function filterLicenses() {
-      const q = document.getElementById('searchBar').value.toLowerCase().trim();
-      const filtered = allLicenses.filter(l => 
-        l.raw_key_prefix.toLowerCase().includes(q) || 
-        (l.notes && l.notes.toLowerCase().includes(q))
-      );
-      renderLicenses(filtered);
-    }
-
-    async function generateKey() {
-      const note = document.getElementById('licNote').value;
-      const maxActivations = document.getElementById('licMax').value;
-      const expiresInDays = document.getElementById('licExpiry').value;
-
-      try {
-        const res = await fetch('/admin/api/licenses/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
-          body: JSON.stringify({ note, maxActivations, expiresInDays })
-        });
-        const data = await res.json();
-        if (data.success) {
-          document.getElementById('generatedKeyVal').textContent = data.licenseKey;
-          document.getElementById('keyOutput').style.display = 'block';
-          document.getElementById('licNote').value = '';
-          showToast('Unique license key created!');
-          loadDashboard();
-        } else {
-          showToast(data.message || 'Key generation failure', 'error');
-        }
-      } catch (e) {
-        showToast('Error communicating with Server', 'error');
-      }
-    }
-
-    function copyGeneratedKey() {
-      const keyVal = document.getElementById('generatedKeyVal').textContent;
-      navigator.clipboard.writeText(keyVal).then(() => {
-        showToast('Key copied to clipboard!');
-      });
-    }
-
     async function revoke(id) {
-      if (!confirm('Are you sure you want to revoke this license?')) return;
+      if (!confirm('Revoke this license? All active extension instances will immediately be blocked.')) return;
       try {
         const res = await fetch('/admin/api/licenses/revoke', {
           method: 'POST',
@@ -867,14 +1268,10 @@ function handleAdminUI() {
           body: JSON.stringify({ licenseId: id })
         });
         if (res.ok) {
-          showToast('License revoked successfully');
+          showToast('License successfully revoked');
           loadDashboard();
-        } else {
-          showToast('Failed to revoke license', 'error');
         }
-      } catch (e) {
-        showToast('Error revoking license', 'error');
-      }
+      } catch (_) { showToast('Error revoking license', 'error'); }
     }
 
     async function reactivate(id) {
@@ -885,18 +1282,35 @@ function handleAdminUI() {
           body: JSON.stringify({ licenseId: id })
         });
         if (res.ok) {
-          showToast('License reactivated successfully');
+          showToast('License successfully reactivated');
           loadDashboard();
-        } else {
-          showToast('Failed to reactivate license', 'error');
         }
-      } catch (e) {
-        showToast('Error reactivating license', 'error');
-      }
+      } catch (_) { showToast('Error reactivating license', 'error'); }
+    }
+
+    function openExtendModal(id) {
+      targetExtendLicenseId = id;
+      document.getElementById('extendModal').style.display = 'flex';
+    }
+
+    async function confirmExtend(days, setPerpetual = false) {
+      if (!targetExtendLicenseId) return;
+      try {
+        const res = await fetch('/admin/api/licenses/extend', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+          body: JSON.stringify({ licenseId: targetExtendLicenseId, additionalDays: days, setPerpetual })
+        });
+        if (res.ok) {
+          showToast('License duration successfully extended');
+          closeModal('extendModal');
+          loadDashboard();
+        }
+      } catch (_) { showToast('Failed to extend license', 'error'); }
     }
 
     async function deleteLicense(id) {
-      if (!confirm('CRITICAL WARNING: This will permanently delete the license and all activation records from the database. Are you sure you want to proceed?')) return;
+      if (!confirm('Permanent Deletion: All license records and device activations will be erased from D1. Proceed?')) return;
       try {
         const res = await fetch('/admin/api/licenses/delete', {
           method: 'POST',
@@ -904,14 +1318,10 @@ function handleAdminUI() {
           body: JSON.stringify({ licenseId: id })
         });
         if (res.ok) {
-          showToast('License completely deleted');
+          showToast('License permanently deleted');
           loadDashboard();
-        } else {
-          showToast('Failed to delete license', 'error');
         }
-      } catch (e) {
-        showToast('Error deleting license', 'error');
-      }
+      } catch (_) { showToast('Failed to delete license', 'error'); }
     }
 
     async function showDetails(id) {
@@ -925,39 +1335,61 @@ function handleAdminUI() {
         if (data.success) {
           const l = data.license;
           const acts = data.activations;
-          const expText = formatExpiryDisplay(l.expires_at);
           
           document.getElementById('modalMeta').innerHTML = 
-            '<p><strong>License Key Prefix:</strong> ' + l.raw_key_prefix + '</p>' +
-            '<p><strong>Notes:</strong> ' + (l.notes || 'None') + '</p>' +
-            '<p><strong>Expires:</strong> ' + expText + '</p>';
+            '<p><strong>Prefix:</strong> <span class="key-badge">' + l.raw_key_prefix + '</span> &bull; <strong>Status:</strong> ' + l.status.toUpperCase() + '</p>' +
+            '<p><strong>Client Note:</strong> ' + (l.notes || 'None') + '</p>' +
+            '<p><strong>Validity:</strong> ' + formatExpiryDisplay(l.expires_at) + ' &bull; <strong>Capacity:</strong> ' + l.activation_count + ' / ' + l.max_activations + '</p>';
           
           const list = document.getElementById('modalActivations');
           if (acts.length === 0) {
-            list.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-muted); font-size:13px;">No active device activations recorded for this key.</p>';
+            list.innerHTML = '<p style="text-align:center; padding:18px; color:var(--text-dim); font-size:12.5px;">No active device sessions registered for this license.</p>';
           } else {
             list.innerHTML = acts.map(a => {
-              return '<div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); padding:16px; border-radius:12px; font-size:12px; line-height:1.5; margin-bottom: 8px;">' +
-                '<p><strong>Device ID:</strong> <span style="font-family:monospace; color:var(--accent); font-weight: 700;">' + a.device_id + '</span></p>' +
-                '<p><strong>Device IP:</strong> ' + (a.device_ip || 'Unknown') + ' | <strong>Country:</strong> ' + (a.device_geo || 'Unknown') + '</p>' +
-                '<p><strong>First Activated:</strong> ' + new Date(a.activated_at).toLocaleString() + '</p>' +
-                '<p><strong>Last Ping:</strong> ' + new Date(a.last_seen_at).toLocaleString() + '</p>' +
-                '<p><strong>User Agent:</strong> <span style="color:var(--text-muted); font-size:11px;">' + (a.device_user_agent || 'Unknown') + '</span></p>' +
+              return '<div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); padding:12px 14px; border-radius:10px; font-size:12px; display:flex; justify-content:space-between; align-items:center; gap:10px;">' +
+                '<div>' +
+                  '<p><strong>Device:</strong> <span style="font-family:monospace; color:var(--cyan);">' + a.device_id + '</span></p>' +
+                  '<p style="color:var(--text-dim); margin-top:2px;"><strong>IP:</strong> ' + (a.device_ip || 'Unknown') + ' | <strong>Country:</strong> ' + (a.device_geo || 'Unknown') + ' | <strong>Ping:</strong> ' + new Date(a.last_seen_at).toLocaleDateString() + '</p>' +
+                '</div>' +
+                '<button class="btn-action danger" onclick="kickDevice(&#39;' + a.id + '&#39;, &#39;' + l.id + '&#39;)">Deauthorize</button>' +
               '</div>';
             }).join('');
           }
           
           document.getElementById('detailsModal').style.display = 'flex';
-        } else {
-          showToast('Failed to load telemetry diagnostics', 'error');
         }
-      } catch (e) {
-        showToast('Error communicating with Server', 'error');
-      }
+      } catch (_) { showToast('Failed to load telemetry diagnostics', 'error'); }
     }
 
-    function closeDetailsModal() {
-      document.getElementById('detailsModal').style.display = 'none';
+    async function kickDevice(activationId, licenseId) {
+      if (!confirm('Deauthorize this device? The user will have to re-activate their license key.')) return;
+      try {
+        const res = await fetch('/admin/api/activations/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+          body: JSON.stringify({ activationId, licenseId })
+        });
+        if (res.ok) {
+          showToast('Device deauthorized');
+          showDetails(licenseId);
+          loadDashboard();
+        }
+      } catch (_) { showToast('Failed to deauthorize device', 'error'); }
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    function exportData(format = 'json') {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allLicenses, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "ewu_helper_licenses_" + Date.now() + ".json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast('Exported licenses as JSON file');
     }
   </script>
 </body>
