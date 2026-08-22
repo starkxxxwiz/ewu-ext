@@ -65,12 +65,12 @@ async function hashKey(key) {
 }
 
 function generateRandomKey() {
-  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'; // Exclude ambiguous chars like 0, O, 1, I
+  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'; // 32 unambiguous chars (2^5)
   const randomBytes = new Uint8Array(16);
   crypto.getRandomValues(randomBytes);
   let result = '';
   for (let i = 0; i < 16; i++) {
-    result += chars[randomBytes[i] % chars.length];
+    result += chars[randomBytes[i] & 31]; // 100% uniform CSPRNG selection
   }
   return `${result.substring(0, 4)}-${result.substring(4, 8)}-${result.substring(8, 12)}-${result.substring(12, 16)}`;
 }
@@ -375,7 +375,8 @@ async function handleAdminAPI(path, request, env, corsHeaders) {
 
     const licId = 'lic_' + crypto.randomUUID();
     const now = Date.now();
-    const expiresAt = expiresInDays ? (now + (parseInt(expiresInDays, 10) * 24 * 60 * 60 * 1000)) : null;
+    const days = (expiresInDays !== undefined && expiresInDays !== null && expiresInDays !== '') ? parseInt(expiresInDays, 10) : 0;
+    const expiresAt = (days && !isNaN(days) && days > 0) ? (now + (days * 24 * 60 * 60 * 1000)) : null;
 
     await env.DB.prepare(
       'INSERT INTO licenses (id, license_key_hash, raw_key_prefix, status, created_at, expires_at, max_activations, notes) VALUES (?, ?, ?, "active", ?, ?, ?, ?)'
@@ -549,7 +550,7 @@ function handleAdminUI() {
   <div class="container">
     <div id="authSection" class="card auth-box">
       <h2>Admin Dashboard Access</h2>
-      <p>Secure authentication using encrypted credentials storage</p>
+      <p>Session-only authentication &bull; Closes upon browser exit</p>
       <input type="password" id="adminPass" placeholder="Enter Admin Secret Password" />
       <button onclick="login()">Log In Securely</button>
     </div>
@@ -592,7 +593,7 @@ function handleAdminUI() {
 
       <div class="card">
         <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">Generate Unique License Key</h3>
-        <p style="font-size: 13px; color: var(--text-muted);">Uniqueness checks are executed automatically prior to D1 insertion.</p>
+        <p style="font-size: 13px; color: var(--text-muted);">CSPRNG bitmask generation with automatic uniqueness verification.</p>
         
         <div class="form-row">
           <div class="form-group" style="flex: 2;">
@@ -666,7 +667,11 @@ function handleAdminUI() {
       return false;
     };
 
-    let adminToken = localStorage.getItem('ewu_admin_secret') || '';
+    // Clean up any legacy localStorage tokens so closed browsers are strictly unauthorized
+    try { localStorage.removeItem('ewu_admin_secret'); } catch (_) {}
+
+    // Use sessionStorage for tab/session-only persistence
+    let adminToken = sessionStorage.getItem('ewu_admin_secret') || '';
     let allLicenses = [];
 
     if (adminToken) checkAuth();
@@ -686,12 +691,12 @@ function handleAdminUI() {
     async function login() {
       adminToken = document.getElementById('adminPass').value.trim();
       if (!adminToken) return showToast('Please enter your secret password', 'error');
-      localStorage.setItem('ewu_admin_secret', adminToken);
+      sessionStorage.setItem('ewu_admin_secret', adminToken);
       checkAuth();
     }
 
     function logout() {
-      localStorage.removeItem('ewu_admin_secret');
+      sessionStorage.removeItem('ewu_admin_secret');
       adminToken = '';
       document.getElementById('dashboardSection').style.display = 'none';
       document.getElementById('authSection').style.display = 'block';
@@ -708,7 +713,7 @@ function handleAdminUI() {
         } else {
           const text = await res.text();
           showToast('Access Denied (' + res.status + '): ' + text, 'error');
-          localStorage.removeItem('ewu_admin_secret');
+          sessionStorage.removeItem('ewu_admin_secret');
         }
       } catch (e) {
         showToast('Connection to server failed: ' + e.message, 'error');
@@ -733,6 +738,19 @@ function handleAdminUI() {
       }
     }
 
+    function formatExpiryDisplay(exp) {
+      if (!exp || exp === null || exp === 0 || exp === 'null' || isNaN(Number(exp))) {
+        return '<span style="color:var(--success); font-weight:700;">Never (Perpetual)</span>';
+      }
+      const num = Number(exp);
+      if (num <= 0) return '<span style="color:var(--success); font-weight:700;">Never (Perpetual)</span>';
+      const d = new Date(num);
+      if (isNaN(d.getTime()) || d.getFullYear() >= 2099) {
+        return '<span style="color:var(--success); font-weight:700;">Never (Perpetual)</span>';
+      }
+      return d.toLocaleDateString();
+    }
+
     function renderLicenses(licenses) {
       const tbody = document.getElementById('licTable');
       if (licenses.length === 0) {
@@ -749,7 +767,7 @@ function handleAdminUI() {
           '<td>' + (l.notes || '<span style="color:var(--text-muted); opacity:0.5;">None</span>') + '</td>' +
           '<td><span class="badge ' + badgeClass + '">' + l.status + '</span></td>' +
           '<td>' + l.activation_count + ' / ' + l.max_activations + '</td>' +
-          '<td>' + (l.expires_at ? new Date(l.expires_at).toLocaleDateString() : '<span style="color:var(--success);">Lifetime</span>') + '</td>' +
+          '<td>' + formatExpiryDisplay(l.expires_at) + '</td>' +
           '<td>' +
             '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
               (l.status === 'active' 
@@ -873,11 +891,12 @@ function handleAdminUI() {
         if (data.success) {
           const l = data.license;
           const acts = data.activations;
+          const expText = formatExpiryDisplay(l.expires_at);
           
           document.getElementById('modalMeta').innerHTML = 
             '<p><strong>License Key Prefix:</strong> ' + l.raw_key_prefix + '</p>' +
             '<p><strong>Notes:</strong> ' + (l.notes || 'None') + '</p>' +
-            '<p><strong>Expires:</strong> ' + (l.expires_at ? new Date(l.expires_at).toLocaleString() : 'Lifetime') + '</p>';
+            '<p><strong>Expires:</strong> ' + expText + '</p>';
           
           const list = document.getElementById('modalActivations');
           if (acts.length === 0) {

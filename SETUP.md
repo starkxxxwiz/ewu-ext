@@ -92,37 +92,34 @@ cmd /c wrangler deploy
 
 ---
 
-## 3. Generating License Keys
+## 3. Generating License Keys & Managing Admin Sessions
 
 1. Navigate to your deployed Cloudflare Worker URL in any browser:
    `https://<your-worker-subdomain>.workers.dev/admin`
 2. Enter the `ADMIN_SECRET` password set during deployment.
-3. In the **Generate New License Key** section:
+3. **Session-Only Security**: The admin hub uses `sessionStorage`. Closing the browser or tab immediately terminates the session and requires entering the password again.
+4. In the **Generate Unique License Key** section:
    - Enter a client note or identifier (e.g. `Student John Doe`).
    - Set max device limit (default: 1).
-   - Select expiration (30 days, 90 days, 1 year, or Never).
-   - Click **Generate Key**.
-4. Copy the key (`XXXX-XXXX-XXXX-XXXX`).
+   - Select expiration: `Perpetual (Never Expires)` or choose duration (`30 Days`, `90 Days`, `1 Year`).
+   - Perpetual keys are recorded with `NULL` expiration timestamp and clearly displayed as `Never (Perpetual)` in the subscriptions table.
+   - Click **Create New License**.
+5. Copy the generated key (`XXXX-XXXX-XXXX-XXXX`).
 
 ---
 
-## 4. Production Build & Obfuscation Pipeline
+## 4. Production Source Backup
 
-Before releasing the `/publish` extension to users, run the build script to minify and obfuscate JavaScript files:
+All un-obfuscated source files are maintained in both the root `/publish` directory and the `/src` backup folder:
+- `src/content.js`
+- `src/popup.js`
+- `src/background.js`
+- `src/activation.js`
 
+If you wish to run the optional minification/obfuscation build pipeline before distributing packed extension archives, you can execute:
 ```bash
-# Install obfuscation dependencies inside publish/
-cmd /c npm install
-
-# Run the build script
 cmd /c npm run build
 ```
-
-This obfuscates:
-- `content.js`
-- `popup.js`
-- `background.js`
-- `activation.js`
 
 ---
 
@@ -134,7 +131,8 @@ This obfuscates:
 4. Select the `publish` folder (`c:\xampp\htdocs\Extension\ewu-buddy\V4\publish`).
 
 ### Verification Testing Matrix:
-- **Fresh Install Test**: Reload extension; `activation.html` opens automatically in a new tab.
-- **Valid Key Test**: Enter a valid key (`XXXX-XXXX-XXXX-XXXX`); extension becomes activated and portal features unlock.
-- **Revocation Test**: Go to `/admin`, click **Revoke** on an active key; next time the user loads portal, features disable and unactivated banner appears.
-- **Brute-Force Test**: Submit 6 invalid keys rapidly; endpoint returns HTTP 429 Rate Limit error.
+- **First Page / General View**: Popup opens with only Extension Master Power and Status Toast Notifications toggles. Clicking tabs (`Advising`, `Courses`, `Routine`, `Login`, `System`) reveals module settings.
+- **License Management & Key Switch**: Clicking **Manage** opens `activation.html`. The Subscribed screen displays current key prefix, status, and lifetime/expiration date, with a **Change License Key** button to switch keys seamlessly.
+- **Admin Session Test**: Log into `/admin`, close browser/tab, re-open `/admin` &rarr; treated as unauthorized immediately.
+- **Perpetual Expiry Display**: Create a Perpetual key &rarr; shows `Never (Perpetual)` with green badge in table and details modal.
+- **Brute-Force & Security Test**: 5 rapid failed activations result in HTTP 429 rate limit. Unactivated extensions block all portal enhancements.

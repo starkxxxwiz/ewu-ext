@@ -231,20 +231,31 @@
   function bindEvents() {
 
     // Tab Filter Navigation
+    let currentTab = 'general';
+
+    function applyTabFilter(tab) {
+      currentTab = tab;
+      els.tabBtns.forEach(b => {
+        if (b.getAttribute('data-tab') === tab) {
+          b.classList.add('active');
+        } else {
+          b.classList.remove('active');
+        }
+      });
+
+      els.settingGroups.forEach((grp) => {
+        const groupName = grp.getAttribute('data-group');
+        grp.style.display = (groupName === tab) ? 'block' : 'none';
+      });
+
+      els.settingCards.forEach(c => { c.style.display = 'block'; });
+    }
+
     els.tabBtns.forEach((btn) => {
       btn.addEventListener('click', () => {
-        els.tabBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
         const tab = btn.getAttribute('data-tab');
-
-        els.settingGroups.forEach((grp) => {
-          const groupName = grp.getAttribute('data-group');
-          if (tab === 'all' || groupName === tab) {
-            grp.style.display = 'block';
-          } else {
-            grp.style.display = 'none';
-          }
-        });
+        if (els.settingsSearch) els.settingsSearch.value = '';
+        applyTabFilter(tab);
       });
     });
 
@@ -253,8 +264,7 @@
       els.settingsSearch.addEventListener('input', function () {
         const query = this.value.trim().toLowerCase();
         if (!query) {
-          els.settingCards.forEach(c => c.style.display = 'block');
-          els.settingGroups.forEach(g => g.style.display = 'block');
+          applyTabFilter(currentTab);
           return;
         }
 
@@ -607,7 +617,7 @@
       } else {
         if (dot) dot.style.background = '#34d399';
         if (text) text.textContent = 'Active Production License';
-        const expStr = res.licenseExpiresAt ? `Valid until ${new Date(res.licenseExpiresAt).toLocaleDateString()}` : 'Lifetime Access';
+        const expStr = (res.licenseExpiresAt && Number(res.licenseExpiresAt) > 0) ? `Valid until ${new Date(Number(res.licenseExpiresAt)).toLocaleDateString()}` : 'Lifetime Access (Never Expires)';
         if (sub) sub.textContent = expStr;
       }
     });

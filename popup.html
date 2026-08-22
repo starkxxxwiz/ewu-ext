@@ -576,7 +576,7 @@
       <input type="text" id="settingsSearch" class="search-input" placeholder="Quick search settings..." autocomplete="off" />
     </div>
     <div class="tab-bar">
-      <button type="button" class="tab-btn active" data-tab="all">All</button>
+      <button type="button" class="tab-btn active" data-tab="general">General</button>
       <button type="button" class="tab-btn" data-tab="advising">Advising</button>
       <button type="button" class="tab-btn" data-tab="courses">Courses</button>
       <button type="button" class="tab-btn" data-tab="routine">Routine</button>
@@ -588,8 +588,8 @@
   <!-- Content Body -->
   <div class="content-body" id="settingsContainer">
 
-    <!-- ==================== GENERAL / SYSTEM ==================== -->
-    <div class="setting-group" data-group="system">
+    <!-- ==================== GENERAL (FIRST PAGE) ==================== -->
+    <div class="setting-group" data-group="general">
       <div class="section-heading">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         <span>Master Controls</span>
@@ -609,35 +609,23 @@
         </div>
       </div>
 
-      <!-- Toast & Animations -->
+      <!-- Toast Notification Control -->
       <div class="setting-card">
         <div class="card-row">
           <div class="card-info">
-            <span class="card-title">Toast Alerts &amp; Animations</span>
-            <span class="card-desc">Status indicators and transition physics</span>
+            <span class="card-title">Status Toast Notifications</span>
+            <span class="card-desc">Show alerts and status indicators on portal</span>
           </div>
-        </div>
-        <div class="card-sub-items">
-          <div class="sub-item-row">
-            <span class="sub-title">Status Toast Notifications</span>
-            <label class="cyber-switch">
-              <input type="checkbox" id="toggleToast" />
-              <span class="switch-slider"></span>
-            </label>
-          </div>
-          <div class="sub-item-row">
-            <span class="sub-title">Smooth UI Animations</span>
-            <label class="cyber-switch">
-              <input type="checkbox" id="toggleAnimations" />
-              <span class="switch-slider"></span>
-            </label>
-          </div>
+          <label class="cyber-switch">
+            <input type="checkbox" id="toggleToast" />
+            <span class="switch-slider"></span>
+          </label>
         </div>
       </div>
     </div>
 
     <!-- ==================== ADVISING (ONLINE & OFFLINE) ==================== -->
-    <div class="setting-group" data-group="advising">
+    <div class="setting-group" data-group="advising" style="display:none;">
       <div class="section-heading">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         <span>Advising Offline Suite</span>
@@ -714,7 +702,7 @@
     </div>
 
     <!-- ==================== OFFERED COURSES ==================== -->
-    <div class="setting-group" data-group="courses">
+    <div class="setting-group" data-group="courses" style="display:none;">
       <div class="section-heading">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <span>Offered Courses Enhancer</span>
@@ -762,7 +750,7 @@
     </div>
 
     <!-- ==================== ROUTINE GENERATOR ==================== -->
-    <div class="setting-group" data-group="routine">
+    <div class="setting-group" data-group="routine" style="display:none;">
       <div class="section-heading">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         <span>Routine Generator</span>
@@ -844,7 +832,7 @@
     </div>
 
     <!-- ==================== LOGIN HELPER ==================== -->
-    <div class="setting-group" data-group="login">
+    <div class="setting-group" data-group="login" style="display:none;">
       <div class="section-heading">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         <span>Login Automation</span>
@@ -884,8 +872,26 @@
       </div>
     </div>
 
-    <!-- ==================== BACKUP & DATA ==================== -->
-    <div class="setting-group" data-group="system">
+    <!-- ==================== SYSTEM & PRESETS ==================== -->
+    <div class="setting-group" data-group="system" style="display:none;">
+      <div class="section-heading">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        <span>UI Customization</span>
+      </div>
+
+      <div class="setting-card">
+        <div class="card-row">
+          <div class="card-info">
+            <span class="card-title">Smooth UI Animations</span>
+            <span class="card-desc">Enable smooth transition effects and physics</span>
+          </div>
+          <label class="cyber-switch">
+            <input type="checkbox" id="toggleAnimations" />
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+      </div>
+
       <div class="section-heading">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span>Data &amp; Presets</span>
