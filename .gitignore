@@ -12,5 +12,7 @@ dist/
 # Local OS files
 .DS_Store
 Thumbs.db
-src/
 
+# Source and build script
+src/
+build.js
