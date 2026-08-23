@@ -690,6 +690,39 @@
         }
         if (els.licStatusText) els.licStatusText.textContent = 'License Inactive';
         if (els.licSubText) els.licSubText.style.display = 'none';
+
+        // Blur background settings and show centered activation warning overlay
+        if (container) { container.style.filter = 'blur(7px)'; container.style.pointerEvents = 'none'; }
+        if (content) { content.style.filter = 'blur(7px)'; content.style.pointerEvents = 'none'; }
+
+        const overlay = document.createElement('div');
+        overlay.id = 'ewu-popup-lock-overlay';
+        overlay.style.cssText = 'position:absolute; top:124px; left:0; width:100%; height:calc(100% - 124px); background:rgba(6,9,19,0.85); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:18px; box-sizing:border-box; text-align:center; animation: fadeInOverlay 0.25s ease;';
+        overlay.innerHTML = `
+          <div style="width:100%; max-width:320px; background:rgba(13,19,33,0.95); border:1px solid rgba(99,102,241,0.35); border-radius:16px; padding:24px 20px; box-shadow:0 12px 35px rgba(0,0,0,0.7), 0 0 20px rgba(99,102,241,0.15); box-sizing:border-box;">
+            <div style="width:48px; height:48px; border-radius:14px; background:rgba(99,102,241,0.14); border:1px solid rgba(99,102,241,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; color:#818cf8;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <h3 style="color:#ffffff; font-size:15px; font-weight:800; margin-bottom:6px; letter-spacing:-0.2px;">License Activation Required</h3>
+            <p style="color:#cbd5e1; font-size:12px; line-height:1.55; margin-bottom:18px;">Activate your license to unlock automatic captcha solving, routine timetables, and offline advising suite.</p>
+            <button id="btnPopupActivateAction" style="width:100%; padding:11px 18px; border-radius:10px; background:linear-gradient(135deg, #4f46e5, #3b82f6); color:#ffffff; border:1px solid rgba(255,255,255,0.15); font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 14px rgba(79,70,229,0.35); transition:transform 0.15s ease;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 2l-2 2m-1.5 1.5L14 9m-1.5 1.5L10 13l-4 4-4-4 4-4 2.5-2.5m1.5-1.5L16.5 3.5 18 2z"/><circle cx="7.5" cy="16.5" r="1.5"/></svg>
+              Activate License
+            </button>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+
+        const btnAct = document.getElementById('btnPopupActivateAction');
+        if (btnAct) {
+          btnAct.addEventListener('click', () => {
+            if (typeof chrome !== 'undefined' && chrome.tabs) {
+              chrome.tabs.create({ url: chrome.runtime.getURL('pages/activation.html') });
+            } else {
+              window.open('pages/activation.html', '_blank');
+            }
+          });
+        }
       }
     });
   }

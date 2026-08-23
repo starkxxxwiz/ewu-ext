@@ -1603,16 +1603,16 @@ body.ewu-theme-dark .ewu-cs-stat-divider {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
-  background: rgba(37, 99, 235, 0.05);
-  color: #2563eb !important;
-  border: 1px solid rgba(37, 99, 235, 0.3);
-  border-radius: 8px;
+  padding: 3px 8px;
+  background: transparent;
+  color: inherit !important;
+  border: 1px solid rgba(37, 99, 235, 0.45);
+  border-radius: 6px;
   font-size: inherit;
   font-family: inherit;
-  font-weight: 600;
+  font-weight: 500;
   text-decoration: none !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
   white-space: nowrap;
 }
 
@@ -1622,32 +1622,29 @@ body.ewu-theme-dark .ewu-cs-stat-divider {
 }
 
 .ewu-fac-email-link:hover {
-  background: rgba(37, 99, 235, 0.12);
+  background: rgba(37, 99, 235, 0.08);
   border-color: #2563eb;
-  color: #1d4ed8 !important;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
-  transform: translateY(-1px);
+  color: inherit !important;
 }
 
 .ewu-fac-email-link:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
 }
 
 body.ewu-theme-dark .ewu-fac-email-link {
-  background: rgba(99, 102, 241, 0.1);
-  color: #c7d2fe !important;
-  border-color: rgba(99, 102, 241, 0.4);
+  background: transparent;
+  color: inherit !important;
+  border-color: rgba(56, 189, 248, 0.45);
 }
 
 body.ewu-theme-dark .ewu-fac-email-link svg {
-  color: #818cf8;
+  color: #38bdf8;
 }
 
 body.ewu-theme-dark .ewu-fac-email-link:hover {
-  background: rgba(99, 102, 241, 0.22);
-  border-color: #818cf8;
-  color: #ffffff !important;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  background: rgba(56, 189, 248, 0.1);
+  border-color: #38bdf8;
+  color: inherit !important;
 }
 
 

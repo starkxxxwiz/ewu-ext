@@ -227,8 +227,8 @@
       position: relative;
       width: 100%;
       padding: 14px 24px;
-      background: linear-gradient(135deg, #6366f1, #4f46e5);
-      border: none;
+      background: linear-gradient(135deg, #4f46e5, #3b82f6);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 14px;
       color: #ffffff;
       font-size: 14.5px;
@@ -238,11 +238,20 @@
       align-items: center;
       justify-content: center;
       gap: 10px;
-      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
-      text-decoration: none;
+      box-shadow: 0 4px 18px rgba(79, 70, 229, 0.35);
+      transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease;
       overflow: hidden;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      user-select: none;
+      contain: paint;
+      transform: translateZ(0);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(79, 70, 229, 0.5);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.97);
     }
 
     .btn-primary::before {
