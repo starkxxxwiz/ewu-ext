@@ -1274,9 +1274,15 @@ body.ewu-no-animations *::after {
 
 .ewu-rc-table-wrapper {
   overflow-x: auto;
+  overflow-y: auto;
   max-height: calc(100vh - 280px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
+  contain: content;
+  will-change: scroll-position;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
 }
 .ewu-rc-table {
   width: 100%;
@@ -1331,6 +1337,8 @@ body.ewu-no-animations *::after {
   padding: 16px;
   color: #f9fafb;
   min-height: 80vh;
+  transform: translateZ(0);
+  contain: paint;
 }
 .ewu-cp-header {
   display: flex;
@@ -1359,9 +1367,7 @@ body.ewu-no-animations *::after {
 }
 
 .ewu-cp-panel {
-  background: rgba(17, 24, 39, 0.9);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: #0f172a;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 18px;
@@ -1369,6 +1375,8 @@ body.ewu-no-animations *::after {
   flex-direction: column;
   gap: 14px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transform: translateZ(0);
+  contain: content;
 }
 
 .ewu-cp-panel-header {
@@ -1391,24 +1399,29 @@ body.ewu-no-animations *::after {
   max-height: calc(100vh - 360px);
   overflow-y: auto;
   padding-right: 4px;
+  contain: content;
+  will-change: scroll-position;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 
 .ewu-cp-card {
-  background: rgba(31, 41, 55, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 12px;
-  padding: 14px;
+  padding: 13px 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 82px;
+  transform: translateZ(0);
 }
 .ewu-cp-card:hover {
   border-color: rgba(99, 102, 241, 0.5);
-  background: rgba(31, 41, 55, 0.9);
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 .ewu-cp-card.in-plan {
   border-color: rgba(34, 197, 94, 0.6);

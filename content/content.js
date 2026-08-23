@@ -4237,11 +4237,16 @@
 
       var searchInput = safeQuery('#ewu-cp-search');
       var clearBtn = safeQuery('#ewu-cp-search-clear');
+      var debounceTimer = null;
       if (searchInput) {
         searchInput.addEventListener('input', function () {
-          self._searchTerm = this.value.trim().toLowerCase();
-          if (clearBtn) clearBtn.classList.toggle('visible', self._searchTerm.length > 0);
-          self._renderCatalog();
+          var val = this.value.trim().toLowerCase();
+          if (clearBtn) clearBtn.classList.toggle('visible', val.length > 0);
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(function () {
+            self._searchTerm = val;
+            self._renderCatalog();
+          }, 80);
         });
       }
       if (clearBtn) {
@@ -4250,6 +4255,28 @@
           self._searchTerm = '';
           clearBtn.classList.remove('visible');
           self._renderCatalog();
+        });
+      }
+
+      var catalogListEl = safeQuery('#ewu-cp-catalog-list');
+      if (catalogListEl) {
+        catalogListEl.addEventListener('click', function (e) {
+          var btn = e.target.closest('.ewu-cp-btn-add-sec');
+          if (btn) {
+            var sid = btn.getAttribute('data-id');
+            if (sid) self._addCourseToPlan(sid);
+          }
+        });
+      }
+
+      var planListEl = safeQuery('#ewu-cp-plan-list');
+      if (planListEl) {
+        planListEl.addEventListener('click', function (e) {
+          var btn = e.target.closest('.ewu-cp-btn-remove-sec');
+          if (btn) {
+            var sid = btn.getAttribute('data-id');
+            if (sid) self._removeCourseFromPlan(sid);
+          }
         });
       }
 
@@ -4379,14 +4406,6 @@
       }
 
       listEl.innerHTML = html;
-
-      var addBtns = listEl.querySelectorAll('.ewu-cp-btn-add-sec');
-      for (var b = 0; b < addBtns.length; b++) {
-        addBtns[b].addEventListener('click', function () {
-          var sid = this.getAttribute('data-id');
-          self._addCourseToPlan(sid);
-        });
-      }
     },
 
     _addCourseToPlan: function (courseId) {
@@ -4559,14 +4578,6 @@
       }
 
       planListEl.innerHTML = html;
-
-      var removeBtns = planListEl.querySelectorAll('.ewu-cp-btn-remove-sec');
-      for (var r = 0; r < removeBtns.length; r++) {
-        removeBtns[r].addEventListener('click', function () {
-          var sid = this.getAttribute('data-id');
-          self._removeCourseFromPlan(sid);
-        });
-      }
     },
 
     _removeCourseFromPlan: function (courseId) {
