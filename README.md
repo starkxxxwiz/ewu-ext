@@ -19,7 +19,7 @@
   </p>
 
   <p align="center">
-    <b>Auto Captcha Solving</b> • <b>10-Column Advising Suite</b> • <b>Ultra-HD Routine Generator</b> • <b>Seat Availability Tracker</b> • <b>Offline Course Planner</b>
+    <b>Auto Captcha Solving</b> • <b>10-Column Advising Suite</b> • <b>Ultra-HD Routine Generator</b> • <b>Seat Availability Tracker</b> • <b>Offline Course Planner</b> • <b>Cyber Command Hub</b>
   </p>
 
 </div>
@@ -34,7 +34,7 @@
 
 ### 📅 2. Routine & Timetable Generator
 * Automatically detects your registered courses and builds a visual weekly schedule timetable.
-* Custom visual themes with adjustable contrast.
+* Upgraded interactive buttons with smooth hover particle glows and active press feedback.
 * Export high-resolution schedule images (**PNG**) and document sheets (**PDF**) with a single click.
 
 ### 🎯 3. Advising Assistant (Online & Offline)
@@ -46,12 +46,13 @@
 ### 📚 4. Offered Courses Catalog Enhancer
 * Sticky headers keep table columns in view while scrolling through hundreds of courses.
 * Quick filtering by course code, department, or instructor.
-* Instant PDF catalog generator.
+* Instant PDF catalog generator with sleek gradient styling.
 
-### 🎛️ 5. Modern Settings & License Manager
-* Minimalist master power switch and notification toggles.
-* Sub-module controls for individual portal pages.
-* Dedicated **License Activation Hub** with seamless key switching and direct links to the student portal.
+### 🎛️ 5. Cyber Command Admin Console & Overview Analytics
+* **Overview & Analytics Dashboard**: Real-time KPI cards, dynamic SVG telemetry trends, license validity distribution, and live stream of connected devices.
+* **License Manager & Key Generator**: Single and batch CSPRNG key generator with duration controls and device capacity management.
+* **Remote Controls & Broadcast**: Emergency global killswitch, live announcement banners, and mandatory update enforcer.
+* **Mobile-Responsive & Glassmorphic UI**: High-contrast, mobile-optimized activation and update portals.
 
 ---
 
