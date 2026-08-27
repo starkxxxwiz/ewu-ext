@@ -19,7 +19,7 @@
   </p>
 
   <p align="center">
-    <b>Auto Captcha Solving</b> • <b>10-Column Advising Suite</b> • <b>Ultra-HD Routine Generator</b> • <b>Seat Availability Tracker</b> • <b>Offline Course Planner</b> • <b>Cyber Command Hub</b>
+    <b>Auto Captcha Solving</b> • <b>10-Column Advising Suite</b> • <b>Ultra-HD Routine Generator</b> • <b>Seat Availability Tracker</b> • <b>Offline Course Planner</b>
   </p>
 
 </div>
@@ -47,12 +47,6 @@
 * Sticky headers keep table columns in view while scrolling through hundreds of courses.
 * Quick filtering by course code, department, or instructor.
 * Instant PDF catalog generator with sleek gradient styling.
-
-### 🎛️ 5. Cyber Command Admin Console & Overview Analytics
-* **Overview & Analytics Dashboard**: Real-time KPI cards, dynamic SVG telemetry trends, license validity distribution, and live stream of connected devices.
-* **License Manager & Key Generator**: Single and batch CSPRNG key generator with duration controls and device capacity management.
-* **Remote Controls & Broadcast**: Emergency global killswitch, live announcement banners, and mandatory update enforcer.
-* **Mobile-Responsive & Glassmorphic UI**: High-contrast, mobile-optimized activation and update portals.
 
 ---
 
