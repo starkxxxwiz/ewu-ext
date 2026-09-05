@@ -9,7 +9,7 @@
     <a href="https://github.com/starkxxxwiz/ewu-ext"><img src="https://img.shields.io/badge/Manifest-V3-6366f1?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
     <a href="https://github.com/starkxxxwiz/ewu-ext"><img src="https://img.shields.io/badge/Version-2.0.0_Production-38bdf8?style=for-the-badge&logo=semver&logoColor=white" alt="Version 2.0.0" /></a>
     <a href="https://github.com/starkxxxwiz/ewu-ext/commits/main"><img src="https://img.shields.io/github/commits-since/starkxxxwiz/ewu-ext/0.0.1?style=for-the-badge&color=10b981&logo=git&logoColor=white" alt="Commits" /></a>
-    <a href="https://github.com/starkxxxwiz/ewu-ext"><img src="https://img.shields.io/badge/Platform-Chrome_/_Brave_/_Edge-f59e0b?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Supported Browsers" /></a>
+    <a href="https://github.com/starkxxxwiz/ewu-ext"><img src="https://img.shields.io/badge/Platform-Windows_/_Mac_/_Android-f59e0b?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Supported Platforms" /></a>
   </p>
 
   <p align="center">
@@ -50,21 +50,50 @@
 
 ---
 
-## 📥 How to Install & Setup
+## 📥 How to Download the Extension
 
-### Step 1: Download the Extension
-1. Download this repository as a ZIP archive by clicking the green **Code &rarr; Download ZIP** button above.
-2. Extract the downloaded `.zip` folder to your computer.
+You can download **EWU Buddy** using either of the following two options:
 
-### Step 2: Load into Your Browser (Chrome / Brave / Edge)
-1. Open your Chromium-based browser (Google Chrome, Brave, Microsoft Edge, Opera, etc.).
-2. In the URL bar, go to:
-   - **Chrome**: `chrome://extensions/`
-   - **Brave**: `brave://extensions/`
-   - **Edge**: `edge://extensions/`
-3. Enable **Developer mode** using the toggle in the top-right corner.
-4. Click the **Load unpacked** button in the top-left corner.
-5. Select the extracted extension directory.
+### 🔹 Option A: Download from GitHub Releases (Recommended)
+1. Go to the [**Releases**](https://github.com/starkxxxwiz/ewu-ext/releases) section on the right-hand sidebar of this repository.
+2. Under **Assets**, click on `ewu-buddy-v2.0.zip` to download the pre-packaged archive directly.
+
+### 🔹 Option B: Download Repository Source ZIP
+1. Scroll to the top of this GitHub repository page.
+2. Click the green **Code** button &rarr; click **Download ZIP**.
+3. A `.zip` archive containing the extension will be saved to your device.
+
+---
+
+## 🛠️ Installation Guide
+
+### 📱 For Android Phones / Tablets (Kiwi Browser, Quetta, Lemur)
+You can use Chromium browsers with extension support (such as **Kiwi Browser** or **Quetta Browser**):
+
+1. Install **Kiwi Browser** or **Quetta Browser** from Google Play Store.
+2. Download the extension `.zip` file from the [Download section](#-how-to-download-the-extension).
+3. Open **Kiwi Browser** (or Quetta) and tap the **⋮ (three dots menu)** in the top-right corner.
+4. Select **Extensions** (or navigate to `chrome://extensions`).
+5. Turn **ON** the **Developer mode** toggle in the top-right corner.
+6. Tap the **+ (from .zip / .crx / .user.js)** button.
+7. Choose the downloaded `.zip` file from your device storage.
+8. ✨ **Done!** The extension installs directly into your mobile browser.
+
+---
+
+### 🖥️ For PC / Desktop / Laptop (Chrome, Brave, Edge, Opera)
+
+1. Download the extension `.zip` file from the [Download section](#-how-to-download-the-extension).
+2. **Extract** the downloaded `.zip` folder to any location on your computer.
+3. Open your Chromium-based browser (Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi, etc.).
+4. Open the Extensions management page:
+   - **Google Chrome**: Navigate to `chrome://extensions/`
+   - **Brave Browser**: Navigate to `brave://extensions/`
+   - **Microsoft Edge**: Navigate to `edge://extensions/`
+5. Turn **ON** the **Developer mode** toggle in the top-right corner.
+6. Click the **Load unpacked** button in the top-left corner.
+7. Select the extracted extension directory (the folder containing `manifest.json`).
+8. ✨ **Done!** The EWU Buddy icon will appear in your browser toolbar.
 
 ---
 
@@ -77,13 +106,26 @@
 
 ---
 
+## ⚠️ Disclaimer & Takedown Policy
+
+> [!IMPORTANT]
+> **EWU Buddy** is an independent, community-developed productivity utility designed strictly for educational and personal assistance purposes.
+> 
+> - This project is **not** officially affiliated with, endorsed by, or operated by East West University (EWU).
+> - All trademarks, logos, and portal interfaces belong to their respective copyright holders.
+> - If East West University authorities or relevant copyright owners have questions, concerns, or wish to request modification or takedown of any feature, please reach out directly and the request will be addressed immediately:
+>   - **Direct Contact (Telegram)**: [@AftabKabir](https://t.me/AftabKabir)
+>   - **Issue Tracker**: Submit a request via [GitHub Issues](https://github.com/starkxxxwiz/ewu-ext/issues).
+
+---
+
 ## 💬 Support & Inquiries
 
-Need a license key, having trouble, or want to suggest a new feature?
+Need a license key, having trouble installing, or want to suggest a new feature?
 - Reach out directly on Telegram: **[@AftabKabir](https://t.me/AftabKabir)**
 
 ---
 
 <div align="center">
-  <sub>Crafted for East West University Students. Copyright © 2026 EWU Portal Helper. All rights reserved.</sub>
+  <sub>Crafted with ❤️ for East West University Students. Copyright © 2026 EWU Buddy. All rights reserved.</sub>
 </div>

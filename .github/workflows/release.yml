@@ -1,0 +1,78 @@
+name: Build & Publish Extension Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Package and Publish Extension
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Read Version from manifest.json
+        id: get_version
+        run: |
+          VERSION=$(node -p "require('./manifest.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Package Extension Archive
+        run: |
+          mkdir -p dist
+          zip -r "dist/ewu-buddy-v${{ env.VERSION }}.zip" \
+            manifest.json \
+            content/ \
+            popup/ \
+            pages/ \
+            background/ \
+            lib/ \
+            icons/ \
+            README.md \
+            -x "*.DS_Store" "*Thumbs.db"
+
+      - name: Generate Release Notes & Caption
+        id: release_notes
+        run: |
+          cat << 'EOF' > release_notes.md
+          ## ⚡ EWU Buddy — Production Release
+          
+          Intelligent Student Portal Assistant for East West University (`portal.ewubd.edu`).
+
+          ### 📦 What's Included in this Build
+          - **⚡ Automatic Mathematical Captcha Solver** on Portal Login.
+          - **📅 Weekly Schedule Routine Generator** with Ultra-HD PNG/PDF exporter.
+          - **🎯 10-Column Advising Suite & Live Seat Availability Tracker**.
+          - **📚 Offered Courses Catalog Enhancer** with quick live filtering.
+          - **💡 Offline Advising Course Planner** with conflict detection.
+          - **📱 Universal Mobile Compatibility** (Android Kiwi & Quetta browsers).
+
+          ### 📥 Installation Instructions
+          - **🖥️ PC (Chrome / Brave / Edge)**: Download the `.zip` below, extract it, go to `chrome://extensions/`, enable *Developer mode*, and click **Load unpacked**.
+          - **📱 Android (Kiwi / Quetta)**: Download the `.zip` below, open browser extensions menu, enable *Developer mode*, and click **+ (from .zip / .crx / .user.js)** to install directly.
+
+          ---
+          <sub>Crafted for East West University Students. Educational and productivity tool.</sub>
+          EOF
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: "⚡ EWU Buddy v${{ env.VERSION }} — Production Build (${{ env.SHORT_SHA }})"
+          body_path: release_notes.md
+          files: dist/ewu-buddy-v${{ env.VERSION }}.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
