@@ -131,7 +131,8 @@
       }
 
       // PRIORITY 4: Optional Update Notice (non-blocking)
-      if (!update.isMandatory && update.latestVersion && isVersionOutdated(manifestVer, update.latestVersion)) {
+      var showUpdateNotice = (typeof update.showNotice === 'boolean') ? update.showNotice : (update.show_update_notice !== false);
+      if (!update.isMandatory && showUpdateNotice && update.latestVersion && isVersionOutdated(manifestVer, update.latestVersion)) {
         var optBanner = document.createElement('div');
         optBanner.id = 'ewu-portal-opt-update';
         optBanner.style.cssText = 'width:100%; background:rgba(99,102,241,0.18); border-bottom:1px solid rgba(99,102,241,0.4); padding:8px 18px; color:#ffffff; font-size:12.5px; font-family:-apple-system,BlinkMacSystemFont,sans-serif; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box; z-index:99998;';

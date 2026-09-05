@@ -46,7 +46,8 @@ async function checkRemoteSystemState() {
         title: update.title,
         changelog: update.changelog,
         updateUrl: update.update_url,
-        isMandatory: Boolean(update.is_mandatory)
+        isMandatory: Boolean(update.is_mandatory),
+        showNotice: Boolean(update.show_update_notice !== false)
       }
     });
 
@@ -149,7 +150,8 @@ async function verifyLicenseToken() {
                   title: u.title || '',
                   changelog: u.changelog || '',
                   updateUrl: u.update_url || '',
-                  isMandatory: Boolean(u.is_mandatory)
+                  isMandatory: Boolean(u.is_mandatory),
+                  showNotice: Boolean(u.show_update_notice !== false)
                 }
               });
             }

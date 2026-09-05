@@ -734,7 +734,8 @@
       const headerEl = document.querySelector('.header');
 
       // PRIORITY 4: Optional Update Available Banner
-      if (isUpdateAvailable && !update.isMandatory) {
+      const showUpdateNotice = (typeof update.showNotice === 'boolean') ? update.showNotice : (update.show_update_notice !== false);
+      if (isUpdateAvailable && !update.isMandatory && showUpdateNotice) {
         const upBanner = document.createElement('div');
         upBanner.id = 'ewu-popup-update-banner';
         upBanner.style.cssText = 'margin:8px 14px 0 14px; background:rgba(99,102,241,0.14); border:1px solid rgba(99,102,241,0.35); border-radius:10px; padding:8px 12px; font-size:11.5px; line-height:1.4; color:#f1f5f9; display:flex; justify-content:space-between; align-items:center;';
