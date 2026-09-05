@@ -577,7 +577,7 @@
       'ewu_system_notice'
     ], (res) => {
       const shutdown = res.ewu_system_shutdown || { enabled: false };
-      const update = res.ewu_system_update || { isMandatory: false, minVersion: '2.0.0' };
+      const update = res.ewu_system_update || { isMandatory: false, minVersion: '1.1.0' };
       const notice = res.ewu_system_notice || { enabled: false };
 
       const container = document.querySelector('.search-nav-container');
@@ -594,7 +594,7 @@
       if (container) { container.style.filter = ''; container.style.pointerEvents = ''; }
       if (content) { content.style.filter = ''; content.style.pointerEvents = ''; }
 
-      const manifestVer = (chrome.runtime.getManifest && chrome.runtime.getManifest().version) || '2.0.0';
+      const manifestVer = (chrome.runtime.getManifest && chrome.runtime.getManifest().version) || '1.1.0';
       const isOutdated = isVersionOutdated(manifestVer, update.minVersion);
       const isUpdateAvailable = update.latestVersion && isVersionOutdated(manifestVer, update.latestVersion);
 

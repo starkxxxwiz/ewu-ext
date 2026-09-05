@@ -7,7 +7,7 @@
 
   <p align="center">
     <a href="https://github.com/starkxxxwiz/ewu-ext"><img src="https://img.shields.io/badge/Manifest-V3-6366f1?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
-    <a href="https://github.com/starkxxxwiz/ewu-ext"><img src="https://img.shields.io/badge/Version-2.0.0_Production-38bdf8?style=for-the-badge&logo=semver&logoColor=white" alt="Version 2.0.0" /></a>
+    <a href="https://github.com/starkxxxwiz/ewu-ext"><img src="https://img.shields.io/badge/Version-1.1.0_Production-38bdf8?style=for-the-badge&logo=semver&logoColor=white" alt="Version 1.1.0" /></a>
     <a href="https://github.com/starkxxxwiz/ewu-ext/commits/main"><img src="https://img.shields.io/github/commits-since/starkxxxwiz/ewu-ext/0.0.1?style=for-the-badge&color=10b981&logo=git&logoColor=white" alt="Commits" /></a>
     <a href="https://github.com/starkxxxwiz/ewu-ext"><img src="https://img.shields.io/badge/Platform-Windows_/_Mac_/_Android-f59e0b?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Supported Platforms" /></a>
   </p>
@@ -56,7 +56,7 @@ You can download **EWU Buddy** using either of the following two options:
 
 ### 🔹 Option A: Download from GitHub Releases (Recommended)
 1. Go to the [**Releases**](https://github.com/starkxxxwiz/ewu-ext/releases) section on the right-hand sidebar of this repository.
-2. Under **Assets**, click on `ewu-buddy-v2.0.zip` to download the pre-packaged archive directly.
+2. Under **Assets**, click on `ewu-buddy-v1.1.zip` to download the pre-packaged archive directly.
 
 ### 🔹 Option B: Download Repository Source ZIP
 1. Scroll to the top of this GitHub repository page.

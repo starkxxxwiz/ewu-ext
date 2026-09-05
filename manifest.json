@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "EWU Portal Helper",
-  "version": "2.0",
+  "version": "1.1",
   "description": "Professional helper extension for East West University Student Portal. Auto-solves login captcha, generates class routines, and enhances offered courses table.",
 
   "permissions": [

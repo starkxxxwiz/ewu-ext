@@ -1,5 +1,5 @@
 /* =============================================================
-   EWU Portal Helper v2.0
+   EWU Portal Helper v1.1
    Content Script
    ============================================================= */
 
@@ -14,7 +14,7 @@
     LOG_PREFIX: '[EWU Portal Helper]',
     ROUTINE_LOG: '[EWU Helper][Routine]',
     STORAGE_KEY: 'ewu_portal_helper_settings',
-    VERSION: '2.0',
+    VERSION: '1.1',
   };
 
   /* -----------------------------------------------------------
@@ -102,7 +102,7 @@
   function renderSystemBanners() {
     chrome.storage.local.get(['ewu_system_shutdown', 'ewu_system_update', 'ewu_system_notice'], function (res) {
       var shutdown = res.ewu_system_shutdown || { enabled: false };
-      var update = res.ewu_system_update || { isMandatory: false, minVersion: '2.0.0' };
+      var update = res.ewu_system_update || { isMandatory: false, minVersion: '1.1.0' };
       var notice = res.ewu_system_notice || { enabled: false };
 
       var existingBanner = document.getElementById('ewu-portal-system-banner');
@@ -118,7 +118,7 @@
         return;
       }
 
-      var manifestVer = (chrome.runtime.getManifest && chrome.runtime.getManifest().version) || '2.0.0';
+      var manifestVer = (chrome.runtime.getManifest && chrome.runtime.getManifest().version) || '1.1.0';
 
       // PRIORITY 2: Mandatory Extension Update
       if (update.isMandatory && isVersionOutdated(manifestVer, update.minVersion)) {
@@ -176,8 +176,8 @@
     }
     chrome.storage.local.get(['ewu_system_shutdown', 'ewu_system_update'], function (res) {
       var shutdown = res.ewu_system_shutdown || { enabled: false };
-      var update = res.ewu_system_update || { isMandatory: false, minVersion: '2.0.0' };
-      var manifestVer = (chrome.runtime.getManifest && chrome.runtime.getManifest().version) || '2.0.0';
+      var update = res.ewu_system_update || { isMandatory: false, minVersion: '1.1.0' };
+      var manifestVer = (chrome.runtime.getManifest && chrome.runtime.getManifest().version) || '1.1.0';
 
       renderSystemBanners();
 

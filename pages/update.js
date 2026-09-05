@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
   var manifest = chrome.runtime.getManifest();
-  var currentVersion = manifest.version || '2.0.0';
+  var currentVersion = manifest.version || '1.1.0';
 
   document.getElementById('currentVerText').textContent = 'v' + currentVersion;
 

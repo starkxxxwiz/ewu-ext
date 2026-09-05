@@ -35,7 +35,7 @@ async function checkRemoteSystemState() {
 
     var shutdown = data.shutdown || { enabled: false };
     var notice = data.notice || { enabled: false };
-    var update = data.update || { is_mandatory: false, min_version: '2.0.0' };
+    var update = data.update || { is_mandatory: false, min_version: '1.1.0' };
 
     chrome.storage.local.set({
       ewu_system_shutdown: shutdown,
@@ -51,7 +51,7 @@ async function checkRemoteSystemState() {
     });
 
     // Priority 2: Mandatory Update Enforcer
-    var currentVer = chrome.runtime.getManifest().version || '2.0.0';
+    var currentVer = chrome.runtime.getManifest().version || '1.1.0';
     if (update.is_mandatory && isVersionOutdated(currentVer, update.min_version)) {
       chrome.storage.local.get(['ewu_update_tab_opened'], function (res) {
         if (!res.ewu_update_tab_opened) {
@@ -144,8 +144,8 @@ async function verifyLicenseToken() {
                 ewu_system_shutdown: data.system.shutdown || { enabled: false },
                 ewu_system_notice: data.system.notice || { enabled: false },
                 ewu_system_update: {
-                  minVersion: u.min_version || '2.0.0',
-                  latestVersion: u.latest_version || '2.0.0',
+                  minVersion: u.min_version || '1.1.0',
+                  latestVersion: u.latest_version || '1.1.0',
                   title: u.title || '',
                   changelog: u.changelog || '',
                   updateUrl: u.update_url || '',
