@@ -10,8 +10,8 @@
   <style>
     :root {
       --bg: #030712;
-      --card-bg: rgba(13, 19, 33, 0.85);
-      --card-hover: rgba(17, 24, 39, 0.95);
+      --card-bg: rgba(13, 19, 33, 0.92);
+      --card-hover: rgba(17, 24, 39, 0.98);
       --border: rgba(255, 255, 255, 0.12);
       --border-focus: rgba(99, 102, 241, 0.7);
       --accent: #6366f1;
@@ -34,17 +34,15 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    body {
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      min-height: 100vh;
+      min-height: 100dvh;
       background: var(--bg);
       color: var(--text);
-      min-height: 100vh;
-      min-height: -webkit-fill-available;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px 16px;
-      position: relative;
       overflow-x: hidden;
+      position: relative;
     }
 
     body::before {
@@ -65,6 +63,22 @@
       z-index: 0;
     }
 
+    /* Guaranteed Centering Container */
+    .page-wrapper {
+      min-height: 100vh;
+      min-height: 100dvh;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      box-sizing: border-box;
+    }
+
     .activation-card {
       background: var(--card-bg);
       border: 1px solid rgba(99, 102, 241, 0.35);
@@ -81,6 +95,8 @@
       position: relative;
       z-index: 1;
       overflow: hidden;
+      contain: content;
+      margin: auto;
     }
 
     .activation-card::before {
@@ -163,12 +179,12 @@
     }
 
     .feature-icon {
-      width: 22px;
-      height: 22px;
-      border-radius: 7px;
-      background: rgba(16, 185, 129, 0.2);
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      color: #34d399;
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #a5b4fc;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -243,36 +259,12 @@
       overflow: hidden;
       contain: paint;
       transform: translateZ(0);
+      touch-action: manipulation;
     }
 
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(79, 70, 229, 0.5);
-    }
-
-    .btn-primary:active {
-      transform: scale(0.97);
-    }
-
-    .btn-primary::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: left 0.6s ease;
-    }
-
-    .btn-primary:hover::before {
-      left: 100%;
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 30px rgba(99, 102, 241, 0.55);
-      background: linear-gradient(135deg, #4f46e5, #4338ca);
+      box-shadow: 0 8px 24px rgba(79, 70, 229, 0.55);
     }
 
     .btn-primary:active {
@@ -302,6 +294,7 @@
       gap: 8px;
       text-decoration: none;
       transition: all 0.2s ease;
+      touch-action: manipulation;
     }
 
     .btn-secondary:hover {
@@ -330,6 +323,8 @@
       align-items: center;
       gap: 8px;
       transition: all 0.2s ease;
+      touch-action: manipulation;
+      text-decoration: none;
     }
 
     .btn-support:hover {
@@ -422,12 +417,12 @@
 
     /* Mobile Responsive Optimizations */
     @media (max-width: 480px) {
-      body {
-        padding: 16px 12px;
+      .page-wrapper {
+        padding: 16px 10px;
       }
 
       .activation-card {
-        padding: 26px 20px;
+        padding: 26px 18px;
         border-radius: 20px;
       }
 
@@ -468,117 +463,120 @@
   </style>
 </head>
 <body>
-  <div class="activation-card">
-    <div class="brand-header">
-      <div class="brand-icon">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-      </div>
-      <div>
-        <h1 class="brand-title">EWU Portal Helper</h1>
-        <div class="brand-sub">ENTERPRISE LICENSE VERIFICATION</div>
-      </div>
-    </div>
-
-    <!-- MAIN ACTIVATION FORM VIEW -->
-    <div id="activationMainView">
-      <p class="welcome-text">
-        Welcome to EWU Portal Helper! Enter your production license key below to unlock automated captcha solving, smart advising tools, routine generation, and schedule analytics.
-      </p>
-
-      <div class="feature-list">
-        <div class="feature-item">
-          <div class="feature-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-          <span>Automatic Neural Captcha Auto-Fill on Login</span>
+  <div class="page-wrapper">
+    <div class="activation-card">
+      <div class="brand-header">
+        <div class="brand-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
         </div>
-        <div class="feature-item">
-          <div class="feature-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-          <span>Routine Generator &amp; Ultra-HD Schedule Exporter</span>
-        </div>
-        <div class="feature-item">
-          <div class="feature-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-          <span>Enhanced Offered Courses Table &amp; Live Seat Tracker</span>
-        </div>
-        <div class="feature-item">
-          <div class="feature-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-          <span>Offline Advising Course Planner &amp; Conflict Solver</span>
+        <div>
+          <h1 class="brand-title">EWU Portal Helper</h1>
+          <div class="brand-sub">ENTERPRISE LICENSE VERIFICATION</div>
         </div>
       </div>
 
-      <form id="activationForm">
-        <div class="input-group">
-          <label class="input-label" for="licenseKey">License Activation Key</label>
-          <div class="license-input-wrapper">
-            <input type="text" id="licenseKey" class="license-input" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" required spellcheck="false" maxlength="24">
+      <!-- MAIN ACTIVATION FORM VIEW -->
+      <div id="activationMainView">
+        <p class="welcome-text">
+          Welcome to EWU Portal Helper! Enter your production license key below to unlock automated captcha solving, smart advising tools, routine generation, and schedule analytics.
+        </p>
+
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+            <span>Automatic Neural Captcha Auto-Fill on Login</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <span>Routine Generator &amp; Ultra-HD Schedule Exporter</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+            <span>Enhanced Offered Courses Table &amp; Live Seat Tracker</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <span>Offline Advising Course Planner &amp; Conflict Solver</span>
           </div>
         </div>
 
-        <button type="submit" id="btnActivate" class="btn-primary">
-          <span id="btnText">Verify &amp; Activate License</span>
-          <div id="btnSpinner" class="spinner" style="display:none;"></div>
-        </button>
-      </form>
+        <form id="activationForm">
+          <div class="input-group">
+            <label class="input-label" for="licenseKey">License Activation Key</label>
+            <div class="license-input-wrapper">
+              <input type="text" id="licenseKey" class="license-input" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" required spellcheck="false" maxlength="24">
+            </div>
+          </div>
 
-      <div id="statusBox" class="status-box"></div>
+          <button type="submit" id="btnActivate" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-1.5 1.5L14 9m-1.5 1.5L10 13l-4 4-4-4 4-4 2.5-2.5m1.5-1.5L16.5 3.5 18 2z"/><circle cx="7.5" cy="16.5" r="1.5"/></svg>
+            <span id="btnText">Verify &amp; Activate License</span>
+            <div id="btnSpinner" class="spinner" style="display:none;"></div>
+          </button>
+        </form>
 
-      <div id="cancelChangeWrap" style="display:none; margin-top: 14px; text-align: center;">
-        <button type="button" id="btnCancelChange" class="btn-secondary">&larr; Cancel &amp; Keep Existing License</button>
-      </div>
+        <div id="statusBox" class="status-box"></div>
 
-      <div style="font-size: 13px; margin-top: 24px; text-align: center; border-top: 1px solid var(--border); padding-top: 18px; color: var(--text-muted);">
-        Don't have a license key yet? <br/>
-        <button id="btnGetLicensePage" class="btn-support">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          Get License / Contact Support
-        </button>
-      </div>
-    </div>
-
-    <!-- SUBSCRIBED / ACTIVE VIEW -->
-    <div id="subscribedView" style="display:none; text-align:center;">
-      <div class="success-badge-wrap">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-      </div>
-      
-      <h2 style="font-size:22px; font-weight:800; color:#ffffff; background:linear-gradient(135deg,#ffffff 40%,#a5b4fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px;">
-        Subscription Active
-      </h2>
-      <p style="color:var(--text-muted); font-size:13.5px; line-height:1.6; margin-bottom:22px;">
-        Your license key is authorized and all features are unlocked.
-      </p>
-
-      <div class="sub-meta-box">
-        <div class="sub-meta-row">
-          <strong style="color:var(--text-dim);">License Prefix:</strong>
-          <span id="subKeyPrefix" style="font-family:'JetBrains Mono',monospace; color:var(--cyan); font-weight:800;">XXXX-...</span>
+        <div id="cancelChangeWrap" style="display:none; margin-top: 14px; text-align: center;">
+          <button type="button" id="btnCancelChange" class="btn-secondary">&larr; Cancel &amp; Keep Existing License</button>
         </div>
-        <div class="sub-meta-row">
-          <strong style="color:var(--text-dim);">Status:</strong>
-          <span style="color:var(--emerald); font-weight:800; display:inline-flex; align-items:center; gap:6px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-            ACTIVE // UNLOCKED
-          </span>
-        </div>
-        <div class="sub-meta-row">
-          <strong style="color:var(--text-dim);">Validity:</strong>
-          <span id="subExpiryText" style="color:#a5b4fc; font-weight:800;">Lifetime Access</span>
+
+        <div style="font-size: 13px; margin-top: 24px; text-align: center; border-top: 1px solid var(--border); padding-top: 18px; color: var(--text-muted);">
+          Don't have a license key yet? <br/>
+          <button id="btnGetLicensePage" class="btn-support">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Get License / Contact Support
+          </button>
         </div>
       </div>
 
-      <div style="display:flex; flex-direction:column; gap:10px;">
-        <button type="button" id="btnVisitPortal" class="btn-primary" style="background:linear-gradient(135deg, #10b981, #059669); box-shadow:0 8px 25px rgba(16,185,129,0.35);">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          Visit Student Portal
-        </button>
+      <!-- SUBSCRIBED / ACTIVE VIEW -->
+      <div id="subscribedView" style="display:none; text-align:center;">
+        <div class="success-badge-wrap">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+        </div>
+        
+        <h2 style="font-size:22px; font-weight:800; color:#ffffff; background:linear-gradient(135deg,#ffffff 40%,#a5b4fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px;">
+          Subscription Active
+        </h2>
+        <p style="color:var(--text-muted); font-size:13.5px; line-height:1.6; margin-bottom:22px;">
+          Your license key is authorized and all features are permanently unlocked.
+        </p>
 
-        <button type="button" id="btnChangeLicense" class="btn-secondary">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L14 9m-1.5 1.5L10 13l-4 4-4-4 4-4 2.5-2.5m1.5-1.5L16.5 3.5 18 2z"/></svg>
-          Change License Key
-        </button>
+        <div class="sub-meta-box">
+          <div class="sub-meta-row">
+            <strong style="color:var(--text-dim);">License Prefix:</strong>
+            <span id="subKeyPrefix" style="font-family:'JetBrains Mono',monospace; color:var(--cyan); font-weight:800;">XXXX-...</span>
+          </div>
+          <div class="sub-meta-row">
+            <strong style="color:var(--text-dim);">Status:</strong>
+            <span style="color:var(--emerald); font-weight:800; display:inline-flex; align-items:center; gap:6px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              ACTIVE // UNLOCKED
+            </span>
+          </div>
+          <div class="sub-meta-row">
+            <strong style="color:var(--text-dim);">Validity:</strong>
+            <span id="subExpiryText" style="color:#a5b4fc; font-weight:800;">Lifetime Access</span>
+          </div>
+        </div>
 
-        <a href="https://t.me/AftabKabir" target="_blank" class="btn-secondary" style="font-size:12.5px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          Contact Developer / Support
-        </a>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <button type="button" id="btnVisitPortal" class="btn-primary" style="background:linear-gradient(135deg, #10b981, #059669); box-shadow:0 8px 25px rgba(16,185,129,0.35);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Visit Student Portal
+          </button>
+
+          <button type="button" id="btnChangeLicense" class="btn-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L14 9m-1.5 1.5L10 13l-4 4-4-4 4-4 2.5-2.5m1.5-1.5L16.5 3.5 18 2z"/></svg>
+            Change License Key
+          </button>
+
+          <a href="https://t.me/AftabKabir" target="_blank" class="btn-secondary" style="font-size:12.5px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Contact Developer / Support
+          </a>
+        </div>
       </div>
     </div>
   </div>

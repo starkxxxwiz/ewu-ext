@@ -47,6 +47,14 @@
     });
   }
 
+  function isLicenseValid(licStatus, licExp) {
+    if (licStatus !== 'active') return false;
+    if (licExp && typeof licExp === 'number' && licExp > 0) {
+      if (Date.now() > licExp) return false;
+    }
+    return true;
+  }
+
   function renderSubscribedView(prefix, expiresAt) {
     var mainView = document.getElementById('activationMainView');
     var subView = document.getElementById('subscribedView');
@@ -69,29 +77,66 @@
   }
 
   function checkExistingActivation() {
-    if (typeof chrome === 'undefined' || !chrome.storage) return;
-    chrome.storage.local.get(['ewu_license_token', 'ewu_license_exp', 'ewu_license_prefix', 'ewu_device_id'], async function (res) {
-      if (res.ewu_license_token && res.ewu_license_exp && Date.now() < res.ewu_license_exp) {
+    if (typeof chrome === 'undefined' || !chrome.storage) {
+      var localToken = localStorage.getItem('ewu_license_token');
+      var localStatus = localStorage.getItem('ewu_license_status') || (localToken ? 'active' : '');
+      var localExp = localStorage.getItem('ewu_license_expiry');
+      if (localToken && isLicenseValid(localStatus, localExp ? Number(localExp) : null)) {
+        currentLicenseState = {
+          prefix: localStorage.getItem('ewu_license_prefix') || 'XXXX-...',
+          expiresAt: localExp ? Number(localExp) : null
+        };
+        renderSubscribedView(currentLicenseState.prefix, currentLicenseState.expiresAt);
+      }
+      return;
+    }
+
+    chrome.storage.local.get([
+      'ewu_license_token',
+      'ewu_license_status',
+      'ewu_license_expiry',
+      'ewu_license_exp', // backward compat
+      'ewu_license_prefix',
+      'ewu_device_id'
+    ], async function (res) {
+      var token = res.ewu_license_token;
+      var status = res.ewu_license_status || (token ? 'active' : 'inactive');
+      var expiry = (res.ewu_license_expiry !== undefined) ? res.ewu_license_expiry : null;
+
+      if (token && isLicenseValid(status, expiry)) {
         currentLicenseState = {
           prefix: res.ewu_license_prefix || 'XXXX-...',
-          expiresAt: res.ewu_license_exp
+          expiresAt: expiry
         };
         renderSubscribedView(currentLicenseState.prefix, currentLicenseState.expiresAt);
 
-        // Revalidate in background
+        // Revalidate in background without blocking
         try {
           var deviceId = res.ewu_device_id || await getDeviceId();
           var response = await fetch(WORKER_URL + '/api/license/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: res.ewu_license_token, deviceId: deviceId })
+            body: JSON.stringify({ token: token, deviceId: deviceId })
           });
           var data = await response.json();
           if (response.ok && data.valid) {
             currentLicenseState.expiresAt = data.licenseExpiresAt;
+            chrome.storage.local.set({
+              ewu_license_status: 'active',
+              ewu_license_expiry: data.licenseExpiresAt,
+              ewu_license_prefix: data.licensePrefix || currentLicenseState.prefix
+            });
             renderSubscribedView(currentLicenseState.prefix, currentLicenseState.expiresAt);
+          } else if (data && data.valid === false) {
+            // License explicitly revoked or expired on server
+            chrome.storage.local.set({ ewu_license_status: 'inactive' });
+            document.getElementById('subscribedView').style.display = 'none';
+            document.getElementById('activationMainView').style.display = 'block';
+            showStatus(data.reason || 'License is no longer active. Please enter a valid license key.', 'error');
           }
-        } catch (_) {}
+        } catch (_) {
+          // Network drop: keep user active offline!
+        }
       }
     });
   }
@@ -154,21 +199,27 @@
       var data = await response.json();
       if (response.ok && data.success) {
         var licPrefix = (data.licenseInfo && data.licenseInfo.keyPrefix) ? data.licenseInfo.keyPrefix : licenseKey.substring(0, 9) + '...';
-        var licExp = data.licenseInfo ? data.licenseInfo.expiresAt : null;
+        var licExp = (data.licenseInfo && data.licenseInfo.expiresAt !== undefined) ? data.licenseInfo.expiresAt : (data.licenseExpiresAt || null);
+
+        var savePayload = {
+          ewu_license_token: data.token,
+          ewu_license_status: 'active',
+          ewu_license_expiry: licExp,
+          ewu_token_exp: data.expiresAt || data.tokenExpiresAt,
+          ewu_license_prefix: licPrefix
+        };
 
         if (typeof chrome !== 'undefined' && chrome.storage) {
-          chrome.storage.local.set({
-            ewu_license_token: data.token,
-            ewu_license_exp: data.expiresAt,
-            ewu_license_prefix: licPrefix
-          }, function () {
+          chrome.storage.local.set(savePayload, function () {
             if (chrome.runtime && chrome.runtime.sendMessage) {
               chrome.runtime.sendMessage({ type: 'EWU_SETTINGS_UPDATED' });
             }
           });
         } else {
           localStorage.setItem('ewu_license_token', data.token);
-          localStorage.setItem('ewu_license_exp', data.expiresAt);
+          localStorage.setItem('ewu_license_status', 'active');
+          localStorage.setItem('ewu_license_expiry', licExp ? String(licExp) : '');
+          localStorage.setItem('ewu_license_prefix', licPrefix);
         }
 
         currentLicenseState = {
@@ -176,16 +227,16 @@
           expiresAt: licExp
         };
 
-        showStatus('License activated successfully! Thank you for using EWU Portal Helper.', 'success');
+        showStatus('License activated successfully! Full access unlocked.', 'success');
         keyInput.value = '';
         setTimeout(function () {
           renderSubscribedView(currentLicenseState.prefix, currentLicenseState.expiresAt);
-        }, 1000);
+        }, 800);
       } else {
-        showStatus(data.message || 'Invalid or inactive license key. Please check your key or contact the owner.', 'error');
+        showStatus(data.message || 'Invalid or inactive license key. Please check your key or contact support.', 'error');
       }
     } catch (err) {
-      showStatus('Unable to reach verification server. Please check your internet connection or try again later.', 'error');
+      showStatus('Unable to reach verification server. Please check your internet connection and try again.', 'error');
     } finally {
       setLoading(false);
     }

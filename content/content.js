@@ -108,39 +108,40 @@
       var existingBanner = document.getElementById('ewu-portal-system-banner');
       if (existingBanner) existingBanner.remove();
 
+      // PRIORITY 1: Emergency Remote Shutdown
       if (shutdown.enabled) {
         var sBanner = document.createElement('div');
         sBanner.id = 'ewu-portal-system-banner';
-        sBanner.style.cssText = 'position:fixed; top:18px; right:18px; z-index:999999; max-width:400px; background:rgba(13,19,33,0.92); border:1px solid rgba(244,63,94,0.55); border-radius:16px; padding:16px 20px; box-shadow:0 15px 40px rgba(0,0,0,0.8), 0 0 25px rgba(244,63,94,0.3); color:#fff; font-family:-apple-system,BlinkMacSystemFont,sans-serif; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); transition:all 0.3s ease;';
+        sBanner.style.cssText = 'position:fixed; top:18px; right:18px; z-index:999999; max-width:400px; background:rgba(13,19,33,0.95); border:1px solid rgba(244,63,94,0.55); border-radius:16px; padding:16px 20px; box-shadow:0 15px 40px rgba(0,0,0,0.8), 0 0 25px rgba(244,63,94,0.3); color:#fff; font-family:-apple-system,BlinkMacSystemFont,sans-serif; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); transition:all 0.3s ease;';
         sBanner.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;"><span style="color:#f43f5e; font-weight:800; font-size:13.5px; letter-spacing:0.3px;">' + (shutdown.title || 'System Temporarily Offline') + '</span><button style="background:transparent; border:none; color:#94a3b8; font-size:16px; cursor:pointer; padding:2px 6px; line-height:1;" onclick="this.closest(\'#ewu-portal-system-banner\').remove()">✕</button></div><div style="font-size:12.5px; color:#cbd5e1; line-height:1.5;">' + (shutdown.message || 'EWU Portal Helper is currently disabled by administrator.') + '</div>';
         document.body.appendChild(sBanner);
-
-        setTimeout(function () {
-          if (sBanner && sBanner.parentNode) {
-            sBanner.style.opacity = '0';
-            setTimeout(function () { if (sBanner.parentNode) sBanner.remove(); }, 400);
-          }
-        }, 7000);
         return;
       }
 
       var manifestVer = (chrome.runtime.getManifest && chrome.runtime.getManifest().version) || '2.0.0';
+
+      // PRIORITY 2: Mandatory Extension Update
       if (update.isMandatory && isVersionOutdated(manifestVer, update.minVersion)) {
         var uBanner = document.createElement('div');
         uBanner.id = 'ewu-portal-system-banner';
-        uBanner.style.cssText = 'position:fixed; top:18px; right:18px; z-index:999999; max-width:400px; background:rgba(13,19,33,0.92); border:1px solid rgba(99,102,241,0.55); border-radius:16px; padding:16px 20px; box-shadow:0 15px 40px rgba(0,0,0,0.8), 0 0 25px rgba(99,102,241,0.3); color:#fff; font-family:-apple-system,BlinkMacSystemFont,sans-serif; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); transition:all 0.3s ease;';
+        uBanner.style.cssText = 'position:fixed; top:18px; right:18px; z-index:999999; max-width:400px; background:rgba(13,19,33,0.95); border:1px solid rgba(99,102,241,0.55); border-radius:16px; padding:16px 20px; box-shadow:0 15px 40px rgba(0,0,0,0.8), 0 0 25px rgba(99,102,241,0.3); color:#fff; font-family:-apple-system,BlinkMacSystemFont,sans-serif; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); transition:all 0.3s ease;';
         uBanner.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;"><span style="color:#818cf8; font-weight:800; font-size:13.5px; letter-spacing:0.3px;">' + (update.title || 'Extension Update Required') + '</span><button style="background:transparent; border:none; color:#94a3b8; font-size:16px; cursor:pointer; padding:2px 6px; line-height:1;" onclick="this.closest(\'#ewu-portal-system-banner\').remove()">✕</button></div><div style="font-size:12.5px; color:#cbd5e1; line-height:1.5; margin-bottom:12px;">Please update EWU Buddy (v' + (update.latestVersion || update.minVersion) + ') to continue.</div><a href="' + (update.updateUrl || 'https://t.me/AftabKabir') + '" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; font-size:12px; font-weight:700; border-radius:10px; text-decoration:none; box-shadow:0 4px 14px rgba(99,102,241,0.4);">Update Now &rarr;</a>';
         document.body.appendChild(uBanner);
-
-        setTimeout(function () {
-          if (uBanner && uBanner.parentNode) {
-            uBanner.style.opacity = '0';
-            setTimeout(function () { if (uBanner.parentNode) uBanner.remove(); }, 400);
-          }
-        }, 8000);
         return;
       }
 
+      // PRIORITY 4: Optional Update Notice (non-blocking)
+      if (!update.isMandatory && update.latestVersion && isVersionOutdated(manifestVer, update.latestVersion)) {
+        var optBanner = document.createElement('div');
+        optBanner.id = 'ewu-portal-opt-update';
+        optBanner.style.cssText = 'width:100%; background:rgba(99,102,241,0.18); border-bottom:1px solid rgba(99,102,241,0.4); padding:8px 18px; color:#ffffff; font-size:12.5px; font-family:-apple-system,BlinkMacSystemFont,sans-serif; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box; z-index:99998;';
+        optBanner.innerHTML = '<div><strong style="color:#818cf8; margin-right:6px;">EWU Buddy Update Available (v' + update.latestVersion + '):</strong><span>' + (update.title || 'New features & advising updates ready.') + '</span></div><div style="display:flex; align-items:center; gap:10px;"><a href="' + (update.updateUrl || 'https://t.me/AftabKabir') + '" target="_blank" style="color:#38bdf8; font-weight:700; text-decoration:underline; font-size:12px;">Download Update &rarr;</a><button style="background:transparent; border:none; color:#94a3b8; font-size:14px; cursor:pointer; padding:0 4px;" onclick="this.closest(\'#ewu-portal-opt-update\').remove()">✕</button></div>';
+        var topBarEl = document.body.firstElementChild;
+        if (topBarEl) document.body.insertBefore(optBanner, topBarEl);
+        else document.body.appendChild(optBanner);
+      }
+
+      // PRIORITY 5: Broadcast Notice Banner (non-blocking)
       if (notice.enabled && (notice.title || notice.message)) {
         var nColor = notice.type === 'alert' ? '#f43f5e' : (notice.type === 'warning' ? '#f59e0b' : '#38bdf8');
         var nBg = notice.type === 'alert' ? 'rgba(244,63,94,0.15)' : (notice.type === 'warning' ? 'rgba(245,158,11,0.15)' : 'rgba(56,189,248,0.15)');
@@ -163,7 +164,7 @@
             nBanner.style.opacity = '0';
             setTimeout(function () { if (nBanner.parentNode) nBanner.remove(); }, 400);
           }
-        }, 10000);
+        }, 12000);
       }
     });
   }
@@ -180,26 +181,51 @@
 
       renderSystemBanners();
 
+      // PRIORITY 1: Shutdown
       if (shutdown.enabled) {
         log('System Shutdown active. Enhancement halted.');
         callback(false);
         return;
       }
 
+      // PRIORITY 2: Mandatory Update
       if (update.isMandatory && isVersionOutdated(manifestVer, update.minVersion)) {
         log('Mandatory update required. Enhancement halted.');
         callback(false);
         return;
       }
 
+      // PRIORITY 3: License check
       chrome.runtime.sendMessage({ type: 'GET_LICENSE_STATUS' }, function (res) {
         if (chrome.runtime.lastError || !res || !res.authorized) {
+          showUnactivatedPrompt();
           callback(false);
         } else {
           callback(true);
         }
       });
     });
+  }
+
+  function showUnactivatedPrompt() {
+    var existingPrompt = document.getElementById('ewu-unactivated-prompt');
+    if (existingPrompt) return;
+
+    var prompt = document.createElement('div');
+    prompt.id = 'ewu-unactivated-prompt';
+    prompt.style.cssText = 'position:fixed; bottom:20px; right:20px; z-index:999999; background:rgba(13,19,33,0.95); border:1px solid rgba(99,102,241,0.45); border-radius:14px; padding:14px 18px; box-shadow:0 12px 35px rgba(0,0,0,0.7), 0 0 20px rgba(99,102,241,0.25); color:#ffffff; font-family:-apple-system,BlinkMacSystemFont,sans-serif; backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); display:flex; align-items:center; gap:12px; font-size:13px; max-width:360px;';
+    prompt.innerHTML = '<div style="width:34px; height:34px; border-radius:10px; background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#818cf8;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div><strong style="display:block; font-size:13px; margin-bottom:2px;">Activate EWU Portal Helper</strong><span style="font-size:11.5px; color:#cbd5e1;">Enter your license key to unlock automated captcha &amp; advising tools.</span></div><button id="btnPromptActivate" style="padding:7px 12px; background:linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; margin-left:4px;">Activate &rarr;</button><button style="background:transparent; border:none; color:#94a3b8; font-size:14px; cursor:pointer; padding:0 2px;" onclick="this.closest(\'#ewu-unactivated-prompt\').remove()">✕</button>';
+    
+    document.body.appendChild(prompt);
+
+    var btnAct = document.getElementById('btnPromptActivate');
+    if (btnAct) {
+      btnAct.addEventListener('click', function () {
+        if (typeof chrome !== 'undefined' && chrome.runtime) {
+          chrome.runtime.sendMessage({ type: 'OPEN_ACTIVATION_PAGE' });
+        }
+      });
+    }
   }
 
 

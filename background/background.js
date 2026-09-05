@@ -13,6 +13,19 @@ function isVersionOutdated(currentVer, minVer) {
   return false;
 }
 
+function isLicenseAuthorizedLocally(res) {
+  if (!res || !res.ewu_license_token) return false;
+  if (res.ewu_license_status === 'inactive' || res.ewu_license_status === 'revoked' || res.ewu_license_status === 'expired') {
+    return false;
+  }
+  // Check subscription expiry (null/0/undefined means Lifetime Perpetual)
+  var licExp = res.ewu_license_expiry;
+  if (licExp && typeof licExp === 'number' && licExp > 0) {
+    if (Date.now() > licExp) return false;
+  }
+  return true;
+}
+
 async function checkRemoteSystemState() {
   try {
     var response = await fetch(WORKER_URL + '/api/system/status');
@@ -37,7 +50,7 @@ async function checkRemoteSystemState() {
       }
     });
 
-    // If update is mandatory and current version is outdated, trigger update tab
+    // Priority 2: Mandatory Update Enforcer
     var currentVer = chrome.runtime.getManifest().version || '2.0.0';
     if (update.is_mandatory && isVersionOutdated(currentVer, update.min_version)) {
       chrome.storage.local.get(['ewu_update_tab_opened'], function (res) {
@@ -55,14 +68,13 @@ async function checkRemoteSystemState() {
 chrome.runtime.onInstalled.addListener(function (details) {
   checkRemoteSystemState();
   if (details.reason === 'install') {
-    chrome.storage.local.get(['ewu_license_token', 'ewu_license_exp'], function (res) {
-      var hasValidToken = res.ewu_license_token && res.ewu_license_exp && Date.now() < res.ewu_license_exp;
-      if (!hasValidToken) {
+    chrome.storage.local.get(['ewu_license_token', 'ewu_license_status', 'ewu_license_expiry', 'ewu_license_exp'], function (res) {
+      if (!isLicenseAuthorizedLocally(res)) {
         chrome.tabs.create({ url: chrome.runtime.getURL('pages/activation.html') });
       }
     });
   }
-  // Setup periodic alarm
+  // Periodic background check alarm (10 minutes)
   try {
     chrome.alarms.create('check_remote_status', { periodInMinutes: 10 });
   } catch (_) {}
@@ -95,19 +107,25 @@ function getDeviceId() {
 
 async function verifyLicenseToken() {
   return new Promise(function (resolve) {
-    chrome.storage.local.get(['ewu_license_token', 'ewu_license_exp', 'ewu_device_id'], function (res) {
-      var token = res.ewu_license_token;
-      var exp = res.ewu_license_exp;
-      var deviceId = res.ewu_device_id;
-      if (!token || !exp || Date.now() > exp) {
-        resolve({ authorized: false, reason: 'No active license token found.' });
+    chrome.storage.local.get([
+      'ewu_license_token',
+      'ewu_license_status',
+      'ewu_license_expiry',
+      'ewu_license_exp',
+      'ewu_license_prefix',
+      'ewu_device_id'
+    ], function (res) {
+      var isLocallyValid = isLicenseAuthorizedLocally(res);
+      if (!isLocallyValid) {
+        resolve({ authorized: false, reason: 'No active license authorization found.' });
         return;
       }
 
-      // Resolve immediately for 0ms latency in UI
-      resolve({ authorized: true, expiresAt: exp });
+      // Fast-path: Instant zero-latency authorization for content and popup
+      resolve({ authorized: true, expiresAt: res.ewu_license_expiry || null });
 
-      // Async background server sync
+      // Silent background server re-verification
+      var token = res.ewu_license_token;
       var checkServer = function (devId) {
         fetch(WORKER_URL + '/api/license/verify', {
           method: 'POST',
@@ -115,6 +133,11 @@ async function verifyLicenseToken() {
           body: JSON.stringify({ token: token, deviceId: devId })
         }).then(function (r) { return r.json(); }).then(function (data) {
           if (data && data.valid) {
+            chrome.storage.local.set({
+              ewu_license_status: 'active',
+              ewu_license_expiry: data.licenseExpiresAt,
+              ewu_license_prefix: data.licensePrefix || res.ewu_license_prefix
+            });
             if (data.system) {
               var u = data.system.update || {};
               chrome.storage.local.set({
@@ -130,16 +153,20 @@ async function verifyLicenseToken() {
                 }
               });
             }
-          } else if (data && !data.valid) {
-            chrome.storage.local.remove(['ewu_license_token', 'ewu_license_exp']);
+          } else if (data && data.valid === false) {
+            // Explicitly revoked or deleted by admin
+            chrome.storage.local.set({ ewu_license_status: 'inactive' });
+            chrome.storage.local.remove(['ewu_license_token', 'ewu_license_expiry']);
           }
-        }).catch(function () {});
+        }).catch(function () {
+          // Network drop / offline: DO NOT log out user! Keep authorized!
+        });
       };
 
-      if (!deviceId) {
+      if (!res.ewu_device_id) {
         getDeviceId().then(checkServer);
       } else {
-        checkServer(deviceId);
+        checkServer(res.ewu_device_id);
       }
     });
   });
@@ -167,5 +194,3 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     sendResponse({ success: true });
   }
 });
-
-

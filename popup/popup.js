@@ -549,13 +549,27 @@
   }
 
   /* -----------------------------------------------------------
-     LICENSING & REMOTE STATUS ENFORCEMENT
+     LICENSING & REMOTE STATUS ENFORCEMENT (PRIORITY SYSTEM)
      ----------------------------------------------------------- */
+  function isLicenseAuthorizedLocally(res) {
+    if (!res || !res.ewu_license_token) return false;
+    if (res.ewu_license_status === 'inactive' || res.ewu_license_status === 'revoked' || res.ewu_license_status === 'expired') {
+      return false;
+    }
+    var licExp = res.ewu_license_expiry;
+    if (licExp && typeof licExp === 'number' && licExp > 0) {
+      if (Date.now() > licExp) return false;
+    }
+    return true;
+  }
+
   function updateLicenseStatusUI() {
     if (typeof chrome === 'undefined' || !chrome.storage) return;
 
     chrome.storage.local.get([
       'ewu_license_token',
+      'ewu_license_status',
+      'ewu_license_expiry',
       'ewu_license_exp',
       'ewu_license_prefix',
       'ewu_system_shutdown',
@@ -574,15 +588,24 @@
       if (oldOverlay) oldOverlay.remove();
       const oldNotice = document.getElementById('ewu-popup-broadcast-banner');
       if (oldNotice) oldNotice.remove();
+      const oldUpNotice = document.getElementById('ewu-popup-update-banner');
+      if (oldUpNotice) oldUpNotice.remove();
 
       if (container) { container.style.filter = ''; container.style.pointerEvents = ''; }
       if (content) { content.style.filter = ''; content.style.pointerEvents = ''; }
 
       const manifestVer = (chrome.runtime.getManifest && chrome.runtime.getManifest().version) || '2.0.0';
+      const isOutdated = isVersionOutdated(manifestVer, update.minVersion);
+      const isUpdateAvailable = update.latestVersion && isVersionOutdated(manifestVer, update.latestVersion);
 
-      // 1. Check for Emergency Shutdown
+      // ---------------------------------------------------------
+      // PRIORITY 1: Emergency Remote Killswitch / Shutdown
+      // ---------------------------------------------------------
       if (shutdown.enabled) {
-        if (els.licBadgeDot) els.licBadgeDot.style.background = '#f43f5e';
+        if (els.licBadgeDot) {
+          els.licBadgeDot.style.background = '#f43f5e';
+          els.licBadgeDot.style.boxShadow = '0 0 8px rgba(244,63,94,0.7)';
+        }
         if (els.licStatusText) els.licStatusText.textContent = 'System Shutdown';
         if (els.licSubText) els.licSubText.textContent = 'Disabled by administrator';
 
@@ -606,9 +629,14 @@
         return;
       }
 
-      // 2. Check for Mandatory Update
-      if (update.isMandatory && isVersionOutdated(manifestVer, update.minVersion)) {
-        if (els.licBadgeDot) els.licBadgeDot.style.background = '#f59e0b';
+      // ---------------------------------------------------------
+      // PRIORITY 2: Mandatory Extension Update Enforced
+      // ---------------------------------------------------------
+      if (update.isMandatory && isOutdated) {
+        if (els.licBadgeDot) {
+          els.licBadgeDot.style.background = '#f59e0b';
+          els.licBadgeDot.style.boxShadow = '0 0 8px rgba(245,158,11,0.7)';
+        }
         if (els.licStatusText) els.licStatusText.textContent = 'Update Required';
         if (els.licSubText) els.licSubText.textContent = `v${manifestVer} -> v${update.latestVersion || update.minVersion}`;
 
@@ -645,45 +673,12 @@
         return;
       }
 
-      // 3. Render Broadcast Notice Banner if active
-      if (notice.enabled && (notice.title || notice.message)) {
-        let bannerBg = 'rgba(56, 189, 248, 0.12)';
-        let bannerBorder = 'rgba(56, 189, 248, 0.3)';
-        let bannerColor = '#38bdf8';
-        if (notice.type === 'warning') {
-          bannerBg = 'rgba(245, 158, 11, 0.12)';
-          bannerBorder = 'rgba(245, 158, 11, 0.3)';
-          bannerColor = '#f59e0b';
-        } else if (notice.type === 'alert') {
-          bannerBg = 'rgba(244, 63, 94, 0.12)';
-          bannerBorder = 'rgba(244, 63, 94, 0.3)';
-          bannerColor = '#f43f5e';
-        }
+      // ---------------------------------------------------------
+      // PRIORITY 3: License Authorization Check
+      // ---------------------------------------------------------
+      const hasValidLicense = isLicenseAuthorizedLocally(res);
 
-        const banner = document.createElement('div');
-        banner.id = 'ewu-popup-broadcast-banner';
-        banner.style.cssText = `margin:8px 14px 0 14px; background:${bannerBg}; border:1px solid ${bannerBorder}; border-radius:10px; padding:10px 12px; font-size:11.5px; line-height:1.5; color:#f1f5f9;`;
-        banner.innerHTML = `
-          ${notice.title ? `<strong style="display:block; color:${bannerColor}; font-size:12px; margin-bottom:2px;">${notice.title}</strong>` : ''}
-          <span>${notice.message}</span>
-        `;
-        const headerEl = document.querySelector('.header');
-        if (headerEl && headerEl.nextSibling) {
-          headerEl.parentNode.insertBefore(banner, headerEl.nextSibling);
-        }
-      }
-
-      // 4. Check Local License Token & Expiry
-      const hasValidToken = res.ewu_license_token && res.ewu_license_exp && Date.now() < res.ewu_license_exp;
-
-      if (hasValidToken) {
-        if (els.licBadgeDot) {
-          els.licBadgeDot.style.background = '#10b981';
-          els.licBadgeDot.style.boxShadow = '0 0 8px rgba(16, 185, 129, 0.7)';
-        }
-        if (els.licStatusText) els.licStatusText.textContent = 'License Active';
-        if (els.licSubText) els.licSubText.style.display = 'none';
-      } else {
+      if (!hasValidLicense) {
         if (els.licBadgeDot) {
           els.licBadgeDot.style.background = '#f43f5e';
           els.licBadgeDot.style.boxShadow = '0 0 8px rgba(244, 63, 94, 0.7)';
@@ -691,7 +686,7 @@
         if (els.licStatusText) els.licStatusText.textContent = 'License Inactive';
         if (els.licSubText) els.licSubText.style.display = 'none';
 
-        // Blur background settings and show centered activation warning overlay
+        // Blur settings and show centered activation warning overlay
         if (container) { container.style.filter = 'blur(7px)'; container.style.pointerEvents = 'none'; }
         if (content) { content.style.filter = 'blur(7px)'; content.style.pointerEvents = 'none'; }
 
@@ -704,7 +699,7 @@
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
             <h3 style="color:#ffffff; font-size:15px; font-weight:800; margin-bottom:6px; letter-spacing:-0.2px;">License Activation Required</h3>
-            <p style="color:#cbd5e1; font-size:12px; line-height:1.55; margin-bottom:18px;">Activate your license to unlock automatic captcha solving, routine timetables, and offline advising suite.</p>
+            <p style="color:#cbd5e1; font-size:12px; line-height:1.55; margin-bottom:18px;">Activate your license key to unlock automatic captcha solving, routine timetables, and advising planner.</p>
             <button id="btnPopupActivateAction" style="width:100%; padding:11px 18px; border-radius:10px; background:linear-gradient(135deg, #4f46e5, #3b82f6); color:#ffffff; border:1px solid rgba(255,255,255,0.15); font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 14px rgba(79,70,229,0.35); transition:transform 0.15s ease;">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 2l-2 2m-1.5 1.5L14 9m-1.5 1.5L10 13l-4 4-4-4 4-4 2.5-2.5m1.5-1.5L16.5 3.5 18 2z"/><circle cx="7.5" cy="16.5" r="1.5"/></svg>
               Activate License
@@ -722,6 +717,61 @@
               window.open('pages/activation.html', '_blank');
             }
           });
+        }
+        return;
+      }
+
+      // ---------------------------------------------------------
+      // PRIORITY 4, 5, 6: User is Authorized! Render Features + Banners
+      // ---------------------------------------------------------
+      if (els.licBadgeDot) {
+        els.licBadgeDot.style.background = '#10b981';
+        els.licBadgeDot.style.boxShadow = '0 0 8px rgba(16, 185, 129, 0.7)';
+      }
+      if (els.licStatusText) els.licStatusText.textContent = 'License Active';
+      if (els.licSubText) els.licSubText.style.display = 'none';
+
+      const headerEl = document.querySelector('.header');
+
+      // PRIORITY 4: Optional Update Available Banner
+      if (isUpdateAvailable && !update.isMandatory) {
+        const upBanner = document.createElement('div');
+        upBanner.id = 'ewu-popup-update-banner';
+        upBanner.style.cssText = 'margin:8px 14px 0 14px; background:rgba(99,102,241,0.14); border:1px solid rgba(99,102,241,0.35); border-radius:10px; padding:8px 12px; font-size:11.5px; line-height:1.4; color:#f1f5f9; display:flex; justify-content:space-between; align-items:center;';
+        upBanner.innerHTML = `
+          <span><strong style="color:#818cf8;">Update v${update.latestVersion} available!</strong></span>
+          <a href="${update.updateUrl || 'https://t.me/AftabKabir'}" target="_blank" style="color:#38bdf8; font-weight:700; text-decoration:underline; margin-left:8px;">Download &rarr;</a>
+        `;
+        if (headerEl && headerEl.nextSibling) {
+          headerEl.parentNode.insertBefore(upBanner, headerEl.nextSibling);
+        }
+      }
+
+      // PRIORITY 5: Broadcast Notice Announcement Banner
+      if (notice.enabled && (notice.title || notice.message)) {
+        let bannerBg = 'rgba(56, 189, 248, 0.12)';
+        let bannerBorder = 'rgba(56, 189, 248, 0.3)';
+        let bannerColor = '#38bdf8';
+        if (notice.type === 'warning') {
+          bannerBg = 'rgba(245, 158, 11, 0.12)';
+          bannerBorder = 'rgba(245, 158, 11, 0.3)';
+          bannerColor = '#f59e0b';
+        } else if (notice.type === 'alert') {
+          bannerBg = 'rgba(244, 63, 94, 0.12)';
+          bannerBorder = 'rgba(244, 63, 94, 0.3)';
+          bannerColor = '#f43f5e';
+        }
+
+        const banner = document.createElement('div');
+        banner.id = 'ewu-popup-broadcast-banner';
+        banner.style.cssText = `margin:8px 14px 0 14px; background:${bannerBg}; border:1px solid ${bannerBorder}; border-radius:10px; padding:10px 12px; font-size:11.5px; line-height:1.5; color:#f1f5f9; position:relative;`;
+        banner.innerHTML = `
+          <button style="position:absolute; top:6px; right:8px; background:transparent; border:none; color:#94a3b8; font-size:13px; cursor:pointer;" onclick="this.parentElement.remove()">✕</button>
+          ${notice.title ? `<strong style="display:block; color:${bannerColor}; font-size:12px; margin-bottom:2px;">${notice.title}</strong>` : ''}
+          <span>${notice.message}</span>
+        `;
+        if (headerEl && headerEl.nextSibling) {
+          headerEl.parentNode.insertBefore(banner, headerEl.nextSibling);
         }
       }
     });
