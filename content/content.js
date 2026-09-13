@@ -652,6 +652,25 @@
       return String(room).replace(/\s*\([^)]*\)/g, '').trim();
     },
 
+    _isDroppedOrWithdrawn: function (item) {
+      if (!item) return false;
+      var isTrue = function (val) {
+        if (val === true || val === 1) return true;
+        if (typeof val === 'string') {
+          var s = val.trim().toLowerCase();
+          return s === 'yes' || s === 'true' || s === '1' || s === 'y';
+        }
+        return false;
+      };
+
+      return isTrue(item.DropStatus) ||
+             isTrue(item.WithDrawStatus) ||
+             isTrue(item.WithdrawStatus) ||
+             isTrue(item.IsDrop) ||
+             isTrue(item.IsWithdraw) ||
+             isTrue(item.isSemesterDrop);
+    },
+
     _extractCourses: function () {
       var self = this;
       var rawItems = this._apiData || (typeof ScheduleEnhancerModule !== 'undefined' && ScheduleEnhancerModule._apiData) || null;
@@ -671,6 +690,12 @@
           for (var j = 1; j < rows.length; j++) {
             var cells = rows[j].querySelectorAll('td');
             if (cells.length >= 6) {
+              var withdrawText = ((cells[6] || {}).textContent || '').trim().toLowerCase();
+              var dropText = ((cells[7] || {}).textContent || '').trim().toLowerCase();
+              if (withdrawText === 'yes' || dropText === 'yes') {
+                continue;
+              }
+
               var code = (cells[1] || {}).textContent;
               var sec  = ((cells[2] || {}).textContent || '').trim();
               if (code && code.trim()) {
@@ -703,6 +728,13 @@
       for (var i = 0; i < rawItems.length; i++) {
         var c = rawItems[i];
         if (!c || !c.CourseCode || !String(c.CourseCode).trim()) continue;
+
+        // Skip dropped or withdrawn courses
+        if (self._isDroppedOrWithdrawn(c)) {
+          routineLog('[Routine] Skipping dropped/withdrawn course:', c.CourseCode, 'DropStatus:', c.DropStatus, 'WithDrawStatus:', c.WithDrawStatus);
+          continue;
+        }
+
         var cc = String(c.CourseCode).trim();
         var sec = c.SectionName;
         var key = cc + '|' + sec;
@@ -855,9 +887,9 @@
       var hpad = compact ? 8 : 12;
       var self = this;
 
-      // Calculate sorting weights and detect Saturday/Friday classes
-      var hasSaturday = false;
-      var hasFriday = false;
+      // Calculate sorting weights and track days that actually have classes
+      var allWeekDays = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+      var activeDaysMap = {};
 
       courses.forEach(function (course) {
         var minSortTime = Infinity;
@@ -875,11 +907,8 @@
               minSortTime = parsed.sortTime;
             }
             parsed.days.forEach(function (day) {
-              if (day === 'Saturday') hasSaturday = true;
-              if (day === 'Friday') hasFriday = true;
-
-              var fullWeek = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-              var idx = fullWeek.indexOf(day);
+              activeDaysMap[day] = true;
+              var idx = allWeekDays.indexOf(day);
               if (idx !== -1 && idx < minDayIndex) {
                 minDayIndex = idx;
               }
@@ -891,13 +920,10 @@
         course._minDayIndex = minDayIndex === Infinity ? 9999 : minDayIndex;
       });
 
-      // Construct dynamic daysToShow
-      var daysToShow = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
-      if (hasSaturday) {
-        daysToShow.unshift('Saturday');
-      }
-      if (hasFriday) {
-        daysToShow.push('Friday');
+      // Construct dynamic daysToShow: only include days that actually have scheduled classes
+      var daysToShow = allWeekDays.filter(function (d) { return !!activeDaysMap[d]; });
+      if (!daysToShow.length) {
+        daysToShow = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
       }
 
       // Sort chronologically by earliest daily start time, then day index, then alphabetically
@@ -941,7 +967,7 @@
 
           for (var di = 0; di < parsed.days.length; di++) {
             var day = parsed.days[di];
-            if (!dayMap[day]) continue; // day not in daysToShow (e.g. Saturday/Friday if not in schedule)
+            if (!dayMap[day]) continue; // day not in daysToShow
 
             // Find or create entry for this course on this day
             var existing = null;
@@ -964,6 +990,14 @@
             routineLog('[Routine] Mapped', course.courseCode, 'Sec', course.sectionName, '->', day, parsed.startTime + '-' + parsed.endTime, 'Room:', slot.roomName);
           }
         }
+      }
+
+      // Filter out any day where no course actually had slots
+      var finalDays = daysToShow.filter(function (d) {
+        return dayMap[d] && dayMap[d].some(function (entry) { return entry.slots && entry.slots.length > 0; });
+      });
+      if (finalDays.length > 0) {
+        daysToShow = finalDays;
       }
 
       // Sort slots within each day entry by start time
@@ -1496,6 +1530,25 @@
       return str;
     },
 
+    _isDroppedOrWithdrawn: function (item) {
+      if (!item) return false;
+      var isTrue = function (val) {
+        if (val === true || val === 1) return true;
+        if (typeof val === 'string') {
+          var s = val.trim().toLowerCase();
+          return s === 'yes' || s === 'true' || s === '1' || s === 'y';
+        }
+        return false;
+      };
+
+      return isTrue(item.DropStatus) ||
+             isTrue(item.WithDrawStatus) ||
+             isTrue(item.WithdrawStatus) ||
+             isTrue(item.IsDrop) ||
+             isTrue(item.IsWithdraw) ||
+             isTrue(item.isSemesterDrop);
+    },
+
     _enhanceTable: function () {
       var self = this;
       if (this._isEnhancing) return;
@@ -1544,6 +1597,7 @@
 
         // 2. Enhance Data Rows & Calculate Distinct Course & Credit Totals
         var courseCreditMap = {};
+        var courseDroppedMap = {};
 
         for (var i = 1; i < rows.length; i++) {
           var row = rows[i];
@@ -1560,6 +1614,25 @@
             cells[4].textContent = self._formatScheduleTiming(timingText);
           }
 
+          // Match with API item
+          var matchItem = null;
+          if (rawItems && rawItems.length) {
+            matchItem = rawItems.find(function (item) {
+              return String(item.CourseCode).trim() === courseCode && String(item.SectionName).trim() === sectionName;
+            });
+            if (!matchItem && rawItems[i - 1]) {
+              matchItem = rawItems[i - 1];
+            }
+          }
+
+          // Check if row/course is dropped or withdrawn
+          var withdrawText = cells[6] ? cells[6].textContent.trim().toLowerCase() : '';
+          var dropText = cells[7] ? cells[7].textContent.trim().toLowerCase() : '';
+          var isRowDropped = (withdrawText === 'yes' || dropText === 'yes');
+          if (matchItem && self._isDroppedOrWithdrawn(matchItem)) {
+            isRowDropped = true;
+          }
+
           // Smart course & credit grouping:
           // Group theory and lab entries (e.g. "CSE209 Lab" and "CSE209" -> baseCode "CSE209")
           // and multi-day slot duplicates into a single course entity
@@ -1572,16 +1645,8 @@
             } else if (!courseCreditMap[groupKey]) {
               courseCreditMap[groupKey] = 0;
             }
-          }
-
-          // Match with API item
-          var matchItem = null;
-          if (rawItems && rawItems.length) {
-            matchItem = rawItems.find(function (item) {
-              return String(item.CourseCode).trim() === courseCode && String(item.SectionName).trim() === sectionName;
-            });
-            if (!matchItem && rawItems[i - 1]) {
-              matchItem = rawItems[i - 1];
+            if (isRowDropped) {
+              courseDroppedMap[groupKey] = true;
             }
           }
 
@@ -1627,12 +1692,14 @@
           }
         }
 
-        // 3. Calculate Grouped Total Courses and Total Credits
+        // 3. Calculate Grouped Total Courses and Total Credits (excluding dropped courses from credits)
         var totalCourses = Object.keys(courseCreditMap).length;
         var totalCredits = 0;
         for (var k in courseCreditMap) {
           if (courseCreditMap.hasOwnProperty(k)) {
-            totalCredits += courseCreditMap[k];
+            if (!courseDroppedMap[k]) {
+              totalCredits += courseCreditMap[k];
+            }
           }
         }
 
@@ -4221,7 +4288,7 @@
               '<div class="ewu-cp-card-list" id="ewu-cp-catalog-list"></div>' +
             '</div>' +
             '<!-- Right Panel: Active Combination -->' +
-            '<div class="ewu-cp-panel">' +
+            '<div class="ewu-cp-panel" id="ewu-cp-plan-panel">' +
               '<div class="ewu-cp-panel-header">' +
                 '<span class="ewu-cp-panel-title">My Course Combination</span>' +
                 '<button type="button" class="ewu-btn-modern ewu-btn-modern-danger" id="ewu-cp-btn-delete-all" style="padding:4px 10px; font-size:12px;">Delete All</button>' +
@@ -4234,9 +4301,13 @@
                 '<div class="ewu-cp-metric-card"><div class="ewu-cp-metric-val" id="ewu-cp-metric-credits">0.0</div><div class="ewu-cp-metric-lbl">Credits</div></div>' +
               '</div>' +
               '<div class="ewu-cp-card-list" id="ewu-cp-plan-list"></div>' +
-              '<div style="display:flex; gap:10px; margin-top:8px;">' +
-                '<button type="button" class="ewu-btn-modern ewu-btn-modern-primary" id="ewu-cp-btn-export-img" style="flex:1;">Save Combination as Image</button>' +
-                '<button type="button" class="ewu-btn-modern ewu-btn-modern-ghost" id="ewu-cp-btn-export-all" style="flex:1;">Save All as Image</button>' +
+              '<div style="display:flex; gap:10px; margin-top:8px; flex-wrap:wrap;">' +
+                '<button type="button" class="ewu-btn-modern ewu-btn-modern-primary" id="ewu-cp-btn-preview-routine" style="flex:1; min-width:140px; background:linear-gradient(135deg, #6366f1, #3b82f6);">' +
+                  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
+                  'Preview Routine' +
+                '</button>' +
+                '<button type="button" class="ewu-btn-modern ewu-btn-modern-ghost" id="ewu-cp-btn-export-img" style="flex:1; min-width:140px;">Save Combination Image</button>' +
+                '<button type="button" class="ewu-btn-modern ewu-btn-modern-ghost" id="ewu-cp-btn-export-all" style="flex:1; min-width:140px;">Save All Image</button>' +
               '</div>' +
             '</div>' +
           '</div>' +
@@ -4254,12 +4325,50 @@
         self._clearActivePlan();
       });
 
+      var previewBtn = safeQuery('#ewu-cp-btn-preview-routine');
+      if (previewBtn) {
+        previewBtn.addEventListener('click', function () {
+          self._previewRoutine();
+        });
+      }
+
       safeQuery('#ewu-cp-btn-export-img').addEventListener('click', function () {
         self._exportActiveComboImage();
       });
 
       safeQuery('#ewu-cp-btn-export-all').addEventListener('click', function () {
         self._exportAllCombosImage();
+      });
+
+      // Drag and drop support on the right plan dropzone
+      var planPanelEl = safeQuery('#ewu-cp-plan-panel');
+      var planListDropEl = safeQuery('#ewu-cp-plan-list');
+      var dropTargets = [planPanelEl, planListDropEl].filter(Boolean);
+
+      dropTargets.forEach(function (dt) {
+        dt.addEventListener('dragover', function (e) {
+          e.preventDefault();
+          if (e.dataTransfer) {
+            e.dataTransfer.dropEffect = 'copy';
+          }
+          planPanelEl.classList.add('ewu-cp-drag-over');
+        });
+
+        dt.addEventListener('dragleave', function (e) {
+          if (e.relatedTarget && planPanelEl.contains(e.relatedTarget)) {
+            return;
+          }
+          planPanelEl.classList.remove('ewu-cp-drag-over');
+        });
+
+        dt.addEventListener('drop', function (e) {
+          e.preventDefault();
+          planPanelEl.classList.remove('ewu-cp-drag-over');
+          var courseId = e.dataTransfer ? e.dataTransfer.getData('text/plain') : null;
+          if (courseId) {
+            self._addCourseToPlan(courseId);
+          }
+        });
       });
 
       var searchInput = safeQuery('#ewu-cp-search');
@@ -4414,7 +4523,7 @@
         }
 
         html +=
-          '<div class="ewu-cp-card ' + (isAdded ? 'in-plan' : '') + '">' +
+          '<div class="ewu-cp-card ewu-cp-draggable ' + (isAdded ? 'in-plan' : '') + '" draggable="' + (!isAdded) + '" data-id="' + item.id + '" title="' + (!isAdded ? 'Drag to plan panel or click + Add' : 'Already in plan') + '">' +
             '<div class="ewu-cp-card-main">' +
               '<div class="ewu-cp-card-badges">' +
                 '<span class="ewu-badge ewu-badge-course">' + escapeHTML(item.courseCode) + '</span>' +
@@ -4433,6 +4542,23 @@
       }
 
       listEl.innerHTML = html;
+
+      // Attach HTML5 drag handlers on catalog cards for desktop
+      var cards = listEl.querySelectorAll('.ewu-cp-card.ewu-cp-draggable');
+      for (var cIdx = 0; cIdx < cards.length; cIdx++) {
+        var cardEl = cards[cIdx];
+        cardEl.addEventListener('dragstart', function (e) {
+          var cid = this.getAttribute('data-id');
+          if (e.dataTransfer) {
+            e.dataTransfer.setData('text/plain', cid);
+            e.dataTransfer.effectAllowed = 'copy';
+          }
+          this.classList.add('ewu-cp-dragging');
+        });
+        cardEl.addEventListener('dragend', function () {
+          this.classList.remove('ewu-cp-dragging');
+        });
+      }
     },
 
     _addCourseToPlan: function (courseId) {
@@ -4622,6 +4748,48 @@
       Toast.show('Plan cleared.', 'info', 1500);
       this._renderCatalog();
       this._renderPlanView();
+    },
+
+    _previewRoutine: function () {
+      var combo = this._getActiveCombo();
+      if (!combo.selectedIds.length) {
+        Toast.show('Plan is empty. Add courses before previewing routine.', 'warning');
+        return;
+      }
+
+      var selectedCourses = combo.selectedIds.map(function (id) {
+        return CoursePlannerModule._groupedCourses.find(function (s) { return s.id === id; });
+      }).filter(Boolean);
+
+      var routineCourses = selectedCourses.map(function (item) {
+        var slots = [];
+        for (var s = 0; s < item.schedules.length; s++) {
+          var sch = item.schedules[s];
+          if (sch.days && sch.days.length && sch.days[0] !== 'TBA' && sch.timeStr !== 'Schedule TBA') {
+            slots.push({
+              timeSlotName: sch.days.join(', ') + ' ' + sch.timeStr,
+              roomName: sch.room && sch.room !== 'TBA' ? sch.room : ''
+            });
+          }
+        }
+        return {
+          courseCode: item.courseCode,
+          sectionName: item.section,
+          shortName: item.faculty || '',
+          slots: slots
+        };
+      });
+
+      var opts = {
+        compact: false,
+        showLogo: true,
+        blueIntensity: 'medium',
+        exportQuality: 'standard'
+      };
+
+      var title = combo.name ? ('Course Planner — ' + combo.name) : 'Class Routine';
+      var html = RoutineGeneratorModule._buildRoutine(routineCourses, title, opts);
+      RoutineGeneratorModule._renderModal(html, combo.name ? (combo.name.replace(/\s+/g, '_') + '_Routine') : 'Routine');
     },
 
     _exportActiveComboImage: function () {

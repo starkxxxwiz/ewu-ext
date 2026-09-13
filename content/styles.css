@@ -1377,6 +1377,24 @@ body.ewu-no-animations *::after {
   background: rgba(34, 197, 94, 0.08);
   box-shadow: 0 0 16px rgba(34, 197, 94, 0.15);
 }
+.ewu-cp-card.ewu-cp-draggable {
+  cursor: grab;
+  user-select: none;
+}
+.ewu-cp-card.ewu-cp-draggable:active {
+  cursor: grabbing;
+}
+.ewu-cp-card.ewu-cp-dragging {
+  opacity: 0.45;
+  transform: scale(0.98);
+  border: 1px dashed #818cf8;
+}
+.ewu-cp-panel.ewu-cp-drag-over,
+.ewu-cp-card-list.ewu-cp-drag-over {
+  border-color: #6366f1 !important;
+  background: rgba(99, 102, 241, 0.08) !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3) inset;
+}
 
 .ewu-cp-card-main {
   display: flex;

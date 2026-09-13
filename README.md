@@ -33,15 +33,19 @@
 * Automatic submission on keypress so you can log in within a fraction of a second.
 
 ### 📅 2. Routine & Timetable Generator
-* Automatically detects your registered courses and builds a visual weekly schedule timetable.
+* Automatically detects registered courses and builds a visual weekly schedule timetable.
+* **Smart Drop/Withdraw Filter**: Excludes dropped and withdrawn courses from routine schedules and total credit calculations.
+* **Dynamic Active Days**: Automatically omits empty days with 0 classes (e.g. Thursday) for a cleaner timetable grid.
 * Upgraded interactive buttons with smooth hover particle glows and active press feedback.
 * Export high-resolution schedule images (**PNG**) and document sheets (**PDF**) with a single click.
 
-### 🎯 3. Advising Assistant (Online & Offline)
+### 🎯 3. Advising Assistant & Course Planner (Online & Offline)
 * **10-Column Layout**: Shows section information, faculty names, room numbers, seat capacities, and remaining seats.
 * **Seat Heatmap**: Visual green/amber/red indicators to instantly spot available sections.
-* **Live Search**: Instant search filter for courses and faculty initials.
-* **Offline Course Planner**: Plan and simulate upcoming semesters offline without conflict.
+* **Live Search**: Instant search filter for courses and faculty initials (`Ctrl+K` shortcut).
+* **PC Drag & Drop Planning**: Drag course cards directly into your combination plan on desktop with responsive dropzone feedback.
+* **Routine Preview in Planner**: Interactive **"Preview Routine"** modal with full timetable view, color customization, and image/PDF export for planned combinations.
+* **Multi-Combination Simulator**: Create multiple semester plans with real-time credit, theory, and lab statistics, conflict checking, and PNG image exports.
 
 ### 📚 4. Offered Courses Catalog Enhancer
 * Sticky headers keep table columns in view while scrolling through hundreds of courses.
