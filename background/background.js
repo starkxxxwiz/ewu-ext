@@ -69,15 +69,15 @@ async function checkRemoteSystemState() {
 chrome.runtime.onInstalled.addListener(function (details) {
   checkRemoteSystemState();
   if (details.reason === 'install') {
-    chrome.storage.local.get(['ewu_license_token', 'ewu_license_status', 'ewu_license_expiry', 'ewu_license_exp'], function (res) {
-      if (!isLicenseAuthorizedLocally(res)) {
+    chrome.storage.local.get(['ewu_terms_accepted', 'ewu_license_token', 'ewu_license_status', 'ewu_license_expiry'], function (res) {
+      if (!res.ewu_terms_accepted || !isLicenseAuthorizedLocally(res)) {
         chrome.tabs.create({ url: chrome.runtime.getURL('pages/activation.html') });
       }
     });
   }
-  // Periodic background check alarm (10 minutes)
+  // Periodic background check alarm (15 minutes)
   try {
-    chrome.alarms.create('check_remote_status', { periodInMinutes: 10 });
+    chrome.alarms.create('check_remote_status', { periodInMinutes: 15 });
   } catch (_) {}
 });
 
@@ -93,37 +93,43 @@ if (chrome.alarms && chrome.alarms.onAlarm) {
   });
 }
 
+var _cachedDeviceIdPromise = null;
 function getDeviceId() {
-  return new Promise(function (resolve) {
+  if (_cachedDeviceIdPromise) return _cachedDeviceIdPromise;
+  _cachedDeviceIdPromise = new Promise(function (resolve) {
     chrome.storage.local.get('ewu_device_id', function (res) {
-      var id = res.ewu_device_id;
+      var id = res && res.ewu_device_id;
       if (!id) {
         id = 'dev_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
-        chrome.storage.local.set({ ewu_device_id: id });
+        chrome.storage.local.set({ ewu_device_id: id }, function () {
+          resolve(id);
+        });
+      } else {
+        resolve(id);
       }
-      resolve(id);
     });
   });
+  return _cachedDeviceIdPromise;
 }
 
 async function verifyLicenseToken() {
   return new Promise(function (resolve) {
     chrome.storage.local.get([
+      'ewu_terms_accepted',
       'ewu_license_token',
       'ewu_license_status',
       'ewu_license_expiry',
-      'ewu_license_exp',
       'ewu_license_prefix',
       'ewu_device_id'
     ], function (res) {
       var isLocallyValid = isLicenseAuthorizedLocally(res);
       if (!isLocallyValid) {
-        resolve({ authorized: false, reason: 'No active license authorization found.' });
+        resolve({ authorized: false, termsAccepted: Boolean(res && res.ewu_terms_accepted), reason: 'No active license authorization found.' });
         return;
       }
 
       // Fast-path: Instant zero-latency authorization for content and popup
-      resolve({ authorized: true, expiresAt: res.ewu_license_expiry || null });
+      resolve({ authorized: true, termsAccepted: true, expiresAt: res.ewu_license_expiry || null, prefix: res.ewu_license_prefix || '' });
 
       // Silent background server re-verification
       var token = res.ewu_license_token;
@@ -132,7 +138,10 @@ async function verifyLicenseToken() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: token, deviceId: devId })
-        }).then(function (r) { return r.json(); }).then(function (data) {
+        }).then(function (r) {
+          if (!r.ok) return null;
+          return r.json();
+        }).then(function (data) {
           if (data && data.valid) {
             chrome.storage.local.set({
               ewu_license_status: 'active',
@@ -155,13 +164,12 @@ async function verifyLicenseToken() {
                 }
               });
             }
-          } else if (data && data.valid === false) {
-            // Explicitly revoked or deleted by admin
-            chrome.storage.local.set({ ewu_license_status: 'inactive' });
-            chrome.storage.local.remove(['ewu_license_token', 'ewu_license_expiry']);
+          } else if (data && data.valid === false && (data.reason && data.reason.toLowerCase().includes('revoked'))) {
+            // Explicitly revoked by administrator in D1
+            chrome.storage.local.set({ ewu_license_status: 'revoked' });
           }
         }).catch(function () {
-          // Network drop / offline: DO NOT log out user! Keep authorized!
+          // Offline / Network drop: KEEP USER AUTHORIZED! Never wipe offline!
         });
       };
 

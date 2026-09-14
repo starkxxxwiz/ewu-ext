@@ -1,24 +1,29 @@
-# Node dependencies & package configs
+# Dependencies & Package Managers
 node_modules/
-package.json
 package-lock.json
+package.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Cloudflare Wrangler specific
+# Cloudflare Wrangler & Local Secrets
 .wrangler/
 .dev.vars
 dist/
+*.log
 
-# Local OS files
+# System & Environment Files
 .DS_Store
 Thumbs.db
+.env
+.env.*
+*.tmp
+*.bak
 
-# Source, build, internal setup scripts, and server backend
+# Source, Build, and Server Artifacts
 src/
 build.js
-SETUP.md
 backend/
-publish/
+SETUP.md
+Bot_Setup.md
 Portal Info/

@@ -1,6 +1,31 @@
 (function () {
   'use strict';
   var WORKER_URL = 'https://ewu-helper-license-worker.tonystarkxxx31.workers.dev';
+
+  // Navigation & Step Elements
+  var stepIndicator = document.getElementById('stepIndicator');
+  var nodeStep1 = document.getElementById('nodeStep1');
+  var nodeStep2 = document.getElementById('nodeStep2');
+  var nodeStep3 = document.getElementById('nodeStep3');
+  var lineStep1 = document.getElementById('lineStep1');
+  var lineStep2 = document.getElementById('lineStep2');
+
+  var viewStep1 = document.getElementById('viewStep1Terms');
+  var viewStep2 = document.getElementById('viewStep2Features');
+  var viewStep3 = document.getElementById('viewStep3Activation');
+  var viewStep4 = document.getElementById('viewStep4Ready');
+
+  // Step 1 Elements
+  var chkAcceptTerms = document.getElementById('chkAcceptTerms');
+  var btnNextToFeatures = document.getElementById('btnNextToFeatures');
+  var btnToggleFullTerms = document.getElementById('btnToggleFullTerms');
+  var fullTermsBox = document.getElementById('fullTermsBox');
+  var expandTermsText = document.getElementById('expandTermsText');
+
+  // Step 2 Elements
+  var btnNextToActivation = document.getElementById('btnNextToActivation');
+
+  // Step 3 Elements
   var form = document.getElementById('activationForm');
   var keyInput = document.getElementById('licenseKey');
   var btnActivate = document.getElementById('btnActivate');
@@ -9,23 +34,33 @@
   var statusBox = document.getElementById('statusBox');
   var cancelChangeWrap = document.getElementById('cancelChangeWrap');
   var btnCancelChange = document.getElementById('btnCancelChange');
-  var btnChangeLicense = document.getElementById('btnChangeLicense');
   var btnGetLicensePage = document.getElementById('btnGetLicensePage');
+
+  // Step 4 Elements
   var btnVisitPortal = document.getElementById('btnVisitPortal');
+  var btnChangeLicense = document.getElementById('btnChangeLicense');
+  var subKeyPrefix = document.getElementById('subKeyPrefix');
+  var subExpiryText = document.getElementById('subExpiryText');
 
   var currentLicenseState = null;
+  var currentStep = 1;
 
-  keyInput.addEventListener('input', function (e) {
-    var raw = e.target.value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
-    var formatted = '';
-    for (var i = 0; i < raw.length && i < 16; i++) {
-      if (i > 0 && i % 4 === 0) formatted += '-';
-      formatted += raw[i];
-    }
-    e.target.value = formatted;
-  });
+  // Format Licence Key as XXXX-XXXX-XXXX-XXXX
+  if (keyInput) {
+    keyInput.addEventListener('input', function (e) {
+      var raw = e.target.value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+      var formatted = '';
+      for (var i = 0; i < raw.length && i < 16; i++) {
+        if (i > 0 && i % 4 === 0) formatted += '-';
+        formatted += raw[i];
+      }
+      e.target.value = formatted;
+    });
+  }
 
+  var _cachedDeviceId = null;
   function getDeviceId() {
+    if (_cachedDeviceId) return Promise.resolve(_cachedDeviceId);
     return new Promise(function (resolve) {
       if (typeof chrome === 'undefined' || !chrome.storage) {
         var localId = localStorage.getItem('ewu_device_id');
@@ -33,16 +68,22 @@
           localId = 'dev_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
           localStorage.setItem('ewu_device_id', localId);
         }
+        _cachedDeviceId = localId;
         resolve(localId);
         return;
       }
       chrome.storage.local.get('ewu_device_id', function (res) {
-        var deviceId = res.ewu_device_id;
+        var deviceId = res && res.ewu_device_id;
         if (!deviceId) {
           deviceId = 'dev_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
-          chrome.storage.local.set({ ewu_device_id: deviceId });
+          chrome.storage.local.set({ ewu_device_id: deviceId }, function () {
+            _cachedDeviceId = deviceId;
+            resolve(deviceId);
+          });
+        } else {
+          _cachedDeviceId = deviceId;
+          resolve(deviceId);
         }
-        resolve(deviceId);
       });
     });
   }
@@ -55,53 +96,92 @@
     return true;
   }
 
-  function renderSubscribedView(prefix, expiresAt) {
-    var mainView = document.getElementById('activationMainView');
-    var subView = document.getElementById('subscribedView');
-    var prefixEl = document.getElementById('subKeyPrefix');
-    var expiryEl = document.getElementById('subExpiryText');
+  function setStep(step) {
+    currentStep = step;
+    var views = [viewStep1, viewStep2, viewStep3, viewStep4];
+    views.forEach(function (v) {
+      if (v) v.classList.remove('active');
+    });
 
-    if (prefixEl) prefixEl.textContent = prefix || 'XXXX-...';
-    if (expiryEl) {
+    if (step === 1) {
+      if (viewStep1) viewStep1.classList.add('active');
+      if (stepIndicator) stepIndicator.style.display = 'flex';
+      if (nodeStep1) { nodeStep1.className = 'step-node active'; }
+      if (nodeStep2) { nodeStep2.className = 'step-node'; }
+      if (nodeStep3) { nodeStep3.className = 'step-node'; }
+      if (lineStep1) { lineStep1.className = 'step-line'; }
+      if (lineStep2) { lineStep2.className = 'step-line'; }
+    } else if (step === 2) {
+      if (viewStep2) viewStep2.classList.add('active');
+      if (stepIndicator) stepIndicator.style.display = 'flex';
+      if (nodeStep1) { nodeStep1.className = 'step-node completed'; }
+      if (nodeStep2) { nodeStep2.className = 'step-node active'; }
+      if (nodeStep3) { nodeStep3.className = 'step-node'; }
+      if (lineStep1) { lineStep1.className = 'step-line active'; }
+      if (lineStep2) { lineStep2.className = 'step-line'; }
+    } else if (step === 3) {
+      if (viewStep3) viewStep3.classList.add('active');
+      if (stepIndicator) stepIndicator.style.display = 'flex';
+      if (nodeStep1) { nodeStep1.className = 'step-node completed'; }
+      if (nodeStep2) { nodeStep2.className = 'step-node completed'; }
+      if (nodeStep3) { nodeStep3.className = 'step-node active'; }
+      if (lineStep1) { lineStep1.className = 'step-line active'; }
+      if (lineStep2) { lineStep2.className = 'step-line active'; }
+    } else if (step === 4) {
+      if (viewStep4) viewStep4.classList.add('active');
+      if (stepIndicator) stepIndicator.style.display = 'none';
+    }
+  }
+
+  function renderSubscribedView(prefix, expiresAt) {
+    if (subKeyPrefix) subKeyPrefix.textContent = prefix || 'XXXX-...';
+    if (subExpiryText) {
       if (expiresAt && Number(expiresAt) > 0) {
         var d = new Date(Number(expiresAt));
-        expiryEl.textContent = isNaN(d.getTime()) ? 'Lifetime Access' : d.toLocaleDateString();
+        subExpiryText.textContent = isNaN(d.getTime()) ? 'Lifetime Access' : d.toLocaleDateString();
       } else {
-        expiryEl.textContent = 'Lifetime Access (Never Expires)';
+        subExpiryText.textContent = 'Lifetime Access (Never Expires)';
       }
     }
-
-    if (mainView) mainView.style.display = 'none';
-    if (subView) subView.style.display = 'block';
+    setStep(4);
     if (cancelChangeWrap) cancelChangeWrap.style.display = 'none';
   }
 
   function checkExistingActivation() {
     if (typeof chrome === 'undefined' || !chrome.storage) {
+      var localTerms = localStorage.getItem('ewu_terms_accepted') === 'true';
       var localToken = localStorage.getItem('ewu_license_token');
       var localStatus = localStorage.getItem('ewu_license_status') || (localToken ? 'active' : '');
       var localExp = localStorage.getItem('ewu_license_expiry');
+
       if (localToken && isLicenseValid(localStatus, localExp ? Number(localExp) : null)) {
         currentLicenseState = {
           prefix: localStorage.getItem('ewu_license_prefix') || 'XXXX-...',
           expiresAt: localExp ? Number(localExp) : null
         };
         renderSubscribedView(currentLicenseState.prefix, currentLicenseState.expiresAt);
+        return;
+      }
+      if (localTerms) {
+        setStep(3);
+      } else {
+        setStep(1);
       }
       return;
     }
 
     chrome.storage.local.get([
+      'ewu_terms_accepted',
       'ewu_license_token',
       'ewu_license_status',
       'ewu_license_expiry',
-      'ewu_license_exp', // backward compat
       'ewu_license_prefix',
       'ewu_device_id'
     ], async function (res) {
-      var token = res.ewu_license_token;
-      var status = res.ewu_license_status || (token ? 'active' : 'inactive');
-      var expiry = (res.ewu_license_expiry !== undefined) ? res.ewu_license_expiry : null;
+      var termsAccepted = Boolean(res && res.ewu_terms_accepted);
+      var token = res && res.ewu_license_token;
+      var status = res && (res.ewu_license_status || (token ? 'active' : 'inactive'));
+      var expiry = (res && res.ewu_license_expiry !== undefined) ? res.ewu_license_expiry : null;
 
       if (token && isLicenseValid(status, expiry)) {
         currentLicenseState = {
@@ -110,7 +190,7 @@
         };
         renderSubscribedView(currentLicenseState.prefix, currentLicenseState.expiresAt);
 
-        // Revalidate in background without blocking
+        // Silent background re-verification
         try {
           var deviceId = res.ewu_device_id || await getDeviceId();
           var response = await fetch(WORKER_URL + '/api/license/verify', {
@@ -127,22 +207,61 @@
               ewu_license_prefix: data.licensePrefix || currentLicenseState.prefix
             });
             renderSubscribedView(currentLicenseState.prefix, currentLicenseState.expiresAt);
-          } else if (data && data.valid === false) {
-            // License explicitly revoked or expired on server
-            chrome.storage.local.set({ ewu_license_status: 'inactive' });
-            document.getElementById('subscribedView').style.display = 'none';
-            document.getElementById('activationMainView').style.display = 'block';
-            showStatus(data.reason || 'License is no longer active. Please enter a valid license key.', 'error');
+          } else if (data && data.valid === false && data.reason && data.reason.toLowerCase().includes('revoked')) {
+            chrome.storage.local.set({ ewu_license_status: 'revoked' });
+            setStep(3);
+            showStatus(data.reason || 'Licence is no longer active. Please enter a valid licence key.', 'error');
           }
         } catch (_) {
-          // Network drop: keep user active offline!
+          // Keep active offline!
         }
+        return;
+      }
+
+      if (termsAccepted) {
+        setStep(3);
+      } else {
+        setStep(1);
       }
     });
   }
 
-  checkExistingActivation();
+  // Step 1 Event Listeners
+  if (chkAcceptTerms && btnNextToFeatures) {
+    chkAcceptTerms.addEventListener('change', function () {
+      btnNextToFeatures.disabled = !chkAcceptTerms.checked;
+    });
+  }
 
+  if (btnToggleFullTerms && fullTermsBox && expandTermsText) {
+    btnToggleFullTerms.addEventListener('click', function () {
+      var isVisible = fullTermsBox.style.display === 'block';
+      fullTermsBox.style.display = isVisible ? 'none' : 'block';
+      expandTermsText.textContent = isVisible ? 'Show Complete Terms & Conditions' : 'Hide Complete Terms & Conditions';
+    });
+  }
+
+  if (btnNextToFeatures) {
+    btnNextToFeatures.addEventListener('click', function () {
+      if (!chkAcceptTerms || !chkAcceptTerms.checked) return;
+      if (typeof chrome !== 'undefined' && chrome.storage) {
+        chrome.storage.local.set({ ewu_terms_accepted: true });
+      } else {
+        localStorage.setItem('ewu_terms_accepted', 'true');
+      }
+      setStep(2);
+    });
+  }
+
+  // Step 2 Event Listeners
+  if (btnNextToActivation) {
+    btnNextToActivation.addEventListener('click', function () {
+      setStep(3);
+      if (keyInput) keyInput.focus();
+    });
+  }
+
+  // Step 3 & 4 Navigation
   if (btnVisitPortal) {
     btnVisitPortal.addEventListener('click', function () {
       if (typeof chrome !== 'undefined' && chrome.tabs) {
@@ -155,14 +274,15 @@
 
   if (btnChangeLicense) {
     btnChangeLicense.addEventListener('click', function () {
-      document.getElementById('subscribedView').style.display = 'none';
-      document.getElementById('activationMainView').style.display = 'block';
+      setStep(3);
       if (cancelChangeWrap && currentLicenseState) {
         cancelChangeWrap.style.display = 'block';
       }
       hideStatus();
-      keyInput.value = '';
-      keyInput.focus();
+      if (keyInput) {
+        keyInput.value = '';
+        keyInput.focus();
+      }
     });
   }
 
@@ -180,82 +300,96 @@
     });
   }
 
-  form.addEventListener('submit', async function (e) {
-    e.preventDefault();
-    var licenseKey = keyInput.value.trim();
-    if (!licenseKey) return;
-    setLoading(true);
-    hideStatus();
-    try {
-      var deviceId = await getDeviceId();
-      var response = await fetch(WORKER_URL + '/api/license/activate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          licenseKey: licenseKey,
-          deviceId: deviceId
-        })
-      });
-      var data = await response.json();
-      if (response.ok && data.success) {
-        var licPrefix = (data.licenseInfo && data.licenseInfo.keyPrefix) ? data.licenseInfo.keyPrefix : licenseKey.substring(0, 9) + '...';
-        var licExp = (data.licenseInfo && data.licenseInfo.expiresAt !== undefined) ? data.licenseInfo.expiresAt : (data.licenseExpiresAt || null);
+  // Licence Activation Form Submission
+  if (form) {
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var licenseKey = keyInput.value.trim();
+      if (!licenseKey) return;
+      setLoading(true);
+      hideStatus();
 
-        var savePayload = {
-          ewu_license_token: data.token,
-          ewu_license_status: 'active',
-          ewu_license_expiry: licExp,
-          ewu_token_exp: data.expiresAt || data.tokenExpiresAt,
-          ewu_license_prefix: licPrefix
-        };
+      try {
+        var deviceId = await getDeviceId();
+        var response = await fetch(WORKER_URL + '/api/license/activate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            licenseKey: licenseKey,
+            deviceId: deviceId
+          })
+        });
+        var data = await response.json();
 
-        if (typeof chrome !== 'undefined' && chrome.storage) {
-          chrome.storage.local.set(savePayload, function () {
-            if (chrome.runtime && chrome.runtime.sendMessage) {
-              chrome.runtime.sendMessage({ type: 'EWU_SETTINGS_UPDATED' });
-            }
-          });
+        if (response.ok && data.success) {
+          var licPrefix = (data.licenseInfo && data.licenseInfo.keyPrefix) ? data.licenseInfo.keyPrefix : licenseKey.substring(0, 9) + '...';
+          var licExp = (data.licenseInfo && data.licenseInfo.expiresAt !== undefined) ? data.licenseInfo.expiresAt : (data.licenseExpiresAt || null);
+
+          var savePayload = {
+            ewu_terms_accepted: true,
+            ewu_license_token: data.token,
+            ewu_license_status: 'active',
+            ewu_license_expiry: licExp,
+            ewu_token_exp: data.expiresAt || data.tokenExpiresAt,
+            ewu_license_prefix: licPrefix,
+            ewu_device_id: deviceId
+          };
+
+          if (typeof chrome !== 'undefined' && chrome.storage) {
+            chrome.storage.local.set(savePayload, function () {
+              if (chrome.runtime && chrome.runtime.sendMessage) {
+                chrome.runtime.sendMessage({ type: 'EWU_SETTINGS_UPDATED' });
+              }
+            });
+          } else {
+            localStorage.setItem('ewu_terms_accepted', 'true');
+            localStorage.setItem('ewu_license_token', data.token);
+            localStorage.setItem('ewu_license_status', 'active');
+            localStorage.setItem('ewu_license_expiry', licExp ? String(licExp) : '');
+            localStorage.setItem('ewu_license_prefix', licPrefix);
+            localStorage.setItem('ewu_device_id', deviceId);
+          }
+
+          currentLicenseState = {
+            prefix: licPrefix,
+            expiresAt: licExp
+          };
+
+          showStatus('Licence activated successfully! Full access unlocked.', 'success');
+          keyInput.value = '';
+          setTimeout(function () {
+            renderSubscribedView(currentLicenseState.prefix, currentLicenseState.expiresAt);
+          }, 700);
         } else {
-          localStorage.setItem('ewu_license_token', data.token);
-          localStorage.setItem('ewu_license_status', 'active');
-          localStorage.setItem('ewu_license_expiry', licExp ? String(licExp) : '');
-          localStorage.setItem('ewu_license_prefix', licPrefix);
+          showStatus(data.message || 'Invalid or inactive licence key. Please check your key or contact support.', 'error');
         }
-
-        currentLicenseState = {
-          prefix: licPrefix,
-          expiresAt: licExp
-        };
-
-        showStatus('License activated successfully! Full access unlocked.', 'success');
-        keyInput.value = '';
-        setTimeout(function () {
-          renderSubscribedView(currentLicenseState.prefix, currentLicenseState.expiresAt);
-        }, 800);
-      } else {
-        showStatus(data.message || 'Invalid or inactive license key. Please check your key or contact support.', 'error');
+      } catch (err) {
+        showStatus('Unable to reach verification server. Please check your internet connection and try again.', 'error');
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      showStatus('Unable to reach verification server. Please check your internet connection and try again.', 'error');
-    } finally {
-      setLoading(false);
-    }
-  });
+    });
+  }
 
   function setLoading(loading) {
-    btnActivate.disabled = loading;
-    btnText.style.display = loading ? 'none' : 'inline';
-    btnSpinner.style.display = loading ? 'inline-block' : 'none';
+    if (btnActivate) btnActivate.disabled = loading;
+    if (btnText) btnText.style.display = loading ? 'none' : 'inline';
+    if (btnSpinner) btnSpinner.style.display = loading ? 'inline-block' : 'none';
   }
 
   function showStatus(msg, type) {
+    if (!statusBox) return;
     statusBox.textContent = msg;
     statusBox.className = 'status-box ' + type;
     statusBox.style.display = 'block';
   }
 
   function hideStatus() {
+    if (!statusBox) return;
     statusBox.style.display = 'none';
     statusBox.className = 'status-box';
   }
+
+  // Initialize
+  checkExistingActivation();
 })();

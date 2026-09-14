@@ -7,7 +7,7 @@
 
   <p align="center">
     <a href="https://github.com/starkxxxwiz/ewu-ext"><img src="https://img.shields.io/badge/Manifest-V3-6366f1?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
-    <a href="https://github.com/starkxxxwiz/ewu-ext"><img src="https://img.shields.io/badge/Version-1.1.0_Production-38bdf8?style=for-the-badge&logo=semver&logoColor=white" alt="Version 1.1.0" /></a>
+    <a href="https://github.com/starkxxxwiz/ewu-ext"><img src="https://img.shields.io/badge/Version-1.2.0_Production-38bdf8?style=for-the-badge&logo=semver&logoColor=white" alt="Version 1.2.0" /></a>
     <a href="https://github.com/starkxxxwiz/ewu-ext/commits/main"><img src="https://img.shields.io/github/commits-since/starkxxxwiz/ewu-ext/0.0.1?style=for-the-badge&color=10b981&logo=git&logoColor=white" alt="Commits" /></a>
     <a href="https://github.com/starkxxxwiz/ewu-ext"><img src="https://img.shields.io/badge/Platform-Windows_/_Mac_/_Android-f59e0b?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Supported Platforms" /></a>
   </p>
@@ -19,7 +19,7 @@
   </p>
 
   <p align="center">
-    <b>Auto Captcha Solving</b> • <b>10-Column Advising Suite</b> • <b>Ultra-HD Routine Generator</b> • <b>Seat Availability Tracker</b> • <b>Offline Course Planner</b>
+    <b>Auto Captcha Solving</b> • <b>10-Column Advising Suite</b> • <b>Ultra-HD Routine Generator</b> • <b>Seat Heatmaps</b> • <b>Offline Course Planner</b>
   </p>
 
 </div>
@@ -29,43 +29,52 @@
 ## 🚀 Features & Capabilities
 
 ### ⚡ 1. Automatic Captcha Solver
-* Instantly solves the mathematical number captcha on the portal login page (`portal.ewubd.edu`).
-* Automatic submission on keypress so you can log in within a fraction of a second.
+* Instantly solves the mathematical number captcha on the student portal login page (`portal.ewubd.edu`).
+* Fast submission triggers so you can log in smoothly without typing numbers manually.
 
 ### 📅 2. Routine & Timetable Generator
-* Automatically detects registered courses and builds a visual weekly schedule timetable.
+* Automatically detects registered courses and builds a visual weekly timetable schedule.
 * **Smart Drop/Withdraw Filter**: Excludes dropped and withdrawn courses from routine schedules and total credit calculations.
-* **Dynamic Active Days**: Automatically omits empty days with 0 classes (e.g. Thursday) for a cleaner timetable grid.
-* Upgraded interactive buttons with smooth hover particle glows and active press feedback.
-* Export high-resolution schedule images (**PNG**) and document sheets (**PDF**) with a single click.
+* **Dynamic Active Days**: Automatically omits empty days (such as days with no classes) for a clean, compact grid.
+* **1-Click Multi-Format Export**: Export high-resolution schedule images (**PNG**), document sheets (**PDF**), and standard iCalendar (**`.ics`**) files to sync weekly classes directly into Google Calendar, Apple Calendar, and Outlook.
 
 ### 🎯 3. Advising Assistant & Course Planner (Online & Offline)
-* **10-Column Layout**: Shows section information, faculty names, room numbers, seat capacities, and remaining seats.
-* **Seat Heatmap**: Visual green/amber/red indicators to instantly spot available sections.
-* **Live Search**: Instant search filter for courses and faculty initials (`Ctrl+K` shortcut).
-* **PC Drag & Drop Planning**: Drag course cards directly into your combination plan on desktop with responsive dropzone feedback.
-* **Routine Preview in Planner**: Interactive **"Preview Routine"** modal with full timetable view, color customization, and image/PDF export for planned combinations.
-* **Multi-Combination Simulator**: Create multiple semester plans with real-time credit, theory, and lab statistics, conflict checking, and PNG image exports.
+* **10-Column Advising Suite**: Enriched table displaying section info, faculty initials, room numbers, seat capacities, and remaining live seats.
+* **Seat Heatmap**: Visual green/amber/red occupancy indicators to instantly spot open sections during rush advising.
+* **Instant Filter**: Search courses and faculty initials quickly with the `Ctrl+K` keyboard shortcut.
+* **Drag & Drop Planning**: Drag course cards into semester plan dropzones with automatic schedule conflict checking.
+* **Routine Preview in Planner**: Interactive modal to visualize and export routines of planned combinations before finalizing advising.
 
 ### 📚 4. Offered Courses Catalog Enhancer
-* Sticky headers keep table columns in view while scrolling through hundreds of courses.
-* Quick filtering by course code, department, or instructor.
-* Instant PDF catalog generator with sleek gradient styling.
+* Sticky table headers keep column names in view while scrolling through large course lists.
+* Quick filtering by course code, department, or instructor name.
+* Beautiful PDF catalog generator with sleek gradient styling.
+
+---
+
+## 🧭 First-Start Onboarding Experience
+
+When you install EWU Buddy for the first time, a guided 4-step setup wizard welcomes you:
+
+1. **Step 1: Terms & Conditions**: Read the terms summary and accept to proceed.
+2. **Step 2: Features & Essential Knowledge**: Discover key features, interactive tools, and tips for getting the most out of the extension.
+3. **Step 3: Licence Activation**: Enter your 16-character license key (`XXXX-XXXX-XXXX-XXXX`) to unlock all features.
+4. **Step 4: Subscribed & Ready**: View your activation details and launch directly into the EWU Portal.
 
 ---
 
 ## 📥 How to Download the Extension
 
-You can download **EWU Buddy** using either of the following two options:
+You can download **EWU Buddy** using either of the following methods:
 
 ### 🔹 Option A: Download from GitHub Releases (Recommended)
 1. Go to the [**Releases**](https://github.com/starkxxxwiz/ewu-ext/releases) section on the right-hand sidebar of this repository.
-2. Under **Assets**, click on `ewu-buddy-v1.1.zip` to download the pre-packaged archive directly.
+2. Under **Assets**, click on `ewu-buddy-v1.2.zip` to download the pre-packaged archive directly.
 
 ### 🔹 Option B: Download Repository Source ZIP
 1. Scroll to the top of this GitHub repository page.
 2. Click the green **Code** button &rarr; click **Download ZIP**.
-3. A `.zip` archive containing the extension will be saved to your device.
+3. Extract the `.zip` archive on your device.
 
 ---
 
@@ -76,7 +85,7 @@ You can use Chromium browsers with extension support (such as **Kiwi Browser** o
 
 1. Install **Kiwi Browser** or **Quetta Browser** from Google Play Store.
 2. Download the extension `.zip` file from the [Download section](#-how-to-download-the-extension).
-3. Open **Kiwi Browser** (or Quetta) and tap the **⋮ (three dots menu)** in the top-right corner.
+3. Open your mobile browser and tap the **⋮ (three dots menu)** in the top-right corner.
 4. Select **Extensions** (or navigate to `chrome://extensions`).
 5. Turn **ON** the **Developer mode** toggle in the top-right corner.
 6. Tap the **+ (from .zip / .crx / .user.js)** button.
@@ -87,26 +96,26 @@ You can use Chromium browsers with extension support (such as **Kiwi Browser** o
 
 ### 🖥️ For PC / Desktop / Laptop (Chrome, Brave, Edge, Opera)
 
-1. Download the extension `.zip` file from the [Download section](#-how-to-download-the-extension).
-2. **Extract** the downloaded `.zip` folder to any location on your computer.
-3. Open your Chromium-based browser (Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi, etc.).
-4. Open the Extensions management page:
+1. Download the extension `.zip` file and **extract** it to a folder on your computer.
+2. Open your Chromium-based browser (Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi, etc.).
+3. Open the Extensions management page:
    - **Google Chrome**: Navigate to `chrome://extensions/`
    - **Brave Browser**: Navigate to `brave://extensions/`
    - **Microsoft Edge**: Navigate to `edge://extensions/`
-5. Turn **ON** the **Developer mode** toggle in the top-right corner.
-6. Click the **Load unpacked** button in the top-left corner.
-7. Select the extracted extension directory (the folder containing `manifest.json`).
-8. ✨ **Done!** The EWU Buddy icon will appear in your browser toolbar.
+4. Turn **ON** the **Developer mode** toggle in the top-right corner.
+5. Click the **Load unpacked** button in the top-left corner.
+6. Select the extracted extension directory (the folder containing `manifest.json`).
+7. ✨ **Done!** The EWU Buddy icon will appear in your browser toolbar.
 
 ---
 
-## 🔑 License Activation
+## 🔑 License Activation & Management
 
-1. Upon first install, the **License Activation** page will open automatically (or click the **EWU Buddy** icon in your browser toolbar &rarr; **Manage**).
+1. Upon first install, the **Onboarding & Activation** page will open automatically (or click the **EWU Buddy** icon in your browser toolbar &rarr; **Licence** tab).
 2. Enter your 16-character license key (e.g. `XXXX-XXXX-XXXX-XXXX`).
 3. Click **Verify & Activate License**.
-4. Once activated, click **Visit Student Portal** to access all unlocked features on `portal.ewubd.edu`!
+4. Once activated, your license status is permanently saved on your browser and verified seamlessly.
+5. You can manage your license anytime from the extension popup under the **Licence** tab to check days remaining, sync status, or change keys.
 
 ---
 
@@ -117,7 +126,7 @@ You can use Chromium browsers with extension support (such as **Kiwi Browser** o
 > 
 > - This project is **not** officially affiliated with, endorsed by, or operated by East West University (EWU).
 > - All trademarks, logos, and portal interfaces belong to their respective copyright holders.
-> - If East West University authorities or relevant copyright owners have questions, concerns, or wish to request modification or takedown of any feature, please reach out directly and the request will be addressed immediately:
+> - If East West University authorities or relevant copyright owners have questions, concerns, or wish to request modification or takedown of any feature, please reach out directly:
 >   - **Direct Contact (Telegram)**: [@AftabKabir](https://t.me/AftabKabir)
 >   - **Issue Tracker**: Submit a request via [GitHub Issues](https://github.com/starkxxxwiz/ewu-ext/issues).
 

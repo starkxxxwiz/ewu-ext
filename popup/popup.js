@@ -113,6 +113,16 @@
     licSubText: document.getElementById('licSubText'),
     btnManageLicense: document.getElementById('btnManageLicense'),
 
+    // Dedicated Licence Tab Elements
+    tabLicDot: document.getElementById('tabLicDot'),
+    tabLicStatusText: document.getElementById('tabLicStatusText'),
+    tabLicTypeBadge: document.getElementById('tabLicTypeBadge'),
+    tabLicPrefix: document.getElementById('tabLicPrefix'),
+    tabLicExpiry: document.getElementById('tabLicExpiry'),
+    btnChangeLicenseKey: document.getElementById('btnChangeLicenseKey'),
+    btnRefreshLicense: document.getElementById('btnRefreshLicense'),
+    btnContactSupport: document.getElementById('btnContactSupport'),
+
     // Toast
     toast: document.getElementById('toast'),
   };
@@ -257,18 +267,6 @@
      BIND EVENTS
      ----------------------------------------------------------- */
   function bindEvents() {
-    // Manage License Button Click -> Open Activation Page
-    if (els.btnManageLicense) {
-      els.btnManageLicense.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (typeof chrome !== 'undefined' && chrome.tabs) {
-          chrome.tabs.create({ url: chrome.runtime.getURL('pages/activation.html') });
-        } else {
-          window.open('pages/activation.html', '_blank');
-        }
-      });
-    }
-
     // Tab Filter Navigation
     let currentTab = 'general';
 
@@ -288,6 +286,42 @@
       });
 
       els.settingCards.forEach(c => { c.style.display = 'block'; });
+    }
+
+    // Header Manage Licence Button -> Navigate to Licence tab
+    if (els.btnManageLicense) {
+      els.btnManageLicense.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (els.settingsSearch) els.settingsSearch.value = '';
+        applyTabFilter('license');
+      });
+    }
+
+    // Dedicated Licence Tab Action Buttons
+    if (els.btnChangeLicenseKey) {
+      els.btnChangeLicenseKey.addEventListener('click', () => {
+        if (typeof chrome !== 'undefined' && chrome.tabs) {
+          chrome.tabs.create({ url: chrome.runtime.getURL('pages/activation.html') });
+        } else {
+          window.open('pages/activation.html', '_blank');
+        }
+      });
+    }
+
+    if (els.btnRefreshLicense) {
+      els.btnRefreshLicense.addEventListener('click', () => {
+        showToast('Syncing licence status...');
+        updateLicenseStatusUI();
+        if (typeof chrome !== 'undefined' && chrome.runtime) {
+          chrome.runtime.sendMessage({ type: 'CHECK_REMOTE_STATUS' }).catch(() => {});
+        }
+      });
+    }
+
+    if (els.btnContactSupport) {
+      els.btnContactSupport.addEventListener('click', () => {
+        window.open('https://t.me/AftabKabir', '_blank');
+      });
     }
 
     els.tabBtns.forEach((btn) => {
@@ -683,8 +717,15 @@
           els.licBadgeDot.style.background = '#f43f5e';
           els.licBadgeDot.style.boxShadow = '0 0 8px rgba(244, 63, 94, 0.7)';
         }
-        if (els.licStatusText) els.licStatusText.textContent = 'License Inactive';
+        if (els.licStatusText) els.licStatusText.textContent = 'Licence Inactive';
         if (els.licSubText) els.licSubText.style.display = 'none';
+
+        // Update dedicated Licence tab fields
+        if (els.tabLicDot) els.tabLicDot.style.background = '#f43f5e';
+        if (els.tabLicStatusText) els.tabLicStatusText.textContent = 'Licence Inactive';
+        if (els.tabLicTypeBadge) { els.tabLicTypeBadge.textContent = 'INACTIVE'; els.tabLicTypeBadge.style.color = '#f43f5e'; els.tabLicTypeBadge.style.borderColor = 'rgba(244,63,94,0.4)'; }
+        if (els.tabLicPrefix) els.tabLicPrefix.textContent = 'None';
+        if (els.tabLicExpiry) els.tabLicExpiry.textContent = 'Activation Required';
 
         // Blur settings and show centered activation warning overlay
         if (container) { container.style.filter = 'blur(7px)'; container.style.pointerEvents = 'none'; }
@@ -698,11 +739,11 @@
             <div style="width:48px; height:48px; border-radius:14px; background:rgba(99,102,241,0.14); border:1px solid rgba(99,102,241,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; color:#818cf8;">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
-            <h3 style="color:#ffffff; font-size:15px; font-weight:800; margin-bottom:6px; letter-spacing:-0.2px;">License Activation Required</h3>
-            <p style="color:#cbd5e1; font-size:12px; line-height:1.55; margin-bottom:18px;">Activate your license key to unlock automatic captcha solving, routine timetables, and advising planner.</p>
+            <h3 style="color:#ffffff; font-size:15px; font-weight:800; margin-bottom:6px; letter-spacing:-0.2px;">Licence Activation Required</h3>
+            <p style="color:#cbd5e1; font-size:12px; line-height:1.55; margin-bottom:18px;">Activate your licence key to unlock automatic captcha solving, routine timetables, and advising planner.</p>
             <button id="btnPopupActivateAction" style="width:100%; padding:11px 18px; border-radius:10px; background:linear-gradient(135deg, #4f46e5, #3b82f6); color:#ffffff; border:1px solid rgba(255,255,255,0.15); font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 14px rgba(79,70,229,0.35); transition:transform 0.15s ease;">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 2l-2 2m-1.5 1.5L14 9m-1.5 1.5L10 13l-4 4-4-4 4-4 2.5-2.5m1.5-1.5L16.5 3.5 18 2z"/><circle cx="7.5" cy="16.5" r="1.5"/></svg>
-              Activate License
+              Activate Licence
             </button>
           </div>
         `;
@@ -728,8 +769,22 @@
         els.licBadgeDot.style.background = '#10b981';
         els.licBadgeDot.style.boxShadow = '0 0 8px rgba(16, 185, 129, 0.7)';
       }
-      if (els.licStatusText) els.licStatusText.textContent = 'License Active';
+      if (els.licStatusText) els.licStatusText.textContent = 'Licence Active';
       if (els.licSubText) els.licSubText.style.display = 'none';
+
+      // Update dedicated Licence tab fields
+      if (els.tabLicDot) els.tabLicDot.style.background = '#10b981';
+      if (els.tabLicStatusText) els.tabLicStatusText.textContent = 'Licence Active & Verified';
+      if (els.tabLicTypeBadge) { els.tabLicTypeBadge.textContent = 'ACTIVE'; els.tabLicTypeBadge.style.color = 'var(--emerald)'; els.tabLicTypeBadge.style.borderColor = 'rgba(16,185,129,0.4)'; }
+      if (els.tabLicPrefix) els.tabLicPrefix.textContent = res.ewu_license_prefix || 'XXXX-...';
+      if (els.tabLicExpiry) {
+        if (res.ewu_license_expiry && Number(res.ewu_license_expiry) > 0) {
+          const d = new Date(Number(res.ewu_license_expiry));
+          els.tabLicExpiry.textContent = isNaN(d.getTime()) ? 'Lifetime Access' : d.toLocaleDateString();
+        } else {
+          els.tabLicExpiry.textContent = 'Lifetime Access (Never Expires)';
+        }
+      }
 
       const headerEl = document.querySelector('.header');
 

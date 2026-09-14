@@ -604,24 +604,34 @@
       if (!scheduleDiv || !this._tableReady) return;
       if (this._btnInjected) return;
       this._btnInjected = true;
-      routineLog('Generate Routine button injected');
+      routineLog('Generate Routine & Calendar buttons injected');
 
       var wrapper = document.createElement('div');
       wrapper.id = 'ewu-rg-btn-wrapper';
+      wrapper.style.cssText = 'display:inline-flex;align-items:center;gap:8px;';
 
       var btn = document.createElement('button');
       btn.id = 'ewu-rg-btn-generate';
       btn.type = 'button';
       btn.className = 'ewu-rg-inject-btn';
       btn.disabled = true;
-      btn.textContent = 'Generate Routine';
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:-2px;"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>Generate Routine';
       wrapper.appendChild(btn);
+
+      var calBtn = document.createElement('button');
+      calBtn.id = 'ewu-rg-btn-calendar';
+      calBtn.type = 'button';
+      calBtn.className = 'ewu-rg-inject-btn ewu-rg-inject-cal-btn';
+      calBtn.disabled = true;
+      calBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:-2px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Add to Calendar (.ics)';
+      calBtn.title = 'Export weekly class schedule to Google, Apple, or Outlook Calendar (.ics)';
+      wrapper.appendChild(calBtn);
 
       var printBtn = safeQuery('button[ng-click="PaySlipPrintBySemesterAndStudentId()"]');
       if (printBtn && printBtn.parentNode) {
         var flexRow = document.createElement('div');
         flexRow.id = 'ewu-rg-btn-row';
-        flexRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:12px;';
+        flexRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;';
         printBtn.parentNode.insertBefore(flexRow, printBtn);
         flexRow.appendChild(printBtn);
         flexRow.appendChild(wrapper);
@@ -636,20 +646,29 @@
 
       var self = this;
       btn.addEventListener('click', function () { self._onGenerate(); });
+      calBtn.addEventListener('click', function () { self._exportICS(); });
     },
 
     _updateBtn: function (on) {
       var btn = safeQuery('#ewu-rg-btn-generate');
-      if (!btn) return;
-      btn.disabled = !on;
-      btn.classList.toggle('ewu-rg-btn-ready', on);
+      var calBtn = safeQuery('#ewu-rg-btn-calendar');
+      if (btn) {
+        btn.disabled = !on;
+        btn.classList.toggle('ewu-rg-btn-ready', on);
+      }
+      if (calBtn) {
+        calBtn.disabled = !on;
+        calBtn.classList.toggle('ewu-rg-btn-ready', on);
+      }
     },
 
     _trimRoomName: function (room) {
       if (!room) return '';
-      // Removes bracket description, e.g. "638 (Artificial Intelligence Lab)" -> "638"
-      // Leaves AB2-601, AB2-502, and other clean codes unchanged
-      return String(room).replace(/\s*\([^)]*\)/g, '').trim();
+      var str = String(room).trim();
+      if (str === '-' || str.toUpperCase() === 'TBA' || str.toUpperCase() === 'N/A') return '';
+      // Removes bracket description, e.g. "449 (Telecommunication and Circuit Lab)" -> "449"
+      // Leaves AB2-601, AB2-502, ab1-374, ab2, fub-37, and other clean codes unchanged
+      return str.replace(/\s*\([^)]*\)/g, '').trim();
     },
 
     _isDroppedOrWithdrawn: function (item) {
@@ -662,13 +681,7 @@
         }
         return false;
       };
-
-      return isTrue(item.DropStatus) ||
-             isTrue(item.WithDrawStatus) ||
-             isTrue(item.WithdrawStatus) ||
-             isTrue(item.IsDrop) ||
-             isTrue(item.IsWithdraw) ||
-             isTrue(item.isSemesterDrop);
+      return isTrue(item.DropStatus) || isTrue(item.WithDrawStatus) || isTrue(item.IsDrop) || isTrue(item.IsWithdraw);
     },
 
     _extractCourses: function () {
@@ -690,6 +703,7 @@
           for (var j = 1; j < rows.length; j++) {
             var cells = rows[j].querySelectorAll('td');
             if (cells.length >= 6) {
+              // Check for WithDraw Status (col 6) or Drop Status (col 7)
               var withdrawText = ((cells[6] || {}).textContent || '').trim().toLowerCase();
               var dropText = ((cells[7] || {}).textContent || '').trim().toLowerCase();
               if (withdrawText === 'yes' || dropText === 'yes') {
@@ -770,8 +784,8 @@
       var raw = String(ts).trim();
       if (!raw || raw.toUpperCase() === 'TBA') return null;
 
-      // Extract time range: "8:30AM-10:00AM", "11:50 AM - 01:20 PM", "(11:50AM-1:20PM)", "8:30AM - 10:00AM"
-      var timeMatch = raw.match(/(\d{1,2}:\d{2}\s*(?:AM|PM))\s*(?:-|to)\s*(\d{1,2}:\d{2}\s*(?:AM|PM))/i);
+      // Extract time range: "8:30AM-10:00AM", "8:30-10:00AM", "11:50 AM - 01:20 PM", "(11:50AM-1:20PM)", "8:30 to 10:00 AM"
+      var timeMatch = raw.match(/(\d{1,2}:\d{2}\s*(?:AM|PM)?)\s*(?:-|to)\s*(\d{1,2}:\d{2}\s*(?:AM|PM)?)/i);
       if (!timeMatch) {
         routineLog('[Routine] _parseSlot: no time range match in:', raw);
         return null;
@@ -789,9 +803,9 @@
         'MON': 'Monday', 'MONDAY': 'Monday', 'M': 'Monday',
         'TUE': 'Tuesday', 'TUESDAY': 'Tuesday', 'T': 'Tuesday',
         'WED': 'Wednesday', 'WEDNESDAY': 'Wednesday', 'W': 'Wednesday',
-        'THU': 'Thursday', 'THURSDAY': 'Thursday', 'R': 'Thursday',
+        'THU': 'Thursday', 'THURSDAY': 'Thursday', 'R': 'Thursday', 'TH': 'Thursday',
         'FRI': 'Friday', 'FRIDAY': 'Friday', 'F': 'Friday',
-        'SAT': 'Saturday', 'SATURDAY': 'Saturday', 'A': 'Saturday'
+        'SAT': 'Saturday', 'SATURDAY': 'Saturday', 'A': 'Saturday', 'SA': 'Saturday'
       };
 
       // Check if dayPart contains word tokens (e.g. "Mon, Wed" or "Sun,Tue" or "Thursday")
@@ -816,20 +830,38 @@
         return null;
       }
 
+      var startAmpm = (startStr.match(/(AM|PM)/i) || [])[1];
+      var endAmpm   = (endStr.match(/(AM|PM)/i) || [])[1];
+      if (!startAmpm && endAmpm) {
+        startAmpm = endAmpm;
+        var sH = parseInt((startStr.match(/(\d+):/) || [])[1] || '0', 10);
+        var eH = parseInt((endStr.match(/(\d+):/) || [])[1] || '0', 10);
+        if (endAmpm.toUpperCase() === 'PM' && sH >= 8 && sH < 12 && sH > eH) {
+          startAmpm = 'AM';
+        }
+        startStr = startStr + ' ' + startAmpm;
+      }
+      if (!endAmpm && startAmpm) {
+        endStr = endStr + ' ' + startAmpm;
+      }
+
       function toMin(t) {
         var clean = t.replace(/\s+/g, '');
-        var p = clean.match(/(\d+):(\d+)(AM|PM)/i);
+        var p = clean.match(/(\d+):(\d+)(AM|PM)?/i);
         if (!p) return 0;
         var h = parseInt(p[1], 10);
-        if (p[3].toUpperCase() === 'PM' && h !== 12) h += 12;
-        if (p[3].toUpperCase() === 'AM' && h === 12) h = 0;
+        var ampm = p[3] ? p[3].toUpperCase() : 'AM';
+        if (ampm === 'PM' && h !== 12) h += 12;
+        if (ampm === 'AM' && h === 12) h = 0;
         return h * 60 + parseInt(p[2], 10);
       }
 
       function prettyTime(t) {
         var clean = t.replace(/\s+/g, '');
-        var p = clean.match(/(\d+:\d+)(AM|PM)/i);
-        return p ? (p[1] + ' ' + p[2].toUpperCase()) : t.toUpperCase();
+        var p = clean.match(/(\d+:\d+)(AM|PM)?/i);
+        if (!p) return t.toUpperCase();
+        var ampm = p[2] ? (' ' + p[2].toUpperCase()) : '';
+        return p[1] + ampm;
       }
 
       var parsedResult = {
@@ -960,14 +992,46 @@
           courseSlots = [{ timeSlotName: course.timeSlotName, roomName: course.roomName || '' }];
         }
 
+        // Group courseSlots by time string to identify multi-slot splits
+        var slotsByTime = {};
+        for (var csIdx = 0; csIdx < courseSlots.length; csIdx++) {
+          var p0 = self._parseSlot(courseSlots[csIdx].timeSlotName);
+          if (p0) {
+            var tk = p0.startTime + '-' + p0.endTime;
+            if (!slotsByTime[tk]) slotsByTime[tk] = [];
+            slotsByTime[tk].push(courseSlots[csIdx]);
+          }
+        }
+
         for (var si2 = 0; si2 < courseSlots.length; si2++) {
           var slot = courseSlots[si2];
           var parsed = self._parseSlot(slot.timeSlotName);
           if (!parsed) continue;
 
+          var tk = parsed.startTime + '-' + parsed.endTime;
+          var matchingSlots = slotsByTime[tk] || [slot];
+          var slotIdxInGroup = matchingSlots.indexOf(slot);
+
           for (var di = 0; di < parsed.days.length; di++) {
             var day = parsed.days[di];
             if (!dayMap[day]) continue; // day not in daysToShow
+
+            // If there are multiple separate slot records for the same days (e.g. TR slot 1 = 429, TR slot 2 = 114),
+            // assign each slot record to its corresponding day index:
+            if (matchingSlots.length === parsed.days.length && slotIdxInGroup !== -1 && slotIdxInGroup !== di) {
+              continue;
+            }
+
+            // Determine room for this specific day:
+            var currentRoom = slot.roomName || '';
+            if (slot.dayRooms && slot.dayRooms[day]) {
+              currentRoom = slot.dayRooms[day];
+            } else if (currentRoom.indexOf(',') !== -1) {
+              var splitRooms = currentRoom.split(',').map(function (r) { return r.trim(); }).filter(Boolean);
+              if (splitRooms.length === parsed.days.length) {
+                currentRoom = splitRooms[di];
+              }
+            }
 
             // Find or create entry for this course on this day
             var existing = null;
@@ -981,13 +1045,19 @@
               existing = { courseCode: course.courseCode, sectionName: course.sectionName, slots: [] };
               dayMap[day].push(existing);
             }
-            existing.slots.push({
-              startTime: parsed.startTime,
-              endTime:   parsed.endTime,
-              roomName:  slot.roomName || '',
-              sortTime:  parsed.sortTime
+
+            var isDup = existing.slots.some(function (s) {
+              return s.startTime === parsed.startTime && s.endTime === parsed.endTime && s.roomName === currentRoom;
             });
-            routineLog('[Routine] Mapped', course.courseCode, 'Sec', course.sectionName, '->', day, parsed.startTime + '-' + parsed.endTime, 'Room:', slot.roomName);
+            if (!isDup) {
+              existing.slots.push({
+                startTime: parsed.startTime,
+                endTime:   parsed.endTime,
+                roomName:  currentRoom,
+                sortTime:  parsed.sortTime
+              });
+            }
+            routineLog('[Routine] Mapped', course.courseCode, 'Sec', course.sectionName, '->', day, parsed.startTime + '-' + parsed.endTime, 'Room:', currentRoom);
           }
         }
       }
@@ -1074,9 +1144,10 @@
       return h;
     },
 
-    _renderModal: function (html) {
+    _renderModal: function (html, customExportName) {
       var old = safeQuery('#ewu-rg-modal'); if (old) old.remove();
       routineLog('Routine modal opened');
+      this._customExportName = customExportName || '';
 
       var modal = document.createElement('div');
       modal.id = 'ewu-rg-modal';
@@ -1089,6 +1160,7 @@
             '<div class="ewu-rg-toolbar-actions">' +
               '<button class="ewu-rg-btn ewu-rg-btn-pdf" id="ewu-rg-pdf-btn" title="Save as PDF"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> PDF</button>' +
               '<button class="ewu-rg-btn ewu-rg-btn-img" id="ewu-rg-img-btn" title="Save as Image"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Image</button>' +
+              '<button class="ewu-rg-btn ewu-rg-btn-cal" id="ewu-rg-cal-btn" title="Export to Google/Apple Calendar (.ics)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Calendar</button>' +
               '<button class="ewu-rg-btn ewu-rg-btn-close" id="ewu-rg-close-btn" title="Close">&times;</button>' +
             '</div>' +
           '</div>' +
@@ -1103,6 +1175,7 @@
       modal.querySelector('.ewu-rg-overlay').addEventListener('click', function () { self._closeModal(); });
       modal.querySelector('#ewu-rg-pdf-btn').addEventListener('click', function () { self._exportPDF(); });
       modal.querySelector('#ewu-rg-img-btn').addEventListener('click', function () { self._exportImage(); });
+      modal.querySelector('#ewu-rg-cal-btn').addEventListener('click', function () { self._exportICS(); });
       this._escHandler = function (e) { if (e.key === 'Escape' && self._modalOpen) self._closeModal(); };
       document.addEventListener('keydown', this._escHandler);
       requestAnimationFrame(function () { modal.classList.add('ewu-rg-modal-open'); });
@@ -1286,10 +1359,10 @@
         routineLog('PDF export: A4 ' + orient + ', placing at ' + sw.toFixed(1) + 'x' + sh.toFixed(1) + 'mm');
 
         pdf.addImage(canvas.toDataURL('image/png'), 'PNG', xOff, yOff, sw, sh, undefined, 'FAST');
-        var semClean = this._getSemesterName();
+        var semClean = this._customExportName || this._getSemesterName();
         if (semClean) {
-          semClean = semClean.replace(/[^a-zA-Z0-9]/g, '');
-          semClean = semClean.substring(0, 20);
+          semClean = semClean.replace(/[^a-zA-Z0-9_-]/g, '_');
+          semClean = semClean.substring(0, 30);
         }
         var pdfName = semClean ? ('Routine_' + semClean + '.pdf') : 'EWU_Class_Routine.pdf';
         pdf.save(pdfName);
@@ -1362,10 +1435,10 @@
           var url = URL.createObjectURL(blob);
           var a = document.createElement('a');
           a.href = url;
-          var semClean2 = self._getSemesterName();
+          var semClean2 = self._customExportName || self._getSemesterName();
           if (semClean2) {
-            semClean2 = semClean2.replace(/[^a-zA-Z0-9]/g, '');
-            semClean2 = semClean2.substring(0, 20);
+            semClean2 = semClean2.replace(/[^a-zA-Z0-9_-]/g, '_');
+            semClean2 = semClean2.substring(0, 30);
           }
           a.download = semClean2 ? ('Routine_' + semClean2 + '.png') : 'EWU_Class_Routine.png';
           document.body.appendChild(a);
@@ -1381,6 +1454,148 @@
         Toast.show('Image export failed: ' + (e.message || 'Unknown error'), 'error');
       }
       this._showLoad(false);
+    },
+
+    _exportICS: function () {
+      routineLog('Calendar ICS export started');
+      try {
+        var courses = this._extractCourses();
+        if (!courses || !courses.length) {
+          Toast.show('No courses found to export to calendar', 'error');
+          return;
+        }
+
+        var semName = this._customExportName || this._getSemesterName() || 'Semester';
+        var dayToRrule = {
+          'Sunday': 'SU',
+          'Monday': 'MO',
+          'Tuesday': 'TU',
+          'Wednesday': 'WE',
+          'Thursday': 'TH',
+          'Friday': 'FR',
+          'Saturday': 'SA'
+        };
+
+        var dayIndexMap = {
+          'Sunday': 0,
+          'Monday': 1,
+          'Tuesday': 2,
+          'Wednesday': 3,
+          'Thursday': 4,
+          'Friday': 5,
+          'Saturday': 6
+        };
+
+        var now = new Date();
+        var currentDay = now.getDay();
+        var semesterEndDate = new Date(now.getFullYear(), now.getMonth() + 4, now.getDate(), 23, 59, 59);
+        var untilStr = semesterEndDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+        function formatICSDate(baseDate, timeStr) {
+          var match = (timeStr || '').match(/(\d+):(\d+)\s*(AM|PM)?/i);
+          var h = 0, m = 0;
+          if (match) {
+            h = parseInt(match[1], 10);
+            m = parseInt(match[2], 10);
+            var ampm = (match[3] || '').toUpperCase();
+            if (ampm === 'PM' && h !== 12) h += 12;
+            if (ampm === 'AM' && h === 12) h = 0;
+          }
+          var d = new Date(baseDate);
+          d.setHours(h, m, 0, 0);
+
+          var yyyy = d.getFullYear();
+          var mm = String(d.getMonth() + 1).padStart(2, '0');
+          var dd = String(d.getDate()).padStart(2, '0');
+          var hh = String(d.getHours()).padStart(2, '0');
+          var min = String(d.getMinutes()).padStart(2, '0');
+          return yyyy + mm + dd + 'T' + hh + min + '00';
+        }
+
+        var icsLines = [
+          'BEGIN:VCALENDAR',
+          'VERSION:2.0',
+          'PRODID:-//EWU Buddy//Student Class Routine//EN',
+          'CALSCALE:GREGORIAN',
+          'METHOD:PUBLISH',
+          'X-WR-CALNAME:EWU Class Schedule - ' + semName,
+          'X-WR-TIMEZONE:Asia/Dhaka'
+        ];
+
+        var self = this;
+        var eventCount = 0;
+
+        courses.forEach(function (course, cIdx) {
+          var courseSlots = course.slots || [];
+          if (!courseSlots.length && course.timeSlotName) {
+            courseSlots = [{ timeSlotName: course.timeSlotName, roomName: course.roomName || '' }];
+          }
+
+          courseSlots.forEach(function (slot, sIdx) {
+            var parsed = self._parseSlot(slot.timeSlotName);
+            if (!parsed || !parsed.days || !parsed.days.length) return;
+
+            parsed.days.forEach(function (day) {
+              var byDay = dayToRrule[day];
+              if (!byDay) return;
+
+              var targetDayIdx = dayIndexMap[day];
+              var daysUntil = (targetDayIdx - currentDay + 7) % 7;
+              if (daysUntil === 0) daysUntil = 7;
+
+              var eventDate = new Date(now.getTime() + daysUntil * 24 * 60 * 60 * 1000);
+              var dtStart = formatICSDate(eventDate, parsed.startTime);
+              var dtEnd = formatICSDate(eventDate, parsed.endTime);
+              var stamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+              var uid = 'ewu-class-' + Date.now() + '-' + cIdx + '-' + sIdx + '-' + byDay + '@ewubuddy.local';
+
+              var room = self._trimRoomName(slot.roomName) || 'TBA';
+              var faculty = course.facultyInitials || course.facultyName || '';
+              var summary = course.courseCode + ' [Sec ' + (course.sectionName || 1) + '] - ' + room;
+              var desc = 'Course: ' + course.courseCode + '\\nSection: ' + (course.sectionName || 1) + '\\nRoom: ' + room + '\\nTime: ' + parsed.startTime + ' - ' + parsed.endTime;
+              if (faculty) desc += '\\nFaculty: ' + faculty;
+
+              icsLines.push('BEGIN:VEVENT');
+              icsLines.push('UID:' + uid);
+              icsLines.push('DTSTAMP:' + stamp);
+              icsLines.push('DTSTART;TZID=Asia/Dhaka:' + dtStart);
+              icsLines.push('DTEND;TZID=Asia/Dhaka:' + dtEnd);
+              icsLines.push('RRULE:FREQ=WEEKLY;BYDAY=' + byDay + ';UNTIL=' + untilStr);
+              icsLines.push('SUMMARY:' + summary);
+              icsLines.push('DESCRIPTION:' + desc);
+              icsLines.push('LOCATION:Room ' + room + ', East West University');
+              icsLines.push('STATUS:CONFIRMED');
+              icsLines.push('END:VEVENT');
+              eventCount++;
+            });
+          });
+        });
+
+        icsLines.push('END:VCALENDAR');
+
+        if (eventCount === 0) {
+          Toast.show('No scheduled class timings found to export', 'error');
+          return;
+        }
+
+        var icsContent = icsLines.join('\r\n');
+        var blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        var semClean = (semName || '').replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30);
+        a.download = semClean ? ('EWU_Schedule_' + semClean + '.ics') : 'EWU_Class_Schedule.ics';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+
+        routineLog('Calendar ICS export success: ' + eventCount + ' recurring events generated');
+        Toast.show('Calendar (.ics) downloaded! Ready to import.', 'success');
+      } catch (err) {
+        routineLog('Calendar ICS export failed:', err);
+        Toast.show('Calendar export failed: ' + (err.message || 'Error'), 'error');
+      }
     },
 
     _showLoad: function (show) {
@@ -4141,7 +4356,8 @@
         if (facName === '-' || facName === 'N/A' || !facName || facName === 'TBA') facName = 'N/A';
 
         var rawTimeSlot = safeText(item.TimeSlotName || item.timeSlot || item.time).trim();
-        var roomName = safeText(item.RoomName || item.room || '-').trim();
+        var rawRoom = safeText(item.RoomName || item.room || '-').trim();
+        var roomName = RoutineGeneratorModule._trimRoomName(rawRoom) || (rawRoom === '-' ? 'TBA' : rawRoom);
         var credit = parseFloat(item.CreditHour || item.creditHour) || (isLab ? 1.0 : 3.0);
 
         if (!groupsMap[groupKey]) {
@@ -4186,25 +4402,43 @@
           var raw = rawEntries[e];
           var parsed = self._parseDaysTime(raw.rawTimeSlot);
           var timeKey = parsed.timeStr;
-          var room = raw.room || 'TBA';
+          var rawTrimmed = RoutineGeneratorModule._trimRoomName(raw.room) || (raw.room && raw.room !== '-' ? raw.room : 'TBA');
 
           if (!timeSlotGroups[timeKey]) {
+            var dayRooms = {};
+            var roomsList = rawTrimmed.split(',').map(function (r) { return r.trim(); }).filter(Boolean);
+            for (var d0 = 0; d0 < parsed.days.length; d0++) {
+              dayRooms[parsed.days[d0]] = (roomsList.length === parsed.days.length) ? roomsList[d0] : rawTrimmed;
+            }
+
             timeSlotGroups[timeKey] = {
               days: parsed.days.slice(),
               timeStr: parsed.timeStr,
-              rooms: [room],
+              rooms: roomsList.length ? roomsList : [rawTrimmed],
+              dayRooms: dayRooms,
               type: defaultType
             };
             slotOrder.push(timeKey);
           } else {
+            var sg = timeSlotGroups[timeKey];
+            var newRooms = rawTrimmed.split(',').map(function (r) { return r.trim(); }).filter(Boolean);
+
             for (var d = 0; d < parsed.days.length; d++) {
-              if (timeSlotGroups[timeKey].days.indexOf(parsed.days[d]) === -1) {
-                timeSlotGroups[timeKey].days.push(parsed.days[d]);
+              var dayName = parsed.days[d];
+              if (sg.days.indexOf(dayName) === -1) {
+                sg.days.push(dayName);
+              }
+              var assignedRoom = (newRooms.length === parsed.days.length) ? newRooms[d] : rawTrimmed;
+              if (assignedRoom && assignedRoom !== 'TBA') {
+                sg.dayRooms[dayName] = assignedRoom;
               }
             }
-            if (room !== 'TBA' && timeSlotGroups[timeKey].rooms.indexOf(room) === -1) {
-              timeSlotGroups[timeKey].rooms.push(room);
-            }
+
+            newRooms.forEach(function (rm) {
+              if (rm !== 'TBA' && sg.rooms.indexOf(rm) === -1) {
+                sg.rooms.push(rm);
+              }
+            });
           }
         }
 
@@ -4215,7 +4449,8 @@
             type: sg.type,
             days: sg.days,
             timeStr: sg.timeStr,
-            room: sg.rooms.join(', ')
+            room: sg.rooms.join(', '),
+            dayRooms: sg.dayRooms
           });
         }
         return result;
@@ -4288,7 +4523,7 @@
               '<div class="ewu-cp-card-list" id="ewu-cp-catalog-list"></div>' +
             '</div>' +
             '<!-- Right Panel: Active Combination -->' +
-            '<div class="ewu-cp-panel" id="ewu-cp-plan-panel">' +
+            '<div class="ewu-cp-panel">' +
               '<div class="ewu-cp-panel-header">' +
                 '<span class="ewu-cp-panel-title">My Course Combination</span>' +
                 '<button type="button" class="ewu-btn-modern ewu-btn-modern-danger" id="ewu-cp-btn-delete-all" style="padding:4px 10px; font-size:12px;">Delete All</button>' +
@@ -4301,13 +4536,12 @@
                 '<div class="ewu-cp-metric-card"><div class="ewu-cp-metric-val" id="ewu-cp-metric-credits">0.0</div><div class="ewu-cp-metric-lbl">Credits</div></div>' +
               '</div>' +
               '<div class="ewu-cp-card-list" id="ewu-cp-plan-list"></div>' +
-              '<div style="display:flex; gap:10px; margin-top:8px; flex-wrap:wrap;">' +
-                '<button type="button" class="ewu-btn-modern ewu-btn-modern-primary" id="ewu-cp-btn-preview-routine" style="flex:1; min-width:140px; background:linear-gradient(135deg, #6366f1, #3b82f6);">' +
-                  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
-                  'Preview Routine' +
+              '<div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">' +
+                '<button type="button" class="ewu-btn-modern ewu-btn-modern-primary" id="ewu-cp-btn-preview" style="flex:1.2; min-width:140px; background:linear-gradient(135deg, #1A73E8, #3b82f6); font-weight:600;">' +
+                  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Preview Routine' +
                 '</button>' +
-                '<button type="button" class="ewu-btn-modern ewu-btn-modern-ghost" id="ewu-cp-btn-export-img" style="flex:1; min-width:140px;">Save Combination Image</button>' +
-                '<button type="button" class="ewu-btn-modern ewu-btn-modern-ghost" id="ewu-cp-btn-export-all" style="flex:1; min-width:140px;">Save All Image</button>' +
+                '<button type="button" class="ewu-btn-modern ewu-btn-modern-ghost" id="ewu-cp-btn-export-img" style="flex:1; min-width:130px;">Save Combination</button>' +
+                '<button type="button" class="ewu-btn-modern ewu-btn-modern-ghost" id="ewu-cp-btn-export-all" style="flex:1; min-width:110px;">Save All</button>' +
               '</div>' +
             '</div>' +
           '</div>' +
@@ -4325,7 +4559,7 @@
         self._clearActivePlan();
       });
 
-      var previewBtn = safeQuery('#ewu-cp-btn-preview-routine');
+      var previewBtn = safeQuery('#ewu-cp-btn-preview');
       if (previewBtn) {
         previewBtn.addEventListener('click', function () {
           self._previewRoutine();
@@ -4340,36 +4574,39 @@
         self._exportAllCombosImage();
       });
 
-      // Drag and drop support on the right plan dropzone
-      var planPanelEl = safeQuery('#ewu-cp-plan-panel');
-      var planListDropEl = safeQuery('#ewu-cp-plan-list');
-      var dropTargets = [planPanelEl, planListDropEl].filter(Boolean);
+      // Setup Drag & Drop zone on the Plan panel / list for PC users
+      var planList = safeQuery('#ewu-cp-plan-list');
+      var planPanel = planList ? planList.closest('.ewu-cp-panel') : null;
 
-      dropTargets.forEach(function (dt) {
-        dt.addEventListener('dragover', function (e) {
+      function setupDropzone(target) {
+        if (!target) return;
+        target.addEventListener('dragover', function (e) {
           e.preventDefault();
           if (e.dataTransfer) {
             e.dataTransfer.dropEffect = 'copy';
           }
-          planPanelEl.classList.add('ewu-cp-drag-over');
-        });
-
-        dt.addEventListener('dragleave', function (e) {
-          if (e.relatedTarget && planPanelEl.contains(e.relatedTarget)) {
-            return;
+          if (!target.classList.contains('ewu-cp-drag-over')) {
+            target.classList.add('ewu-cp-drag-over');
           }
-          planPanelEl.classList.remove('ewu-cp-drag-over');
         });
 
-        dt.addEventListener('drop', function (e) {
+        target.addEventListener('dragleave', function (e) {
+          if (e.relatedTarget && target.contains(e.relatedTarget)) return;
+          target.classList.remove('ewu-cp-drag-over');
+        });
+
+        target.addEventListener('drop', function (e) {
           e.preventDefault();
-          planPanelEl.classList.remove('ewu-cp-drag-over');
-          var courseId = e.dataTransfer ? e.dataTransfer.getData('text/plain') : null;
+          target.classList.remove('ewu-cp-drag-over');
+          var courseId = e.dataTransfer ? (e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('courseId')) : '';
           if (courseId) {
             self._addCourseToPlan(courseId);
           }
         });
-      });
+      }
+
+      setupDropzone(planPanel);
+      setupDropzone(planList);
 
       var searchInput = safeQuery('#ewu-cp-search');
       var clearBtn = safeQuery('#ewu-cp-search-clear');
@@ -4523,7 +4760,8 @@
         }
 
         html +=
-          '<div class="ewu-cp-card ewu-cp-draggable ' + (isAdded ? 'in-plan' : '') + '" draggable="' + (!isAdded) + '" data-id="' + item.id + '" title="' + (!isAdded ? 'Drag to plan panel or click + Add' : 'Already in plan') + '">' +
+          '<div class="ewu-cp-card ' + (isAdded ? 'in-plan' : 'ewu-cp-draggable') + '" ' +
+            (!isAdded ? 'draggable="true" data-course-id="' + item.id + '" title="Drag to add to plan"' : '') + '>' +
             '<div class="ewu-cp-card-main">' +
               '<div class="ewu-cp-card-badges">' +
                 '<span class="ewu-badge ewu-badge-course">' + escapeHTML(item.courseCode) + '</span>' +
@@ -4543,20 +4781,25 @@
 
       listEl.innerHTML = html;
 
-      // Attach HTML5 drag handlers on catalog cards for desktop
-      var cards = listEl.querySelectorAll('.ewu-cp-card.ewu-cp-draggable');
-      for (var cIdx = 0; cIdx < cards.length; cIdx++) {
-        var cardEl = cards[cIdx];
-        cardEl.addEventListener('dragstart', function (e) {
-          var cid = this.getAttribute('data-id');
+      // Drag and Drop support on PC
+      var draggableCards = listEl.querySelectorAll('.ewu-cp-draggable');
+      for (var d = 0; d < draggableCards.length; d++) {
+        draggableCards[d].addEventListener('dragstart', function (e) {
+          var cid = this.getAttribute('data-course-id');
           if (e.dataTransfer) {
             e.dataTransfer.setData('text/plain', cid);
+            e.dataTransfer.setData('courseId', cid);
             e.dataTransfer.effectAllowed = 'copy';
           }
           this.classList.add('ewu-cp-dragging');
         });
-        cardEl.addEventListener('dragend', function () {
+
+        draggableCards[d].addEventListener('dragend', function () {
           this.classList.remove('ewu-cp-dragging');
+          var overElements = document.querySelectorAll('.ewu-cp-drag-over');
+          for (var o = 0; o < overElements.length; o++) {
+            overElements[o].classList.remove('ewu-cp-drag-over');
+          }
         });
       }
     },
@@ -4750,7 +4993,7 @@
       this._renderPlanView();
     },
 
-    _previewRoutine: function () {
+    _previewRoutine: async function () {
       var combo = this._getActiveCombo();
       if (!combo.selectedIds.length) {
         Toast.show('Plan is empty. Add courses before previewing routine.', 'warning');
@@ -4766,9 +5009,11 @@
         for (var s = 0; s < item.schedules.length; s++) {
           var sch = item.schedules[s];
           if (sch.days && sch.days.length && sch.days[0] !== 'TBA' && sch.timeStr !== 'Schedule TBA') {
+            var rm = sch.room && sch.room !== 'TBA' && sch.room !== '-' ? RoutineGeneratorModule._trimRoomName(sch.room) : '';
             slots.push({
               timeSlotName: sch.days.join(', ') + ' ' + sch.timeStr,
-              roomName: sch.room && sch.room !== 'TBA' ? sch.room : ''
+              roomName: rm,
+              dayRooms: sch.dayRooms || null
             });
           }
         }
@@ -4780,15 +5025,16 @@
         };
       });
 
-      var opts = {
-        compact: false,
-        showLogo: true,
-        blueIntensity: 'medium',
-        exportQuality: 'standard'
+      var mods = await loadSettings().then(function (s) { return s.modules || {}; }).catch(function () { return {}; });
+      RoutineGeneratorModule._currentOpts = {
+        compact: !!mods.routineCompact,
+        showLogo: mods.routineShowLogo !== false,
+        blueIntensity: mods.routineBlueIntensity || 'medium',
+        exportQuality: mods.routineExportQuality || 'standard'
       };
 
       var title = combo.name ? ('Course Planner — ' + combo.name) : 'Class Routine';
-      var html = RoutineGeneratorModule._buildRoutine(routineCourses, title, opts);
+      var html = RoutineGeneratorModule._buildRoutine(routineCourses, title, RoutineGeneratorModule._currentOpts);
       RoutineGeneratorModule._renderModal(html, combo.name ? (combo.name.replace(/\s+/g, '_') + '_Routine') : 'Routine');
     },
 

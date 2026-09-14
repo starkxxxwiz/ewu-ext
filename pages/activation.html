@@ -2,28 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>EWU Portal Helper — License Activation</title>
+  <title>EWU Portal Helper — Welcome &amp; Onboarding</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #030712;
-      --card-bg: rgba(13, 19, 33, 0.92);
-      --card-hover: rgba(17, 24, 39, 0.98);
-      --border: rgba(255, 255, 255, 0.12);
-      --border-focus: rgba(99, 102, 241, 0.7);
-      --accent: #6366f1;
-      --accent-hover: #4f46e5;
-      --accent-glow: rgba(99, 102, 241, 0.35);
-      --cyan: #38bdf8;
+      --bg: #090d16;
+      --card-bg: #0f172a;
+      --card-surface: #1e293b;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: #6366f1;
+      --accent: #4f46e5;
+      --accent-hover: #4338ca;
+      --accent-subtle: rgba(99, 102, 241, 0.12);
       --emerald: #10b981;
-      --rose: #f43f5e;
+      --emerald-subtle: rgba(16, 185, 129, 0.12);
+      --rose: #ef4444;
+      --rose-subtle: rgba(239, 68, 68, 0.12);
       --amber: #f59e0b;
-      --text: #ffffff;
+      --text: #f8fafc;
       --text-muted: #cbd5e1;
-      --text-dim: #94a3b8;
+      --text-dim: #64748b;
     }
 
     * {
@@ -36,7 +37,6 @@
 
     html, body {
       width: 100%;
-      min-height: 100%;
       min-height: 100vh;
       min-height: 100dvh;
       background: var(--bg);
@@ -53,17 +53,15 @@
       width: 100vw;
       height: 100vh;
       background-image: 
-        radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.2) 0%, transparent 45%),
-        radial-gradient(circle at 85% 85%, rgba(56, 189, 248, 0.15) 0%, transparent 45%),
-        radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
-        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-      background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+        radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.1) 0%, transparent 60%),
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 100% 100%, 32px 32px, 32px 32px;
       pointer-events: none;
       z-index: 0;
     }
 
-    /* Guaranteed Centering Container */
+    /* Page Wrapper */
     .page-wrapper {
       min-height: 100vh;
       min-height: 100dvh;
@@ -72,136 +70,420 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 24px 16px;
-      margin: 0 auto;
+      padding: 32px 16px;
       position: relative;
       z-index: 1;
-      box-sizing: border-box;
     }
 
-    .activation-card {
+    /* Step Progress Indicator Bar */
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      width: 100%;
+      max-width: 540px;
+    }
+
+    .step-node {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      transition: all 0.2s ease;
+    }
+
+    .step-dot {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--card-surface);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-dim);
+      transition: all 0.2s ease;
+    }
+
+    .step-node.active .step-dot {
+      background: var(--accent);
+      border-color: #818cf8;
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .step-node.active {
+      color: #ffffff;
+    }
+
+    .step-node.completed .step-dot {
+      background: var(--emerald-subtle);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--emerald);
+    }
+
+    .step-line {
+      flex: 1;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      max-width: 48px;
+      transition: background 0.2s ease;
+    }
+
+    .step-line.active {
+      background: var(--accent);
+    }
+
+    /* Main Container Card */
+    .onboard-card {
       background: var(--card-bg);
-      border: 1px solid rgba(99, 102, 241, 0.35);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      box-shadow: 
-        0 25px 60px rgba(0, 0, 0, 0.85),
-        0 0 40px var(--accent-glow),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-      border-radius: 24px;
-      max-width: 520px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      max-width: 600px;
       width: 100%;
       padding: 36px 32px;
       position: relative;
       z-index: 1;
       overflow: hidden;
-      contain: content;
-      margin: auto;
+      transition: all 0.25s ease;
     }
 
-    .activation-card::before {
+    .onboard-card::before {
       content: '';
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       height: 2px;
-      background: linear-gradient(90deg, transparent, #6366f1, #38bdf8, #10b981, transparent);
+      background: linear-gradient(90deg, transparent, #6366f1, #38bdf8, transparent);
     }
 
+    /* Brand Header */
     .brand-header {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
       margin-bottom: 22px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
     }
 
     .brand-icon {
-      width: 50px;
-      height: 50px;
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(56, 189, 248, 0.2));
-      border: 1.5px solid rgba(99, 102, 241, 0.5);
-      border-radius: 16px;
+      width: 44px;
+      height: 44px;
+      background: var(--accent-subtle);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #38bdf8;
-      box-shadow: 0 0 24px rgba(99, 102, 241, 0.35);
+      color: #818cf8;
       flex-shrink: 0;
     }
 
     .brand-title {
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 800;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.4px;
       color: #ffffff;
-      background: linear-gradient(135deg, #ffffff 40%, #c7d2fe);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
     }
 
     .brand-sub {
       font-size: 11px;
-      font-weight: 800;
-      color: #38bdf8;
+      font-weight: 700;
+      color: #818cf8;
       font-family: 'JetBrains Mono', monospace;
-      margin-top: 3px;
-      letter-spacing: 0.8px;
+      margin-top: 2px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
     }
 
-    .welcome-text {
+    /* Step Container Views */
+    .step-view {
+      display: none;
+      animation: fadeInStep 0.2s ease forwards;
+    }
+
+    .step-view.active {
+      display: block;
+    }
+
+    @keyframes fadeInStep {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Section Titles */
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+
+    .section-desc {
       font-size: 13.5px;
       line-height: 1.6;
-      color: #cbd5e1;
+      color: var(--text-muted);
       margin-bottom: 20px;
     }
 
-    .feature-list {
-      background: rgba(8, 14, 28, 0.65);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      padding: 16px 18px;
-      margin-bottom: 24px;
+    /* Terms Summary Cards */
+    .terms-summary-grid {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
+      margin-bottom: 18px;
     }
 
-    .feature-item {
+    .terms-card-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: #f1f5f9;
+      transition: border-color 0.15s ease;
+    }
+
+    .terms-card-item:hover {
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .terms-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: var(--accent-subtle);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #818cf8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Expandable Full Terms */
+    .full-terms-box {
+      display: none;
+      background: #0b1120;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 18px;
+      max-height: 220px;
+      overflow-y: auto;
+      font-size: 12px;
+      line-height: 1.65;
+      color: #cbd5e1;
+    }
+
+    .full-terms-box::-webkit-scrollbar { width: 5px; }
+    .full-terms-box::-webkit-scrollbar-track { background: transparent; }
+    .full-terms-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+    .full-terms-box h4 {
+      font-size: 12px;
+      font-weight: 700;
+      color: #818cf8;
+      margin-top: 12px;
+      margin-bottom: 4px;
+    }
+
+    .full-terms-box h4:first-child {
+      margin-top: 0;
+    }
+
+    .btn-expand-terms {
+      background: transparent;
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      color: #818cf8;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      margin-bottom: 18px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-expand-terms:hover {
+      background: var(--accent-subtle);
+      border-color: #818cf8;
+      color: #ffffff;
+    }
+
+    /* Acceptance Checkbox */
+    .acceptance-row {
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: 13px;
-      color: #f1f5f9;
-      font-weight: 600;
-      line-height: 1.4;
+      background: var(--accent-subtle);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      user-select: none;
     }
 
-    .feature-icon {
-      width: 24px;
-      height: 24px;
+    .acceptance-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #4f46e5;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .acceptance-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #ffffff;
+      cursor: pointer;
+    }
+
+    /* Feature Cards List */
+    .features-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 22px;
+      max-height: 460px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .features-container::-webkit-scrollbar { width: 5px; }
+    .features-container::-webkit-scrollbar-track { background: transparent; }
+    .features-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+    .feature-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(99, 102, 241, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .feature-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .feature-card-icon {
+      width: 32px;
+      height: 32px;
       border-radius: 8px;
-      background: rgba(99, 102, 241, 0.2);
-      border: 1px solid rgba(99, 102, 241, 0.4);
-      color: #a5b4fc;
+      background: var(--accent-subtle);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      color: #818cf8;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
     }
 
+    .feature-card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .feature-card-badge {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      padding: 2px 7px;
+      border-radius: 6px;
+      margin-left: auto;
+    }
+
+    .feature-card-desc {
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+
+    /* Styled Wireframe / Feature Preview Box */
+    .screenshot-placeholder {
+      background: #0b1120;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 4px;
+      color: var(--text-dim);
+    }
+
+    .screenshot-placeholder svg {
+      color: #818cf8;
+      opacity: 0.75;
+      margin-bottom: 2px;
+    }
+
+    .placeholder-title {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+
+    .placeholder-sub {
+      font-size: 10px;
+      color: #64748b;
+    }
+
+    /* License Input Form */
     .input-group {
-      margin-bottom: 22px;
+      margin-bottom: 20px;
     }
 
     .input-label {
       display: block;
-      font-size: 11.5px;
+      font-size: 11px;
       font-weight: 700;
-      color: #94a3b8;
+      color: var(--text-dim);
       text-transform: uppercase;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.7px;
       margin-bottom: 8px;
     }
 
@@ -212,80 +494,73 @@
 
     .license-input {
       width: 100%;
-      padding: 15px 16px;
-      background: rgba(15, 23, 42, 0.85);
-      border: 1.5px solid rgba(99, 102, 241, 0.4);
-      border-radius: 14px;
+      padding: 14px 16px;
+      background: #0b1120;
+      border: 1.5px solid rgba(99, 102, 241, 0.35);
+      border-radius: 12px;
       color: #ffffff;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 18px;
-      font-weight: 800;
+      font-size: 17px;
+      font-weight: 700;
       letter-spacing: 2px;
       text-align: center;
       outline: none;
-      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
-      transition: all 0.2s ease;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
     .license-input:focus {
-      border-color: #818cf8;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35), inset 0 2px 4px rgba(0, 0, 0, 0.4);
-      background: rgba(15, 23, 42, 0.95);
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
     }
 
     .license-input::placeholder {
       color: #475569;
       letter-spacing: 1px;
-      font-weight: 600;
+      font-weight: 500;
     }
 
+    /* Action Buttons */
     .btn-primary {
-      position: relative;
       width: 100%;
-      padding: 14px 24px;
-      background: linear-gradient(135deg, #4f46e5, #3b82f6);
+      padding: 13px 22px;
+      background: var(--accent);
       border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 14px;
+      border-radius: 12px;
       color: #ffffff;
-      font-size: 14.5px;
-      font-weight: 700;
+      font-size: 14px;
+      font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      box-shadow: 0 4px 18px rgba(79, 70, 229, 0.35);
-      transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease;
-      overflow: hidden;
-      contain: paint;
-      transform: translateZ(0);
+      gap: 8px;
+      transition: background 0.15s ease, transform 0.15s ease;
       touch-action: manipulation;
     }
 
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(79, 70, 229, 0.55);
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
     }
 
-    .btn-primary:active {
-      transform: scale(0.97);
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0);
     }
 
     .btn-primary:disabled {
-      opacity: 0.6;
+      opacity: 0.45;
       cursor: not-allowed;
       transform: none;
-      box-shadow: none;
     }
 
     .btn-secondary {
       width: 100%;
-      padding: 13px 20px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 14px;
+      padding: 12px 18px;
+      background: var(--card-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
       color: #cbd5e1;
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
@@ -293,82 +568,73 @@
       justify-content: center;
       gap: 8px;
       text-decoration: none;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
       touch-action: manipulation;
     }
 
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
       color: #ffffff;
-      border-color: rgba(99, 102, 241, 0.4);
-      transform: translateY(-1px);
-    }
-
-    .btn-secondary:active {
-      transform: scale(0.98);
+      border-color: rgba(99, 102, 241, 0.3);
     }
 
     .btn-support {
       display: inline-flex;
       width: auto;
-      margin-top: 10px;
-      padding: 9px 18px;
-      color: #a5b4fc;
-      background: rgba(99, 102, 241, 0.12);
-      border: 1px solid rgba(99, 102, 241, 0.35);
-      border-radius: 12px;
-      font-size: 12.5px;
-      font-weight: 700;
+      margin-top: 8px;
+      padding: 8px 16px;
+      color: #818cf8;
+      background: var(--accent-subtle);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
       cursor: pointer;
       align-items: center;
-      gap: 8px;
-      transition: all 0.2s ease;
-      touch-action: manipulation;
+      gap: 6px;
+      transition: all 0.15s ease;
       text-decoration: none;
     }
 
     .btn-support:hover {
-      background: rgba(99, 102, 241, 0.22);
+      background: rgba(99, 102, 241, 0.2);
       border-color: #6366f1;
       color: #ffffff;
-      transform: translateY(-1px);
     }
 
     .status-box {
-      margin-top: 18px;
-      padding: 14px 18px;
-      border-radius: 14px;
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 12px;
       font-size: 13px;
       display: none;
       line-height: 1.5;
       text-align: center;
-      font-weight: 600;
-      animation: fadeIn 0.3s ease;
+      font-weight: 500;
+      animation: fadeInStatus 0.2s ease;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
+    @keyframes fadeInStatus {
+      from { opacity: 0; transform: translateY(4px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .status-success {
-      background: rgba(16, 185, 129, 0.15);
-      border: 1.5px solid rgba(16, 185, 129, 0.45);
+    .status-box.success {
+      background: var(--emerald-subtle);
+      border: 1px solid rgba(16, 185, 129, 0.4);
       color: #34d399;
-      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
     }
 
-    .status-error {
-      background: rgba(244, 63, 94, 0.15);
-      border: 1.5px solid rgba(244, 63, 94, 0.45);
+    .status-box.error {
+      background: var(--rose-subtle);
+      border: 1px solid rgba(239, 68, 68, 0.4);
       color: #f87171;
-      box-shadow: 0 4px 20px rgba(244, 63, 94, 0.15);
     }
 
     .spinner {
-      width: 20px;
-      height: 20px;
-      border: 2.5px solid rgba(255, 255, 255, 0.3);
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
       border-radius: 50%;
       border-top-color: #ffffff;
       animation: spin 0.8s linear infinite;
@@ -378,30 +644,29 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Subscribed View */
+    /* Subscribed View Details */
     .success-badge-wrap {
-      width: 72px;
-      height: 72px;
-      border-radius: 22px;
-      margin: 0 auto 20px;
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(56, 189, 248, 0.2));
-      border: 1.5px solid rgba(16, 185, 129, 0.5);
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      margin: 0 auto 18px;
+      background: var(--emerald-subtle);
+      border: 1px solid rgba(16, 185, 129, 0.4);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #10b981;
-      box-shadow: 0 0 35px rgba(16, 185, 129, 0.35);
+      color: var(--emerald);
     }
 
     .sub-meta-box {
-      background: rgba(8, 14, 28, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 16px;
-      padding: 20px;
+      background: #0b1120;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
       text-align: left;
-      font-size: 13.5px;
-      margin-bottom: 24px;
-      line-height: 2;
+      font-size: 13px;
+      margin-bottom: 22px;
+      line-height: 1.8;
     }
 
     .sub-meta-row {
@@ -415,169 +680,336 @@
       margin-bottom: 0;
     }
 
-    /* Mobile Responsive Optimizations */
+    /* Mobile Responsive */
     @media (max-width: 480px) {
       .page-wrapper {
-        padding: 16px 10px;
+        padding: 16px 12px;
       }
 
-      .activation-card {
-        padding: 26px 18px;
-        border-radius: 20px;
+      .onboard-card {
+        padding: 24px 18px;
+        border-radius: 16px;
       }
 
       .brand-title {
-        font-size: 19px;
-      }
-
-      .brand-icon {
-        width: 44px;
-        height: 44px;
+        font-size: 18px;
       }
 
       .license-input {
-        font-size: 16px !important;
-        padding: 13px 12px;
-        letter-spacing: 1.5px;
-      }
-
-      .feature-list {
-        padding: 14px;
-        gap: 10px;
-      }
-
-      .feature-item {
-        font-size: 12px;
+        font-size: 15px !important;
+        padding: 12px 10px;
+        letter-spacing: 1.2px;
       }
 
       .btn-primary {
-        padding: 13px 18px;
-        font-size: 14px;
-      }
-
-      .btn-secondary {
         padding: 12px 16px;
-        font-size: 13px;
+        font-size: 13.5px;
       }
     }
   </style>
 </head>
 <body>
   <div class="page-wrapper">
-    <div class="activation-card">
+
+    <!-- Progress Indicator -->
+    <div class="step-indicator" id="stepIndicator">
+      <div class="step-node active" id="nodeStep1">
+        <span class="step-dot">1</span>
+        <span>Terms</span>
+      </div>
+      <div class="step-line" id="lineStep1"></div>
+      <div class="step-node" id="nodeStep2">
+        <span class="step-dot">2</span>
+        <span>Features</span>
+      </div>
+      <div class="step-line" id="lineStep2"></div>
+      <div class="step-node" id="nodeStep3">
+        <span class="step-dot">3</span>
+        <span>Licence</span>
+      </div>
+    </div>
+
+    <!-- Main Card -->
+    <div class="onboard-card">
       <div class="brand-header">
         <div class="brand-icon">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
         </div>
         <div>
           <h1 class="brand-title">EWU Portal Helper</h1>
-          <div class="brand-sub">ENTERPRISE LICENSE VERIFICATION</div>
+          <div class="brand-sub">Student Assistant &bull; Onboarding</div>
         </div>
       </div>
 
-      <!-- MAIN ACTIVATION FORM VIEW -->
-      <div id="activationMainView">
-        <p class="welcome-text">
-          Welcome to EWU Portal Helper! Enter your production license key below to unlock automated captcha solving, smart advising tools, routine generation, and schedule analytics.
+      <!-- ==================== STEP 1: TERMS & CONDITIONS ==================== -->
+      <div class="step-view active" id="viewStep1Terms">
+        <h2 class="section-title">Terms &amp; Conditions</h2>
+        <p class="section-desc">
+          Please review the terms and usage responsibilities before using EWU Portal Helper.
         </p>
 
-        <div class="feature-list">
-          <div class="feature-item">
-            <div class="feature-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-            <span>Automatic Neural Captcha Auto-Fill on Login</span>
+        <div class="terms-summary-grid">
+          <div class="terms-card-item">
+            <div class="terms-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
+            <div><strong>Educational Productivity Tool:</strong> Built independently by students to streamline portal workflow, advising routines, and schedule planning.</div>
           </div>
-          <div class="feature-item">
-            <div class="feature-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-            <span>Routine Generator &amp; Ultra-HD Schedule Exporter</span>
+          <div class="terms-card-item">
+            <div class="terms-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div><strong>User Responsibility:</strong> Provided for convenience. Users maintain responsibility for their course selections and portal interactions.</div>
           </div>
-          <div class="feature-item">
-            <div class="feature-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
-            <span>Enhanced Offered Courses Table &amp; Live Seat Tracker</span>
+          <div class="terms-card-item">
+            <div class="terms-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+            <div><strong>Privacy Respect:</strong> Zero student credentials, personal information, or private portal passwords are harvested or transmitted.</div>
           </div>
-          <div class="feature-item">
-            <div class="feature-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-            <span>Offline Advising Course Planner &amp; Conflict Solver</span>
+          <div class="terms-card-item">
+            <div class="terms-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div><strong>University Compliance:</strong> Users must abide by East West University codes, academic integrity, and portal policies.</div>
+          </div>
+          <div class="terms-card-item">
+            <div class="terms-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+            <div><strong>Portal Updates:</strong> Compatibility is maintained actively; future university portal redesigns may require extension updates.</div>
           </div>
         </div>
 
+        <button type="button" class="btn-expand-terms" id="btnToggleFullTerms">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          <span id="expandTermsText">Show Complete Terms &amp; Conditions</span>
+        </button>
+
+        <div class="full-terms-box" id="fullTermsBox">
+          <h4>1. Educational Purpose &amp; Scope</h4>
+          <p>EWU Portal Helper is an independent productivity utility crafted to provide schedule visualization, course advising layout enhancements, and number captcha auto-calculation on the East West University student portal.</p>
+          
+          <h4>2. Limitation of Liability</h4>
+          <p>The developers assume no liability for missed advising slots, network failures, portal downtime, or improper usage of this software. The tool is provided "AS-IS" without express warranties.</p>
+          
+          <h4>3. Academic Ethics &amp; Integrity</h4>
+          <p>Students must adhere strictly to university guidelines and academic integrity rules. Any abusive usage or attempting to disrupt university infrastructure is strictly prohibited.</p>
+          
+          <h4>4. Local Storage &amp; Privacy</h4>
+          <p>All core settings and advising plans are saved locally in your browser. No private student portal credentials or academic records are collected.</p>
+          
+          <h4>5. University Interface Changes</h4>
+          <p>The official portal is managed exclusively by East West University. If university updates modify underlying HTML tables, corresponding extension updates will be released.</p>
+        </div>
+
+        <label class="acceptance-row" for="chkAcceptTerms">
+          <input type="checkbox" id="chkAcceptTerms" />
+          <span class="acceptance-label">I have read and agree to the Terms &amp; Conditions</span>
+        </label>
+
+        <button type="button" id="btnNextToFeatures" class="btn-primary" disabled>
+          <span>Next: Features &amp; Basic Knowledge</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+
+      <!-- ==================== STEP 2: FEATURES & BASIC KNOWLEDGE ==================== -->
+      <div class="step-view" id="viewStep2Features">
+        <h2 class="section-title">Features &amp; Capabilities</h2>
+        <p class="section-desc">
+          Key capabilities designed to streamline your daily student portal experience.
+        </p>
+
+        <div class="features-container">
+          <!-- Feature 1 -->
+          <div class="feature-card">
+            <div class="feature-card-header">
+              <div class="feature-card-icon">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div>
+                <div class="feature-card-title">1. Automated Captcha Solver</div>
+              </div>
+              <span class="feature-card-badge">Login</span>
+            </div>
+            <p class="feature-card-desc">
+              Instantly solves the math number security challenge on the student portal login page for seamless entry.
+            </p>
+            <div class="screenshot-placeholder">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
+              <span class="placeholder-title">Auto Captcha Detection &amp; Instant Solver</span>
+              <span class="placeholder-sub">Calculates mathematical challenges automatically</span>
+            </div>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="feature-card">
+            <div class="feature-card-header">
+              <div class="feature-card-icon">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </div>
+              <div>
+                <div class="feature-card-title">2. Weekly Routine Timetable Matrix</div>
+              </div>
+              <span class="feature-card-badge">Routine &amp; PDF</span>
+            </div>
+            <p class="feature-card-desc">
+              Converts enrolled course tables into a visual timetable grid with dropped-course filters and 1-click PNG/PDF export.
+            </p>
+            <div class="screenshot-placeholder">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+              <span class="placeholder-title">Ultra-HD Weekly Timetable Generator</span>
+              <span class="placeholder-sub">Visual schedule grid with single-click PDF export</span>
+            </div>
+          </div>
+
+          <!-- Feature 3 -->
+          <div class="feature-card">
+            <div class="feature-card-header">
+              <div class="feature-card-icon">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              </div>
+              <div>
+                <div class="feature-card-title">3. 10-Column Advising Suite &amp; Seat Heatmap</div>
+              </div>
+              <span class="feature-card-badge">Advising</span>
+            </div>
+            <p class="feature-card-desc">
+              Displays section details, faculty initials, room numbers, seat capacities, live availability, and color heatmaps.
+            </p>
+            <div class="screenshot-placeholder">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h4M6 12h4M6 16h4M14 8h4M14 12h4M14 16h4"/></svg>
+              <span class="placeholder-title">10-Column Table Layout &amp; Seat Heatmap</span>
+              <span class="placeholder-sub">Real-time seat occupancy with instant Ctrl+K search filter</span>
+            </div>
+          </div>
+
+          <!-- Feature 4 -->
+          <div class="feature-card">
+            <div class="feature-card-header">
+              <div class="feature-card-icon">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div>
+                <div class="feature-card-title">4. Offline Advising Course Planner</div>
+              </div>
+              <span class="feature-card-badge">Planner</span>
+            </div>
+            <p class="feature-card-desc">
+              Build semester plans with drag-and-drop course selection, time conflict detection, and routine previews.
+            </p>
+            <div class="screenshot-placeholder">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+              <span class="placeholder-title">Drag &amp; Drop Course Combination Simulator</span>
+              <span class="placeholder-sub">Test combinations and prevent schedule clashes before advising opens</span>
+            </div>
+          </div>
+
+          <!-- Feature 5 -->
+          <div class="feature-card">
+            <div class="feature-card-header">
+              <div class="feature-card-icon">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </div>
+              <div>
+                <div class="feature-card-title">5. Offered Courses &amp; Sticky Headers</div>
+              </div>
+              <span class="feature-card-badge">Catalog</span>
+            </div>
+            <p class="feature-card-desc">
+              Browse hundreds of offered courses with pinned sticky headers, department search filters, and fast PDF exports.
+            </p>
+            <div class="screenshot-placeholder">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              <span class="placeholder-title">Offered Courses Catalog &amp; Sticky Navigation</span>
+              <span class="placeholder-sub">Instant filtering by course code, department, or faculty</span>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" id="btnNextToActivation" class="btn-primary">
+          <span>Next: Licence Activation</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+
+      <!-- ==================== STEP 3: LICENCE ACTIVATION ==================== -->
+      <div class="step-view" id="viewStep3Activation">
+        <h2 class="section-title">Licence Activation</h2>
+        <p class="section-desc">
+          Enter your 16-character licence key to unlock all smart tools on the student portal.
+        </p>
+
         <form id="activationForm">
           <div class="input-group">
-            <label class="input-label" for="licenseKey">License Activation Key</label>
+            <label class="input-label" for="licenseKey">Licence Key</label>
             <div class="license-input-wrapper">
               <input type="text" id="licenseKey" class="license-input" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" required spellcheck="false" maxlength="24">
             </div>
           </div>
 
           <button type="submit" id="btnActivate" class="btn-primary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-1.5 1.5L14 9m-1.5 1.5L10 13l-4 4-4-4 4-4 2.5-2.5m1.5-1.5L16.5 3.5 18 2z"/><circle cx="7.5" cy="16.5" r="1.5"/></svg>
-            <span id="btnText">Verify &amp; Activate License</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 2l-2 2m-1.5 1.5L14 9m-1.5 1.5L10 13l-4 4-4-4 4-4 2.5-2.5m1.5-1.5L16.5 3.5 18 2z"/><circle cx="7.5" cy="16.5" r="1.5"/></svg>
+            <span id="btnText">Verify &amp; Activate Licence</span>
             <div id="btnSpinner" class="spinner" style="display:none;"></div>
           </button>
         </form>
 
         <div id="statusBox" class="status-box"></div>
 
-        <div id="cancelChangeWrap" style="display:none; margin-top: 14px; text-align: center;">
-          <button type="button" id="btnCancelChange" class="btn-secondary">&larr; Cancel &amp; Keep Existing License</button>
+        <div id="cancelChangeWrap" style="display:none; margin-top: 12px; text-align: center;">
+          <button type="button" id="btnCancelChange" class="btn-secondary">&larr; Cancel &amp; Keep Current Licence</button>
         </div>
 
-        <div style="font-size: 13px; margin-top: 24px; text-align: center; border-top: 1px solid var(--border); padding-top: 18px; color: var(--text-muted);">
-          Don't have a license key yet? <br/>
-          <button id="btnGetLicensePage" class="btn-support">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Get License / Contact Support
+        <div style="font-size: 12.5px; margin-top: 22px; text-align: center; border-top: 1px solid var(--border); padding-top: 16px; color: var(--text-muted);">
+          Need a licence key? <br/>
+          <button type="button" id="btnGetLicensePage" class="btn-support">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Contact Developer (@AftabKabir)
           </button>
         </div>
       </div>
 
-      <!-- SUBSCRIBED / ACTIVE VIEW -->
-      <div id="subscribedView" style="display:none; text-align:center;">
+      <!-- ==================== STEP 4: EXTENSION READY (SUBSCRIBED VIEW) ==================== -->
+      <div class="step-view" id="viewStep4Ready" style="text-align:center;">
         <div class="success-badge-wrap">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
         </div>
         
-        <h2 style="font-size:22px; font-weight:800; color:#ffffff; background:linear-gradient(135deg,#ffffff 40%,#a5b4fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px;">
-          Subscription Active
+        <h2 style="font-size:20px; font-weight:700; color:#ffffff; margin-bottom:6px;">
+          Extension Ready &amp; Active
         </h2>
-        <p style="color:var(--text-muted); font-size:13.5px; line-height:1.6; margin-bottom:22px;">
-          Your license key is authorized and all features are permanently unlocked.
+        <p style="color:var(--text-muted); font-size:13px; line-height:1.6; margin-bottom:20px;">
+          Your licence key is authorized and all EWU Portal Helper tools are active.
         </p>
 
         <div class="sub-meta-box">
           <div class="sub-meta-row">
-            <strong style="color:var(--text-dim);">License Prefix:</strong>
-            <span id="subKeyPrefix" style="font-family:'JetBrains Mono',monospace; color:var(--cyan); font-weight:800;">XXXX-...</span>
+            <strong style="color:var(--text-dim);">Licence Prefix:</strong>
+            <span id="subKeyPrefix" style="font-family:'JetBrains Mono',monospace; color:#818cf8; font-weight:700;">XXXX-...</span>
           </div>
           <div class="sub-meta-row">
             <strong style="color:var(--text-dim);">Status:</strong>
-            <span style="color:var(--emerald); font-weight:800; display:inline-flex; align-items:center; gap:6px;">
+            <span style="color:var(--emerald); font-weight:700; display:inline-flex; align-items:center; gap:6px;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-              ACTIVE // UNLOCKED
+              ACTIVE
             </span>
           </div>
           <div class="sub-meta-row">
             <strong style="color:var(--text-dim);">Validity:</strong>
-            <span id="subExpiryText" style="color:#a5b4fc; font-weight:800;">Lifetime Access</span>
+            <span id="subExpiryText" style="color:#cbd5e1; font-weight:600;">Lifetime Access</span>
           </div>
         </div>
 
         <div style="display:flex; flex-direction:column; gap:10px;">
-          <button type="button" id="btnVisitPortal" class="btn-primary" style="background:linear-gradient(135deg, #10b981, #059669); box-shadow:0 8px 25px rgba(16,185,129,0.35);">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            Visit Student Portal
+          <button type="button" id="btnVisitPortal" class="btn-primary" style="background:#059669;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Launch Student Portal
           </button>
 
           <button type="button" id="btnChangeLicense" class="btn-secondary">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L14 9m-1.5 1.5L10 13l-4 4-4-4 4-4 2.5-2.5m1.5-1.5L16.5 3.5 18 2z"/></svg>
-            Change License Key
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L14 9m-1.5 1.5L10 13l-4 4-4-4 4-4 2.5-2.5m1.5-1.5L16.5 3.5 18 2z"/></svg>
+            Change Licence Key
           </button>
 
-          <a href="https://t.me/AftabKabir" target="_blank" class="btn-secondary" style="font-size:12.5px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Contact Developer / Support
+          <a href="https://t.me/AftabKabir" target="_blank" class="btn-secondary" style="font-size:12px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Contact Support
           </a>
         </div>
       </div>
+
     </div>
   </div>
 
