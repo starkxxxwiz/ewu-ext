@@ -604,28 +604,14 @@
       if (!scheduleDiv || !this._tableReady) return;
       if (this._btnInjected) return;
       this._btnInjected = true;
-      routineLog('Generate Routine & Calendar buttons injected');
-
-      var wrapper = document.createElement('div');
-      wrapper.id = 'ewu-rg-btn-wrapper';
-      wrapper.style.cssText = 'display:inline-flex;align-items:center;gap:8px;';
+      routineLog('Generate Routine button injected');
 
       var btn = document.createElement('button');
       btn.id = 'ewu-rg-btn-generate';
       btn.type = 'button';
       btn.className = 'ewu-rg-inject-btn';
       btn.disabled = true;
-      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:-2px;"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>Generate Routine';
-      wrapper.appendChild(btn);
-
-      var calBtn = document.createElement('button');
-      calBtn.id = 'ewu-rg-btn-calendar';
-      calBtn.type = 'button';
-      calBtn.className = 'ewu-rg-inject-btn ewu-rg-inject-cal-btn';
-      calBtn.disabled = true;
-      calBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:-2px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Add to Calendar (.ics)';
-      calBtn.title = 'Export weekly class schedule to Google, Apple, or Outlook Calendar (.ics)';
-      wrapper.appendChild(calBtn);
+      btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right:6px;vertical-align:-2px;"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>Generate Routine';
 
       var printBtn = safeQuery('button[ng-click="PaySlipPrintBySemesterAndStudentId()"]');
       if (printBtn && printBtn.parentNode) {
@@ -634,31 +620,25 @@
         flexRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;';
         printBtn.parentNode.insertBefore(flexRow, printBtn);
         flexRow.appendChild(printBtn);
-        flexRow.appendChild(wrapper);
+        flexRow.appendChild(btn);
       } else {
         var tableContainer = safeQuery('.table-responsive');
         if (tableContainer && tableContainer.parentNode) {
-          tableContainer.parentNode.insertBefore(wrapper, tableContainer);
+          tableContainer.parentNode.insertBefore(btn, tableContainer);
         } else {
-          scheduleDiv.appendChild(wrapper);
+          scheduleDiv.appendChild(btn);
         }
       }
 
       var self = this;
       btn.addEventListener('click', function () { self._onGenerate(); });
-      calBtn.addEventListener('click', function () { self._exportICS(); });
     },
 
     _updateBtn: function (on) {
       var btn = safeQuery('#ewu-rg-btn-generate');
-      var calBtn = safeQuery('#ewu-rg-btn-calendar');
       if (btn) {
         btn.disabled = !on;
         btn.classList.toggle('ewu-rg-btn-ready', on);
-      }
-      if (calBtn) {
-        calBtn.disabled = !on;
-        calBtn.classList.toggle('ewu-rg-btn-ready', on);
       }
     },
 
