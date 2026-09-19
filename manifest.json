@@ -11,6 +11,7 @@
 
   "host_permissions": [
     "https://portal.ewubd.edu/*",
+    "https://www.ewubd.edu/*",
     "https://*.workers.dev/*"
   ],
 

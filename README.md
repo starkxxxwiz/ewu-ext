@@ -34,9 +34,14 @@
 
 ### 📅 2. Routine & Timetable Generator
 * Automatically detects registered courses and builds a visual weekly timetable schedule.
+* **Official EWU Academic Calendar Integration (Semester & Holiday-Aware)**:
+  * Dynamically queries the official EWU academic calendar for the current semester (e.g. `https://www.ewubd.edu/academic-calendar-details/{semester-slug}`).
+  * Extracts the official **First Day of Classes** and **Last Day of Classes** to determine recurring schedule boundaries.
+  * Dynamically extracts all university holidays, including single-day and **multi-day holiday ranges** (e.g., Durgapuja, Victory Day, Christmas Day).
+  * Generates standard RFC 5545 iCalendar (`.ics`) files with `RRULE` recurrence and holiday exception dates (`EXDATE`) so classes automatically skip official holidays and end on the true last day of classes.
 * **Smart Drop/Withdraw Filter**: Excludes dropped and withdrawn courses from routine schedules and total credit calculations.
 * **Dynamic Active Days**: Automatically omits empty days (such as days with no classes) for a clean, compact grid.
-* **1-Click Multi-Format Export**: Export high-resolution schedule images (**PNG**), document sheets (**PDF**), and standard iCalendar (**`.ics`**) files to sync weekly classes directly into Google Calendar, Apple Calendar, and Outlook.
+* **1-Click Multi-Format Export**: Export high-resolution schedule images (**PNG**), document sheets (**PDF**), and semester-aware iCalendar (**`.ics`**) files to sync weekly classes directly into Google Calendar, Apple Calendar, and Outlook.
 
 ### 🎯 3. Advising Assistant & Course Planner (Online & Offline)
 * **10-Column Advising Suite**: Enriched table displaying section info, faculty initials, room numbers, seat capacities, and remaining live seats.

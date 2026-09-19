@@ -202,5 +202,31 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message && message.type === 'OPEN_UPDATE_PAGE') {
     chrome.tabs.create({ url: chrome.runtime.getURL('pages/update.html') });
     sendResponse({ success: true });
+    return true;
+  }
+  if (message && message.type === 'FETCH_ACADEMIC_CALENDAR') {
+    var calUrl = message.url;
+    fetch(calUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.7',
+        'Referer': 'https://www.ewubd.edu/academic-calendar',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36'
+      }
+    }).then(function (res) {
+      if (!res.ok) {
+        sendResponse({ ok: false, status: res.status, error: 'HTTP ' + res.status });
+        return;
+      }
+      return res.text();
+    }).then(function (html) {
+      if (html !== undefined) {
+        sendResponse({ ok: true, html: html });
+      }
+    }).catch(function (err) {
+      sendResponse({ ok: false, error: err.message || 'Fetch failed' });
+    });
+    return true;
   }
 });

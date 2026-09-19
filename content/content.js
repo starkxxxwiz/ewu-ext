@@ -499,6 +499,22 @@
 
     _apiData: null, _tableReady: false, _hooksInstalled: false,
     _observer: null, _modalOpen: false, _currentOpts: null, _btnInjected: false,
+    _cachedAcademicCalendars: {}, _pendingCalendarFetch: {},
+
+    MONTH_MAP: {
+      january: 0, jan: 0,
+      february: 1, feb: 1,
+      march: 2, mar: 2,
+      april: 3, apr: 3,
+      may: 4,
+      june: 5, jun: 5,
+      july: 6, jul: 6,
+      august: 7, aug: 7,
+      september: 8, sept: 8, sep: 8,
+      october: 9, oct: 9,
+      november: 10, nov: 10,
+      december: 11, dec: 11
+    },
 
     init: async function (settings) {
       var mods = settings.modules || {};
@@ -508,56 +524,14 @@
 
       routineLog('Class schedule page detected');
       routineLog('Routine Generator activating');
-      this._hookAPI();
+      injectPageHook();
       this._listenMessages();
       this._watchTable();
       if (this._apiData || this._tableReady) {
         this._injectButton();
         this._updateBtn(true);
+        this._preloadAcademicCalendar();
       }
-    },
-
-    _hookAPI: function () {
-      if (this._hooksInstalled) return;
-      this._hooksInstalled = true;
-      var self = this;
-
-      if (window.fetch) {
-        var orig = window.fetch;
-        window.fetch = async function () {
-          var res = await orig.apply(this, arguments);
-          var url = (typeof arguments[0] === 'string') ? arguments[0] : (arguments[0] && arguments[0].url) || '';
-          if (url.indexOf(self.API_KW) !== -1) {
-            try {
-              var d = await res.clone().json();
-              self._apiData = d;
-              routineLog('Schedule API captured via fetch');
-              self._tableReady = true;
-              self._injectButton();
-              self._updateBtn(true);
-            } catch (e) {}
-          }
-          return res;
-        };
-      }
-
-      var origOpen = XMLHttpRequest.prototype.open, origSend = XMLHttpRequest.prototype.send;
-      XMLHttpRequest.prototype.open = function (m, url) { this._ewu_url = url; return origOpen.apply(this, arguments); };
-      XMLHttpRequest.prototype.send = function () {
-        if (this._ewu_url && this._ewu_url.indexOf(self.API_KW) !== -1) {
-          var xhr = this;
-          this.addEventListener('load', function () {
-            try {
-              self._apiData = JSON.parse(xhr.responseText);
-              routineLog('Schedule API captured via XHR');
-              self._tableReady = true;
-              self._injectButton();
-              self._updateBtn(true);
-            } catch (e) {}
-          });
-        }
-        return origSend.apply(this, arguments);
-      };
     },
 
     _listenMessages: function () {
@@ -569,6 +543,7 @@
           self._tableReady = true;
           self._injectButton();
           self._updateBtn(true);
+          self._preloadAcademicCalendar();
         }
       });
     },
@@ -1436,8 +1411,329 @@
       this._showLoad(false);
     },
 
-    _exportICS: function () {
+    _calculateYear: function (monthIdx, baseYear, semStartMonth) {
+      if (semStartMonth === undefined || semStartMonth === null) return baseYear;
+      if (semStartMonth >= 7 && monthIdx <= 3) {
+        return baseYear + 1;
+      }
+      return baseYear;
+    },
+
+    _formatDateKey: function (d) {
+      var y = d.getFullYear();
+      var m = String(d.getMonth() + 1).padStart(2, '0');
+      var day = String(d.getDate()).padStart(2, '0');
+      return y + '-' + m + '-' + day;
+    },
+
+    _parseDateTokens: function (dateStr, baseYear, semStartMonth) {
+      if (!dateStr) return [];
+      var str = String(dateStr).replace(/\s+/g, ' ').replace(/[•*]/g, '').trim();
+      var self = this;
+
+      // Pattern: Month Day - Day (e.g. "October 19-21", "October 19 - 21")
+      var m1 = str.match(/^([A-Za-z.]+)\s*(\d{1,2})\s*(?:-|to)\s*(\d{1,2})$/i);
+      if (m1) {
+        var mName = m1[1].replace(/\./g, '').toLowerCase();
+        var startDay = parseInt(m1[2], 10);
+        var endDay = parseInt(m1[3], 10);
+        if (self.MONTH_MAP[mName] !== undefined && startDay > 0 && endDay >= startDay) {
+          var mIdx = self.MONTH_MAP[mName];
+          var year = self._calculateYear(mIdx, baseYear, semStartMonth);
+          var results = [];
+          for (var d = startDay; d <= endDay; d++) {
+            results.push(new Date(year, mIdx, d));
+          }
+          return results;
+        }
+      }
+
+      // Pattern: Month Day - Month Day (e.g. "Nov. 30-Dec. 03", "Dec 26-Jan 04")
+      var m2 = str.match(/^([A-Za-z.]+)\s*(\d{1,2})\s*(?:-|to)\s*([A-Za-z.]+)\s*(\d{1,2})$/i);
+      if (m2) {
+        var mName1 = m2[1].replace(/\./g, '').toLowerCase();
+        var day1 = parseInt(m2[2], 10);
+        var mName2 = m2[3].replace(/\./g, '').toLowerCase();
+        var day2 = parseInt(m2[4], 10);
+        if (self.MONTH_MAP[mName1] !== undefined && self.MONTH_MAP[mName2] !== undefined) {
+          var mIdx1 = self.MONTH_MAP[mName1];
+          var mIdx2 = self.MONTH_MAP[mName2];
+          var year1 = self._calculateYear(mIdx1, baseYear, semStartMonth);
+          var year2 = self._calculateYear(mIdx2, baseYear, semStartMonth);
+          var startDate = new Date(year1, mIdx1, day1);
+          var endDate = new Date(year2, mIdx2, day2);
+          var results2 = [];
+          var cur = new Date(startDate.getTime());
+          while (cur <= endDate) {
+            results2.push(new Date(cur.getTime()));
+            cur.setDate(cur.getDate() + 1);
+          }
+          return results2;
+        }
+      }
+
+      // Pattern: Month Day, Day, Day (e.g. "Sept. 13, 14, 15")
+      var m3 = str.match(/^([A-Za-z.]+)\s*([\d,\s]+)$/i);
+      if (m3 && m3[2].indexOf(',') !== -1) {
+        var mName3 = m3[1].replace(/\./g, '').toLowerCase();
+        if (self.MONTH_MAP[mName3] !== undefined) {
+          var mIdx3 = self.MONTH_MAP[mName3];
+          var year3 = self._calculateYear(mIdx3, baseYear, semStartMonth);
+          var days = m3[2].split(/[,]+/).map(function (s) { return parseInt(s.trim(), 10); }).filter(function (n) { return !isNaN(n); });
+          var results3 = [];
+          for (var di = 0; di < days.length; di++) {
+            results3.push(new Date(year3, mIdx3, days[di]));
+          }
+          return results3;
+        }
+      }
+
+      // Pattern: Single Month Day (e.g. "September 13", "October 01", "December 16")
+      var m4 = str.match(/^([A-Za-z.]+)\s*(\d{1,2})$/i);
+      if (m4) {
+        var mName4 = m4[1].replace(/\./g, '').toLowerCase();
+        var day4 = parseInt(m4[2], 10);
+        if (self.MONTH_MAP[mName4] !== undefined && day4 > 0) {
+          var mIdx4 = self.MONTH_MAP[mName4];
+          var year4 = self._calculateYear(mIdx4, baseYear, semStartMonth);
+          return [new Date(year4, mIdx4, day4)];
+        }
+      }
+
+      // Pattern: Day Month (e.g. "13 September", "16 December")
+      var m5 = str.match(/^(\d{1,2})\s*([A-Za-z.]+)$/i);
+      if (m5) {
+        var day5 = parseInt(m5[1], 10);
+        var mName5 = m5[2].replace(/\./g, '').toLowerCase();
+        if (self.MONTH_MAP[mName5] !== undefined && day5 > 0) {
+          var mIdx5 = self.MONTH_MAP[mName5];
+          var year5 = self._calculateYear(mIdx5, baseYear, semStartMonth);
+          return [new Date(year5, mIdx5, day5)];
+        }
+      }
+
+      return [];
+    },
+
+    _parseAcademicCalendarHTML: function (htmlText, semesterName) {
+      var self = this;
+      var baseYear = new Date().getFullYear();
+      var yearMatch = (semesterName || '').match(/\b(20\d{2})\b/);
+      if (yearMatch) {
+        baseYear = parseInt(yearMatch[1], 10);
+      }
+
+      var rows = [];
+      var tableMatch = (htmlText || '').match(/<table[\s\S]*?<\/table>/i);
+      if (!tableMatch) {
+        return { ok: false, error: 'No calendar table found in response' };
+      }
+
+      var rowMatches = tableMatch[0].match(/<tr[\s\S]*?<\/tr>/gi) || [];
+      for (var ri = 0; ri < rowMatches.length; ri++) {
+        var rHtml = rowMatches[ri];
+        var cellMatches = rHtml.match(/<td[\s\S]*?<\/td>/gi) || [];
+        var cells = [];
+        for (var ci = 0; ci < cellMatches.length; ci++) {
+          var text = cellMatches[ci].replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim();
+          cells.push(text);
+        }
+        if (cells.length >= 3) {
+          rows.push({
+            dateStr: cells[0],
+            dayStr: cells[1],
+            eventStr: cells[2]
+          });
+        }
+      }
+
+      if (!rows.length) {
+        return { ok: false, error: 'No table rows found in calendar' };
+      }
+
+      var firstClassRow = null;
+      var lastClassRow = null;
+
+      for (var rIdx = 0; rIdx < rows.length; rIdx++) {
+        var row = rows[rIdx];
+        var ev = row.eventStr.toLowerCase();
+        if (ev.indexOf('first day of classes') !== -1 &&
+            ev.indexOf('for spring') === -1 &&
+            ev.indexOf('for summer') === -1 &&
+            ev.indexOf('for fall') === -1 &&
+            !firstClassRow) {
+          firstClassRow = row;
+        }
+        if (ev.indexOf('last day of classes') !== -1 && !lastClassRow) {
+          lastClassRow = row;
+        }
+      }
+
+      if (!firstClassRow) {
+        return { ok: false, error: 'Could not identify "First Day of Classes"' };
+      }
+      if (!lastClassRow) {
+        return { ok: false, error: 'Could not identify "Last Day of Classes"' };
+      }
+
+      var startDates = self._parseDateTokens(firstClassRow.dateStr, baseYear, null);
+      if (!startDates.length) {
+        return { ok: false, error: 'Could not parse start date: ' + firstClassRow.dateStr };
+      }
+      var classStartDate = startDates[0];
+      var semStartMonth = classStartDate.getMonth();
+
+      var endDates = self._parseDateTokens(lastClassRow.dateStr, baseYear, semStartMonth);
+      if (!endDates.length) {
+        return { ok: false, error: 'Could not parse end date: ' + lastClassRow.dateStr };
+      }
+      var classEndDate = endDates[endDates.length - 1];
+
+      var holidayEntries = [];
+      var holidayDatesMap = {};
+
+      for (var hIdx = 0; hIdx < rows.length; hIdx++) {
+        var hRow = rows[hIdx];
+        var hEv = hRow.eventStr;
+        if (/\bholiday\b/i.test(hEv)) {
+          var hDates = self._parseDateTokens(hRow.dateStr, baseYear, semStartMonth);
+          if (hDates.length) {
+            var hName = hEv.replace(/^holiday\s*[:\-]?\s*/i, '').trim() || hEv;
+            holidayEntries.push({
+              rawDate: hRow.dateStr,
+              rawEvent: hEv,
+              name: hName,
+              dates: hDates
+            });
+            for (var hd = 0; hd < hDates.length; hd++) {
+              var dKey = self._formatDateKey(hDates[hd]);
+              holidayDatesMap[dKey] = {
+                date: hDates[hd],
+                name: hName
+              };
+            }
+          }
+        }
+      }
+
+      routineLog('[Calendar] Parsed official academic calendar for', semesterName, 'Start:', self._formatDateKey(classStartDate), 'End:', self._formatDateKey(classEndDate), 'Holidays:', Object.keys(holidayDatesMap).length, 'days');
+
+      return {
+        ok: true,
+        baseYear: baseYear,
+        semesterName: semesterName,
+        classStartDate: classStartDate,
+        classEndDate: classEndDate,
+        startDateStr: self._formatDateKey(classStartDate),
+        endDateStr: self._formatDateKey(classEndDate),
+        holidayEntries: holidayEntries,
+        holidayDatesMap: holidayDatesMap
+      };
+    },
+
+    _fetchAcademicCalendar: async function (semesterName) {
+      var self = this;
+      if (!semesterName || typeof semesterName !== 'string') {
+        return { ok: false, error: 'No semester specified' };
+      }
+      var cleanName = semesterName.trim();
+      var slug = cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      if (!slug) {
+        return { ok: false, error: 'Invalid semester slug' };
+      }
+
+      if (self._cachedAcademicCalendars[slug]) {
+        return self._cachedAcademicCalendars[slug];
+      }
+
+      if (self._pendingCalendarFetch[slug]) {
+        return self._pendingCalendarFetch[slug];
+      }
+
+      var url = 'https://www.ewubd.edu/academic-calendar-details/' + slug;
+      routineLog('[Calendar] Fetching EWU Academic Calendar from:', url);
+
+      var fetchPromise = (async function () {
+        var htmlContent = null;
+
+        // Attempt 1: Direct fetch in content script context
+        try {
+          var resp = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+              'Accept-Language': 'en-US,en;q=0.7',
+              'Referer': 'https://www.ewubd.edu/academic-calendar'
+            }
+          });
+          if (resp.ok) {
+            htmlContent = await resp.text();
+          }
+        } catch (fetchErr) {
+          routineLog('[Calendar] Direct fetch error:', fetchErr.message);
+        }
+
+        // Attempt 2: Background delegation via Chrome messaging
+        if (!htmlContent) {
+          try {
+            var bgResult = await new Promise(function (resolve) {
+              if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                chrome.runtime.sendMessage({
+                  type: 'FETCH_ACADEMIC_CALENDAR',
+                  url: url,
+                  semesterName: cleanName
+                }, function (response) {
+                  if (chrome.runtime.lastError) {
+                    resolve({ ok: false, error: chrome.runtime.lastError.message });
+                  } else {
+                    resolve(response || { ok: false, error: 'No response from background' });
+                  }
+                });
+              } else {
+                resolve({ ok: false, error: 'Chrome runtime not available' });
+              }
+            });
+            if (bgResult && bgResult.ok && bgResult.html) {
+              htmlContent = bgResult.html;
+            } else if (bgResult && bgResult.error) {
+              routineLog('[Calendar] Background fetch failed:', bgResult.error);
+            }
+          } catch (bgErr) {
+            routineLog('[Calendar] Background delegation exception:', bgErr.message);
+          }
+        }
+
+        if (!htmlContent) {
+          return { ok: false, error: 'Could not load academic calendar from EWU website' };
+        }
+
+        var parsed = self._parseAcademicCalendarHTML(htmlContent, cleanName);
+        if (parsed && parsed.ok) {
+          self._cachedAcademicCalendars[slug] = parsed;
+          return parsed;
+        }
+        return parsed || { ok: false, error: 'Failed to parse academic calendar' };
+      })();
+
+      self._pendingCalendarFetch[slug] = fetchPromise;
+      try {
+        var res = await fetchPromise;
+        return res;
+      } finally {
+        delete self._pendingCalendarFetch[slug];
+      }
+    },
+
+    _preloadAcademicCalendar: function () {
+      var sem = this._getSemesterName();
+      if (sem) {
+        this._fetchAcademicCalendar(sem).catch(function () {});
+      }
+    },
+
+    _exportICS: async function () {
       routineLog('Calendar ICS export started');
+      var self = this;
       try {
         var courses = this._extractCourses();
         if (!courses || !courses.length) {
@@ -1445,7 +1741,6 @@
           return;
         }
 
-        var semName = this._customExportName || this._getSemesterName() || 'Semester';
         var dayToRrule = {
           'Sunday': 'SU',
           'Monday': 'MO',
@@ -1466,12 +1761,145 @@
           'Saturday': 6
         };
 
-        var now = new Date();
-        var currentDay = now.getDay();
-        var semesterEndDate = new Date(now.getFullYear(), now.getMonth() + 4, now.getDate(), 23, 59, 59);
-        var untilStr = semesterEndDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        var semName = this._getSemesterName();
 
-        function formatICSDate(baseDate, timeStr) {
+        // Scope Isolation Check:
+        // If customExportName is present (e.g. from Course Planner Preview), retain the existing routine logic.
+        if (this._customExportName) {
+          var customSemName = this._customExportName || 'Semester';
+          var now = new Date();
+          var currentDay = now.getDay();
+          var semesterEndDate = new Date(now.getFullYear(), now.getMonth() + 4, now.getDate(), 23, 59, 59);
+          var legacyUntilStr = semesterEndDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+          function formatLegacyICSDate(baseDate, timeStr) {
+            var match = (timeStr || '').match(/(\d+):(\d+)\s*(AM|PM)?/i);
+            var h = 0, m = 0;
+            if (match) {
+              h = parseInt(match[1], 10);
+              m = parseInt(match[2], 10);
+              var ampm = (match[3] || '').toUpperCase();
+              if (ampm === 'PM' && h !== 12) h += 12;
+              if (ampm === 'AM' && h === 12) h = 0;
+            }
+            var d = new Date(baseDate);
+            d.setHours(h, m, 0, 0);
+            var yyyy = d.getFullYear();
+            var mm = String(d.getMonth() + 1).padStart(2, '0');
+            var dd = String(d.getDate()).padStart(2, '0');
+            var hh = String(d.getHours()).padStart(2, '0');
+            var min = String(d.getMinutes()).padStart(2, '0');
+            return yyyy + mm + dd + 'T' + hh + min + '00';
+          }
+
+          var legacyIcsLines = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//EWU Buddy//Student Class Routine//EN',
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH',
+            'X-WR-CALNAME:EWU Class Schedule - ' + customSemName,
+            'X-WR-TIMEZONE:Asia/Dhaka'
+          ];
+
+          var legacyEventCount = 0;
+          courses.forEach(function (course, cIdx) {
+            var courseSlots = course.slots || [];
+            if (!courseSlots.length && course.timeSlotName) {
+              courseSlots = [{ timeSlotName: course.timeSlotName, roomName: course.roomName || '' }];
+            }
+
+            courseSlots.forEach(function (slot, sIdx) {
+              var parsed = self._parseSlot(slot.timeSlotName);
+              if (!parsed || !parsed.days || !parsed.days.length) return;
+
+              parsed.days.forEach(function (day) {
+                var byDay = dayToRrule[day];
+                if (!byDay) return;
+
+                var targetDayIdx = dayIndexMap[day];
+                var daysUntil = (targetDayIdx - currentDay + 7) % 7;
+                if (daysUntil === 0) daysUntil = 7;
+
+                var eventDate = new Date(now.getTime() + daysUntil * 24 * 60 * 60 * 1000);
+                var dtStart = formatLegacyICSDate(eventDate, parsed.startTime);
+                var dtEnd = formatLegacyICSDate(eventDate, parsed.endTime);
+                var stamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                var uid = 'ewu-class-' + Date.now() + '-' + cIdx + '-' + sIdx + '-' + byDay + '@ewubuddy.local';
+
+                var room = self._trimRoomName(slot.roomName) || 'TBA';
+                var faculty = course.facultyInitials || course.facultyName || '';
+                var summary = course.courseCode + ' [Sec ' + (course.sectionName || 1) + '] - ' + room;
+                var desc = 'Course: ' + course.courseCode + '\\nSection: ' + (course.sectionName || 1) + '\\nRoom: ' + room + '\\nTime: ' + parsed.startTime + ' - ' + parsed.endTime;
+                if (faculty) desc += '\\nFaculty: ' + faculty;
+
+                legacyIcsLines.push('BEGIN:VEVENT');
+                legacyIcsLines.push('UID:' + uid);
+                legacyIcsLines.push('DTSTAMP:' + stamp);
+                legacyIcsLines.push('DTSTART;TZID=Asia/Dhaka:' + dtStart);
+                legacyIcsLines.push('DTEND;TZID=Asia/Dhaka:' + dtEnd);
+                legacyIcsLines.push('RRULE:FREQ=WEEKLY;BYDAY=' + byDay + ';UNTIL=' + legacyUntilStr);
+                legacyIcsLines.push('SUMMARY:' + summary);
+                legacyIcsLines.push('DESCRIPTION:' + desc);
+                legacyIcsLines.push('LOCATION:Room ' + room + ', East West University');
+                legacyIcsLines.push('STATUS:CONFIRMED');
+                legacyIcsLines.push('END:VEVENT');
+                legacyEventCount++;
+              });
+            });
+          });
+
+          legacyIcsLines.push('END:VCALENDAR');
+          if (legacyEventCount === 0) {
+            Toast.show('No scheduled class timings found to export', 'error');
+            return;
+          }
+          var legacyIcsContent = legacyIcsLines.join('\r\n');
+          var legacyBlob = new Blob([legacyIcsContent], { type: 'text/calendar;charset=utf-8' });
+          var legacyUrl = URL.createObjectURL(legacyBlob);
+          var legacyA = document.createElement('a');
+          legacyA.href = legacyUrl;
+          var legacyClean = (customSemName || '').replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30);
+          legacyA.download = legacyClean ? ('EWU_Schedule_' + legacyClean + '.ics') : 'EWU_Class_Schedule.ics';
+          document.body.appendChild(legacyA);
+          legacyA.click();
+          document.body.removeChild(legacyA);
+          setTimeout(function () { URL.revokeObjectURL(legacyUrl); }, 1000);
+          Toast.show('Calendar (.ics) downloaded!', 'success');
+          return;
+        }
+
+        // For Class Schedule page: Fetch & use official EWU Academic Calendar
+        if (!semName) {
+          Toast.show('Please select a semester first to generate calendar', 'warning');
+          return;
+        }
+
+        this._showLoad(true);
+        var calResult = await this._fetchAcademicCalendar(semName);
+
+        if (!calResult || !calResult.ok) {
+          this._showLoad(false);
+          var errMsg = (calResult && calResult.error) ? (': ' + calResult.error) : '';
+          routineLog('[Calendar] ICS export aborted - official calendar not available' + errMsg);
+          Toast.show('Unable to fetch official EWU Academic Calendar for ' + semName + '. Calendar export unavailable.', 'error');
+          return;
+        }
+
+        var semStartDate = calResult.classStartDate;
+        var semEndDate = calResult.classEndDate;
+        var holidayMap = calResult.holidayDatesMap || {};
+
+        // Calculate UNTIL timestamp: 23:59:59 UTC on semester end date
+        var untilEnd = new Date(Date.UTC(
+          semEndDate.getFullYear(),
+          semEndDate.getMonth(),
+          semEndDate.getDate(),
+          23, 59, 59
+        ));
+        var untilStr = untilEnd.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+        function parseSlotTime(timeStr) {
           var match = (timeStr || '').match(/(\d+):(\d+)\s*(AM|PM)?/i);
           var h = 0, m = 0;
           if (match) {
@@ -1481,14 +1909,15 @@
             if (ampm === 'PM' && h !== 12) h += 12;
             if (ampm === 'AM' && h === 12) h = 0;
           }
-          var d = new Date(baseDate);
-          d.setHours(h, m, 0, 0);
+          return { h: h, m: m };
+        }
 
+        function formatICSDateTime(d, h, m) {
           var yyyy = d.getFullYear();
           var mm = String(d.getMonth() + 1).padStart(2, '0');
           var dd = String(d.getDate()).padStart(2, '0');
-          var hh = String(d.getHours()).padStart(2, '0');
-          var min = String(d.getMinutes()).padStart(2, '0');
+          var hh = String(h).padStart(2, '0');
+          var min = String(m).padStart(2, '0');
           return yyyy + mm + dd + 'T' + hh + min + '00';
         }
 
@@ -1502,7 +1931,6 @@
           'X-WR-TIMEZONE:Asia/Dhaka'
         ];
 
-        var self = this;
         var eventCount = 0;
 
         courses.forEach(function (course, cIdx) {
@@ -1515,17 +1943,24 @@
             var parsed = self._parseSlot(slot.timeSlotName);
             if (!parsed || !parsed.days || !parsed.days.length) return;
 
+            var startHM = parseSlotTime(parsed.startTime);
+            var endHM = parseSlotTime(parsed.endTime);
+
             parsed.days.forEach(function (day) {
               var byDay = dayToRrule[day];
-              if (!byDay) return;
-
               var targetDayIdx = dayIndexMap[day];
-              var daysUntil = (targetDayIdx - currentDay + 7) % 7;
-              if (daysUntil === 0) daysUntil = 7;
+              if (byDay === undefined || targetDayIdx === undefined) return;
 
-              var eventDate = new Date(now.getTime() + daysUntil * 24 * 60 * 60 * 1000);
-              var dtStart = formatICSDate(eventDate, parsed.startTime);
-              var dtEnd = formatICSDate(eventDate, parsed.endTime);
+              // Find first occurrence date on or after semStartDate for this day of week
+              var firstOccurDate = new Date(semStartDate.getFullYear(), semStartDate.getMonth(), semStartDate.getDate());
+              var daysToAdd = (targetDayIdx - firstOccurDate.getDay() + 7) % 7;
+              firstOccurDate.setDate(firstOccurDate.getDate() + daysToAdd);
+
+              // If first occurrence exceeds semester end date, skip
+              if (firstOccurDate > semEndDate) return;
+
+              var dtStart = formatICSDateTime(firstOccurDate, startHM.h, startHM.m);
+              var dtEnd = formatICSDateTime(firstOccurDate, endHM.h, endHM.m);
               var stamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
               var uid = 'ewu-class-' + Date.now() + '-' + cIdx + '-' + sIdx + '-' + byDay + '@ewubuddy.local';
 
@@ -1535,12 +1970,28 @@
               var desc = 'Course: ' + course.courseCode + '\\nSection: ' + (course.sectionName || 1) + '\\nRoom: ' + room + '\\nTime: ' + parsed.startTime + ' - ' + parsed.endTime;
               if (faculty) desc += '\\nFaculty: ' + faculty;
 
+              // Collect all holiday exclusion dates (EXDATE) that land on this recurring class day
+              var exdates = [];
+              var curCheck = new Date(firstOccurDate.getTime());
+              while (curCheck <= semEndDate) {
+                var dKey = self._formatDateKey(curCheck);
+                if (holidayMap[dKey]) {
+                  exdates.push(formatICSDateTime(curCheck, startHM.h, startHM.m));
+                }
+                curCheck.setDate(curCheck.getDate() + 7);
+              }
+
               icsLines.push('BEGIN:VEVENT');
               icsLines.push('UID:' + uid);
               icsLines.push('DTSTAMP:' + stamp);
               icsLines.push('DTSTART;TZID=Asia/Dhaka:' + dtStart);
               icsLines.push('DTEND;TZID=Asia/Dhaka:' + dtEnd);
               icsLines.push('RRULE:FREQ=WEEKLY;BYDAY=' + byDay + ';UNTIL=' + untilStr);
+
+              for (var xi = 0; xi < exdates.length; xi++) {
+                icsLines.push('EXDATE;TZID=Asia/Dhaka:' + exdates[xi]);
+              }
+
               icsLines.push('SUMMARY:' + summary);
               icsLines.push('DESCRIPTION:' + desc);
               icsLines.push('LOCATION:Room ' + room + ', East West University');
@@ -1554,6 +2005,7 @@
         icsLines.push('END:VCALENDAR');
 
         if (eventCount === 0) {
+          this._showLoad(false);
           Toast.show('No scheduled class timings found to export', 'error');
           return;
         }
@@ -1570,10 +2022,12 @@
         document.body.removeChild(a);
         setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
 
-        routineLog('Calendar ICS export success: ' + eventCount + ' recurring events generated');
-        Toast.show('Calendar (.ics) downloaded! Ready to import.', 'success');
+        routineLog('Calendar ICS export success: ' + eventCount + ' recurring events generated with official academic calendar dates & holiday exclusions');
+        this._showLoad(false);
+        Toast.show('Calendar (.ics) downloaded! Synced with EWU Academic Calendar.', 'success');
       } catch (err) {
         routineLog('Calendar ICS export failed:', err);
+        this._showLoad(false);
         Toast.show('Calendar export failed: ' + (err.message || 'Error'), 'error');
       }
     },
@@ -1590,6 +2044,8 @@
       this._modalOpen = false;
       this._currentOpts = null;
       this._btnInjected = false;
+      this._cachedAcademicCalendars = {};
+      this._pendingCalendarFetch = {};
       if (this._observer) { this._observer.disconnect(); this._observer = null; }
       // If we created a flex row, restore the Print Slip button to its original parent first
       var btnRow = safeQuery('#ewu-rg-btn-row');
@@ -1623,49 +2079,10 @@
           !safeQuery('[ng-controller="ClassScheduleController"]')) return;
 
       log('Schedule Enhancer Module activating');
-      this._hookAPI();
+      injectPageHook();
       this._listenMessages();
       this._watchTable();
       this._enhanceTable();
-    },
-
-    _hookAPI: function () {
-      var self = this;
-      if (window.fetch) {
-        var orig = window.fetch;
-        window.fetch = async function () {
-          var res = await orig.apply(this, arguments);
-          var url = (typeof arguments[0] === 'string') ? arguments[0] : (arguments[0] && arguments[0].url) || '';
-          if (url.indexOf(self.API_KW) !== -1) {
-            try {
-              var d = await res.clone().json();
-              self._apiData = d;
-              log('[ScheduleEnhancer] API data captured via fetch hook');
-              setTimeout(function () { self._enhanceTable(); }, 120);
-            } catch (e) {}
-          }
-          return res;
-        };
-      }
-
-      var origOpen = XMLHttpRequest.prototype.open, origSend = XMLHttpRequest.prototype.send;
-      XMLHttpRequest.prototype.open = function (m, url) {
-        this._ewu_cs_url = url;
-        return origOpen.apply(this, arguments);
-      };
-      XMLHttpRequest.prototype.send = function () {
-        if (this._ewu_cs_url && this._ewu_cs_url.indexOf(self.API_KW) !== -1) {
-          var xhr = this;
-          this.addEventListener('load', function () {
-            try {
-              self._apiData = JSON.parse(xhr.responseText);
-              log('[ScheduleEnhancer] API data captured via XHR hook');
-              setTimeout(function () { self._enhanceTable(); }, 120);
-            } catch (e) {}
-          });
-        }
-        return origSend.apply(this, arguments);
-      };
     },
 
     _listenMessages: function () {
@@ -1997,9 +2414,6 @@
       // Listen for postMessage from pageHook.js
       this._listenForPageHookMessages();
 
-      // Also hook from content script context (as backup)
-      this._hookAPI();
-
       // Watch for table DOM changes
       this._watchTable();
 
@@ -2023,34 +2437,6 @@
           self._handleData(event.data.data);
         }
       });
-    },
-
-    _hookAPI: function () {
-      if (this._hooksInstalled) return;
-      this._hooksInstalled = true;
-      var self = this;
-
-      if (window.fetch) {
-        var orig = window.fetch;
-        window.fetch = async function () {
-          var res = await orig.apply(this, arguments);
-          var url = (typeof arguments[0] === 'string') ? arguments[0] : (arguments[0] && arguments[0].url) || '';
-          if (url.indexOf(self.API_KW) !== -1) {
-            try { var d = await res.clone().json(); self._handleData(d); } catch (e) {}
-          }
-          return res;
-        };
-      }
-
-      var origOpen = XMLHttpRequest.prototype.open, origSend = XMLHttpRequest.prototype.send;
-      XMLHttpRequest.prototype.open = function (m, url) { this._ewu_oc = url; return origOpen.apply(this, arguments); };
-      XMLHttpRequest.prototype.send = function () {
-        if (this._ewu_oc && this._ewu_oc.indexOf(self.API_KW) !== -1) {
-          var xhr = this;
-          this.addEventListener('load', function () { try { self._handleData(JSON.parse(xhr.responseText)); } catch (e) {} });
-        }
-        return origSend.apply(this, arguments);
-      };
     },
 
     _handleData: function (data) {
@@ -2711,7 +3097,6 @@
       routineLog('Advising page detected, activating AdvisingTableEnhancer');
       injectPageHook();
       this._listenForPageHookMessages();
-      this._hookAPI();
       this._watchTables();
       this._injectControlsBar();
       this._injectTopPDFButton();
@@ -2728,34 +3113,6 @@
           self._handleData(event.data.data);
         }
       });
-    },
-
-    _hookAPI: function () {
-      if (this._hooksInstalled) return;
-      this._hooksInstalled = true;
-      var self = this;
-
-      if (window.fetch) {
-        var orig = window.fetch;
-        window.fetch = async function () {
-          var res = await orig.apply(this, arguments);
-          var url = (typeof arguments[0] === 'string') ? arguments[0] : (arguments[0] && arguments[0].url) || '';
-          if (url.indexOf(self.API_KW) !== -1) {
-            try { var d = await res.clone().json(); self._handleData(d); } catch (e) {}
-          }
-          return res;
-        };
-      }
-
-      var origOpen = XMLHttpRequest.prototype.open, origSend = XMLHttpRequest.prototype.send;
-      XMLHttpRequest.prototype.open = function (m, url) { this._ewu_adv = url; return origOpen.apply(this, arguments); };
-      XMLHttpRequest.prototype.send = function () {
-        if (this._ewu_adv && this._ewu_adv.indexOf(self.API_KW) !== -1) {
-          var xhr = this;
-          this.addEventListener('load', function () { try { self._handleData(JSON.parse(xhr.responseText)); } catch (e) {} });
-        }
-        return origSend.apply(this, arguments);
-      };
     },
 
     _handleData: function (data) {
@@ -4128,12 +4485,14 @@
       safeQuery('#ewu-cp-file-json').addEventListener('change', function (e) {
         if (e.target.files && e.target.files[0]) {
           self._parseJSONFile(e.target.files[0]);
+          e.target.value = '';
         }
       });
 
       safeQuery('#ewu-cp-file-pdf').addEventListener('change', function (e) {
         if (e.target.files && e.target.files[0]) {
           self._parsePDFFile(e.target.files[0]);
+          e.target.value = '';
         }
       });
 
@@ -4183,7 +4542,7 @@
       Toast.show('Parsing PDF routine file...', 'info', 3000);
 
       if (typeof window.pdfjsLib === 'undefined') {
-        Toast.show('PDF.js library unavailable.', 'error');
+        Toast.show('PDF parsing engine is not loaded. Please refresh the page.', 'error', 4000);
         return;
       }
 
@@ -4263,12 +4622,14 @@
           });
         }
 
-        if (!courses.length) throw new Error('Could not detect valid course sections in PDF.');
+        if (!courses.length) {
+          throw new Error('No valid course sections recognized in this PDF. Please ensure you uploaded an official EWU class routine PDF, or use "Fetch Courses from Portal" / "Upload Custom JSON".');
+        }
         Toast.show('Parsed ' + courses.length + ' course entries from PDF file.', 'success', 2500);
         self._processRawData(courses);
       } catch (err) {
         log('PDF parse error:', err);
-        Toast.show('PDF Parsing Error: ' + err.message, 'error', 4000);
+        Toast.show('PDF Error: ' + err.message, 'error', 5000);
       }
     },
 
@@ -5281,6 +5642,7 @@
         }
         LoginHelperModule.reset();
         RoutineGeneratorModule.reset();
+        ScheduleEnhancerModule.reset();
         OfferedCoursesEnhancerModule.reset();
         AdvisingTableEnhancerModule.reset();
         AdvisingOfflineModule.reset();
