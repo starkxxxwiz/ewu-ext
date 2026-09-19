@@ -390,6 +390,37 @@
     statusBox.className = 'status-box';
   }
 
+  // Responsive Ambient Background Slideshow Controller
+  (function initBackgroundSlideshow() {
+    function isPortrait() {
+      return window.matchMedia('(max-width: 768px), (orientation: portrait)').matches;
+    }
+
+    var landscapeIndex = 0;
+    var portraitIndex = 0;
+
+    function rotateSlides() {
+      var portraitMode = isPortrait();
+      var selector = portraitMode ? '.bg-slide.portrait' : '.bg-slide.landscape';
+      var slides = document.querySelectorAll(selector);
+      if (!slides.length) return;
+
+      if (portraitMode) {
+        portraitIndex = (portraitIndex + 1) % slides.length;
+        slides.forEach(function (s, i) {
+          s.classList.toggle('active', i === portraitIndex);
+        });
+      } else {
+        landscapeIndex = (landscapeIndex + 1) % slides.length;
+        slides.forEach(function (s, i) {
+          s.classList.toggle('active', i === landscapeIndex);
+        });
+      }
+    }
+
+    setInterval(rotateSlides, 7000);
+  })();
+
   // Initialize
   checkExistingActivation();
 })();

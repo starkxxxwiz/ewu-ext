@@ -1137,33 +1137,5 @@
   </div>
 
   <script src="activation.js"></script>
-  <script>
-    // Responsive Ambient Background Slideshow Controller
-    (function () {
-      function getActiveSlides() {
-        var isPortrait = window.matchMedia('(max-width: 768px), (orientation: portrait)').matches;
-        return document.querySelectorAll(isPortrait ? '.bg-slide.portrait' : '.bg-slide.landscape');
-      }
-
-      var currentIndex = 0;
-      function nextSlide() {
-        var slides = getActiveSlides();
-        if (!slides || !slides.length) return;
-        slides.forEach(function (s) { s.classList.remove('active'); });
-        currentIndex = (currentIndex + 1) % slides.length;
-        if (slides[currentIndex]) {
-          slides[currentIndex].classList.add('active');
-        }
-      }
-
-      // Initial active slide setup
-      var initSlides = getActiveSlides();
-      if (initSlides && initSlides.length && !document.querySelector('.bg-slide.active')) {
-        initSlides[0].classList.add('active');
-      }
-
-      setInterval(nextSlide, 7000);
-    })();
-  </script>
 </body>
 </html>
