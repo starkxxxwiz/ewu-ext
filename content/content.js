@@ -1616,7 +1616,19 @@
         }
       }
 
-      routineLog('[Calendar] Parsed official academic calendar for', semesterName, 'Start:', self._formatDateKey(classStartDate), 'End:', self._formatDateKey(classEndDate), 'Holidays:', Object.keys(holidayDatesMap).length, 'days');
+      var dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      var startDayName = dayNames[classStartDate.getDay()];
+      var endDayName = dayNames[classEndDate.getDay()];
+      var totalHolidays = Object.keys(holidayDatesMap).length;
+
+      routineLog('[Calendar] Official Academic Calendar details parsed for ' + semesterName + ':');
+      routineLog('[Calendar]   - Class Start Date : ' + self._formatDateKey(classStartDate) + ' (' + startDayName + ')');
+      routineLog('[Calendar]   - Class End Date   : ' + self._formatDateKey(classEndDate) + ' (' + endDayName + ')');
+      routineLog('[Calendar]   - Total Holidays   : ' + totalHolidays + ' day(s) across ' + holidayEntries.length + ' event(s)');
+      holidayEntries.forEach(function (h) {
+        var dateList = h.dates.map(function (d) { return self._formatDateKey(d); }).join(', ');
+        routineLog('[Calendar]     * ' + h.name + ' [' + h.rawDate + '] -> ' + dateList);
+      });
 
       return {
         ok: true,
@@ -1626,6 +1638,8 @@
         classEndDate: classEndDate,
         startDateStr: self._formatDateKey(classStartDate),
         endDateStr: self._formatDateKey(classEndDate),
+        startDayName: startDayName,
+        endDayName: endDayName,
         holidayEntries: holidayEntries,
         holidayDatesMap: holidayDatesMap
       };
@@ -1651,55 +1665,51 @@
       }
 
       var url = 'https://www.ewubd.edu/academic-calendar-details/' + slug;
-      routineLog('[Calendar] Fetching EWU Academic Calendar from:', url);
+      routineLog('[Calendar] Fetching official EWU Academic Calendar from:', url);
 
       var fetchPromise = (async function () {
         var htmlContent = null;
 
-        // Attempt 1: Direct fetch in content script context
-        try {
-          var resp = await fetch(url, {
-            method: 'GET',
-            headers: {
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-              'Accept-Language': 'en-US,en;q=0.7',
-              'Referer': 'https://www.ewubd.edu/academic-calendar'
-            }
-          });
-          if (resp.ok) {
-            htmlContent = await resp.text();
-          }
-        } catch (fetchErr) {
-          routineLog('[Calendar] Direct fetch error:', fetchErr.message);
-        }
-
-        // Attempt 2: Background delegation via Chrome messaging
-        if (!htmlContent) {
+        // Priority 1: Delegate to Chrome Extension background service worker (bypasses webpage CORS)
+        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
           try {
             var bgResult = await new Promise(function (resolve) {
-              if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-                chrome.runtime.sendMessage({
-                  type: 'FETCH_ACADEMIC_CALENDAR',
-                  url: url,
-                  semesterName: cleanName
-                }, function (response) {
-                  if (chrome.runtime.lastError) {
-                    resolve({ ok: false, error: chrome.runtime.lastError.message });
-                  } else {
-                    resolve(response || { ok: false, error: 'No response from background' });
-                  }
-                });
-              } else {
-                resolve({ ok: false, error: 'Chrome runtime not available' });
-              }
+              chrome.runtime.sendMessage({
+                type: 'FETCH_ACADEMIC_CALENDAR',
+                url: url,
+                semesterName: cleanName
+              }, function (response) {
+                if (chrome.runtime.lastError) {
+                  resolve({ ok: false, error: chrome.runtime.lastError.message });
+                } else {
+                  resolve(response || { ok: false, error: 'No response from background worker' });
+                }
+              });
             });
             if (bgResult && bgResult.ok && bgResult.html) {
               htmlContent = bgResult.html;
             } else if (bgResult && bgResult.error) {
-              routineLog('[Calendar] Background fetch failed:', bgResult.error);
+              routineLog('[Calendar] Background worker fetch note:', bgResult.error);
             }
           } catch (bgErr) {
             routineLog('[Calendar] Background delegation exception:', bgErr.message);
+          }
+        }
+
+        // Priority 2: Direct fetch fallback (in environments without service worker)
+        if (!htmlContent) {
+          try {
+            var resp = await fetch(url, {
+              method: 'GET',
+              headers: {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+              }
+            });
+            if (resp.ok) {
+              htmlContent = await resp.text();
+            }
+          } catch (fetchErr) {
+            routineLog('[Calendar] Direct fetch fallback note:', fetchErr.message);
           }
         }
 
@@ -1889,6 +1899,9 @@
         var semStartDate = calResult.classStartDate;
         var semEndDate = calResult.classEndDate;
         var holidayMap = calResult.holidayDatesMap || {};
+        var dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        routineLog('[Calendar] Generating ICS events mapped to semester range: ' + self._formatDateKey(semStartDate) + ' (' + dayNames[semStartDate.getDay()] + ') to ' + self._formatDateKey(semEndDate) + ' (' + dayNames[semEndDate.getDay()] + ')');
 
         // Calculate UNTIL timestamp: 23:59:59 UTC on semester end date
         var untilEnd = new Date(Date.UTC(
@@ -1981,6 +1994,9 @@
                 curCheck.setDate(curCheck.getDate() + 7);
               }
 
+              var firstOccurDayName = dayNames[firstOccurDate.getDay()];
+              routineLog('[Calendar]   [Slot] ' + course.courseCode + ' [Sec ' + (course.sectionName || 1) + '] | ' + day + ' ' + parsed.startTime + '-' + parsed.endTime + ' | Room: ' + room + ' | First Session: ' + self._formatDateKey(firstOccurDate) + ' (' + firstOccurDayName + ') | Recurrence Ends: ' + self._formatDateKey(semEndDate) + ' | Holiday Exclusions: ' + exdates.length);
+
               icsLines.push('BEGIN:VEVENT');
               icsLines.push('UID:' + uid);
               icsLines.push('DTSTAMP:' + stamp);
@@ -2022,7 +2038,7 @@
         document.body.removeChild(a);
         setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
 
-        routineLog('Calendar ICS export success: ' + eventCount + ' recurring events generated with official academic calendar dates & holiday exclusions');
+        routineLog('[Calendar] ICS export complete: ' + eventCount + ' recurring event series generated with official semester boundaries and holiday exclusions');
         this._showLoad(false);
         Toast.show('Calendar (.ics) downloaded! Synced with EWU Academic Calendar.', 'success');
       } catch (err) {
