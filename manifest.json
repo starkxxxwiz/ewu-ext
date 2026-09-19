@@ -61,6 +61,7 @@
         "content/pageHook.js",
         "pages/activation.html",
         "pages/update.html",
+        "pages/images/*",
         "icons/*"
       ],
       "matches": [

@@ -2,29 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>EWU Portal Helper — Welcome &amp; Onboarding</title>
+  <title>EWU Buddy — Welcome &amp; Onboarding</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090d16;
-      --card-bg: #0f172a;
-      --card-surface: #1e293b;
-      --border: rgba(255, 255, 255, 0.08);
-      --border-focus: #6366f1;
-      --accent: #4f46e5;
-      --accent-hover: #4338ca;
-      --accent-subtle: rgba(99, 102, 241, 0.12);
+      --bg-dark: #070d1a;
+      --card-bg: rgba(11, 20, 42, 0.78);
+      --card-surface: rgba(19, 34, 68, 0.65);
+      --border: rgba(255, 255, 255, 0.12);
+      --border-focus: #3b82f6;
+      --ewu-crimson: #e11d48;
+      --ewu-crimson-hover: #be123c;
+      --ewu-crimson-subtle: rgba(225, 29, 72, 0.14);
+      --ewu-blue: #2563eb;
+      --ewu-blue-hover: #1d4ed8;
+      --ewu-blue-subtle: rgba(37, 99, 235, 0.14);
       --emerald: #10b981;
-      --emerald-subtle: rgba(16, 185, 129, 0.12);
-      --rose: #ef4444;
-      --rose-subtle: rgba(239, 68, 68, 0.12);
+      --emerald-subtle: rgba(16, 185, 129, 0.14);
+      --rose: #f43f5e;
+      --rose-subtle: rgba(244, 63, 94, 0.14);
       --amber: #f59e0b;
       --text: #f8fafc;
       --text-muted: #cbd5e1;
-      --text-dim: #64748b;
+      --text-dim: #94a3b8;
     }
 
     * {
@@ -39,26 +42,88 @@
       width: 100%;
       min-height: 100vh;
       min-height: 100dvh;
-      background: var(--bg);
+      background: var(--bg-dark);
       color: var(--text);
       overflow-x: hidden;
       position: relative;
     }
 
-    body::before {
-      content: "";
+    /* Cinematic Background Slideshow */
+    .bg-slideshow {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background-image: 
-        radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.1) 0%, transparent 60%),
-        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-      background-size: 100% 100%, 32px 32px, 32px 32px;
-      pointer-events: none;
       z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .bg-slide {
+      position: absolute;
+      top: -5%;
+      left: -5%;
+      width: 110%;
+      height: 110%;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 1.6s ease-in-out, transform 8s ease-out;
+      transform: scale(1);
+    }
+
+    .bg-slide.active {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+
+    .bg-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      background: 
+        radial-gradient(ellipse at 50% 15%, rgba(37, 99, 235, 0.28) 0%, rgba(7, 13, 26, 0.85) 60%, rgba(5, 9, 18, 0.96) 100%),
+        linear-gradient(180deg, rgba(6, 11, 23, 0.65) 0%, rgba(7, 13, 26, 0.92) 100%);
+      pointer-events: none;
+    }
+
+    /* Ambient Glow Spots */
+    .glow-orb-1 {
+      position: fixed;
+      top: 10%;
+      left: 15%;
+      width: 380px;
+      height: 380px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(225, 29, 72, 0.18) 0%, transparent 70%);
+      filter: blur(60px);
+      z-index: 1;
+      pointer-events: none;
+      animation: floatOrb 12s ease-in-out infinite alternate;
+    }
+
+    .glow-orb-2 {
+      position: fixed;
+      bottom: 15%;
+      right: 15%;
+      width: 420px;
+      height: 420px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.22) 0%, transparent 70%);
+      filter: blur(70px);
+      z-index: 1;
+      pointer-events: none;
+      animation: floatOrb 15s ease-in-out infinite alternate-reverse;
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(30px, -20px) scale(1.08); }
+      100% { transform: translate(-20px, 30px) scale(0.95); }
     }
 
     /* Page Wrapper */
@@ -70,9 +135,9 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 32px 16px;
+      padding: 36px 16px;
       position: relative;
-      z-index: 1;
+      z-index: 2;
     }
 
     /* Step Progress Indicator Bar */
@@ -81,9 +146,9 @@
       align-items: center;
       justify-content: center;
       gap: 12px;
-      margin-bottom: 24px;
+      margin-bottom: 22px;
       width: 100%;
-      max-width: 540px;
+      max-width: 580px;
     }
 
     .step-node {
@@ -91,63 +156,82 @@
       align-items: center;
       gap: 8px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-dim);
-      transition: all 0.2s ease;
+      transition: all 0.25s ease;
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 5px 12px 5px 6px;
+      border-radius: 30px;
+      backdrop-filter: blur(12px);
     }
 
     .step-dot {
-      width: 26px;
-      height: 26px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
-      background: var(--card-surface);
-      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 800;
       color: var(--text-dim);
-      transition: all 0.2s ease;
-    }
-
-    .step-node.active .step-dot {
-      background: var(--accent);
-      border-color: #818cf8;
-      color: #ffffff;
-      box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+      transition: all 0.25s ease;
     }
 
     .step-node.active {
       color: #ffffff;
+      border-color: rgba(37, 99, 235, 0.45);
+      background: rgba(37, 99, 235, 0.2);
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.35);
+    }
+
+    .step-node.active .step-dot {
+      background: linear-gradient(135deg, var(--ewu-crimson), var(--ewu-blue));
+      border-color: #93c5fd;
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(225, 29, 72, 0.5);
+    }
+
+    .step-node.completed {
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.3);
+      background: rgba(16, 185, 129, 0.12);
     }
 
     .step-node.completed .step-dot {
       background: var(--emerald-subtle);
-      border-color: rgba(16, 185, 129, 0.4);
+      border-color: rgba(16, 185, 129, 0.5);
       color: var(--emerald);
     }
 
     .step-line {
       flex: 1;
       height: 2px;
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 2px;
-      max-width: 48px;
-      transition: background 0.2s ease;
+      max-width: 36px;
+      transition: background 0.25s ease;
     }
 
     .step-line.active {
-      background: var(--accent);
+      background: linear-gradient(90deg, var(--ewu-crimson), var(--ewu-blue));
     }
 
     /* Main Container Card */
     .onboard-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 20px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-      max-width: 600px;
+      border-radius: 22px;
+      box-shadow: 
+        0 30px 60px -12px rgba(0, 0, 0, 0.8),
+        0 0 40px rgba(37, 99, 235, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      max-width: 620px;
       width: 100%;
       padding: 36px 32px;
       position: relative;
@@ -162,8 +246,8 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, #6366f1, #38bdf8, transparent);
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #e11d48, #2563eb, #38bdf8, transparent);
     }
 
     /* Brand Header */
@@ -171,45 +255,59 @@
       display: flex;
       align-items: center;
       gap: 14px;
-      margin-bottom: 22px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .brand-icon {
-      width: 44px;
-      height: 44px;
-      background: var(--accent-subtle);
-      border: 1px solid rgba(99, 102, 241, 0.35);
-      border-radius: 12px;
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, rgba(225, 29, 72, 0.2), rgba(37, 99, 235, 0.25));
+      border: 1.5px solid rgba(96, 165, 250, 0.4);
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #818cf8;
+      color: #93c5fd;
       flex-shrink: 0;
+      box-shadow: 0 0 18px rgba(37, 99, 235, 0.35);
     }
 
     .brand-title {
-      font-size: 20px;
+      font-size: 21px;
       font-weight: 800;
       letter-spacing: -0.4px;
       color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-badge {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      background: rgba(225, 29, 72, 0.2);
+      border: 1px solid rgba(225, 29, 72, 0.4);
+      color: #fda4af;
+      padding: 2px 7px;
+      border-radius: 6px;
     }
 
     .brand-sub {
-      font-size: 11px;
-      font-weight: 700;
-      color: #818cf8;
-      font-family: 'JetBrains Mono', monospace;
-      margin-top: 2px;
-      letter-spacing: 0.6px;
-      text-transform: uppercase;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #93c5fd;
+      margin-top: 3px;
+      letter-spacing: 0.3px;
     }
 
     /* Step Container Views */
     .step-view {
       display: none;
-      animation: fadeInStep 0.2s ease forwards;
+      animation: fadeInStep 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     .step-view.active {
@@ -219,7 +317,7 @@
     @keyframes fadeInStep {
       from {
         opacity: 0;
-        transform: translateY(8px);
+        transform: translateY(10px);
       }
       to {
         opacity: 1;
@@ -229,7 +327,7 @@
 
     /* Section Titles */
     .section-title {
-      font-size: 18px;
+      font-size: 18.5px;
       font-weight: 700;
       color: #ffffff;
       margin-bottom: 6px;
@@ -255,27 +353,29 @@
       display: flex;
       align-items: flex-start;
       gap: 12px;
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid var(--border);
+      background: rgba(15, 27, 56, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.09);
       border-radius: 12px;
-      padding: 12px 14px;
-      font-size: 12.5px;
+      padding: 13px 15px;
+      font-size: 12.8px;
       line-height: 1.5;
       color: #f1f5f9;
-      transition: border-color 0.15s ease;
+      transition: all 0.2s ease;
     }
 
     .terms-card-item:hover {
-      border-color: rgba(99, 102, 241, 0.3);
+      border-color: rgba(96, 165, 250, 0.35);
+      background: rgba(19, 35, 75, 0.7);
+      transform: translateX(2px);
     }
 
     .terms-icon {
-      width: 24px;
-      height: 24px;
-      border-radius: 6px;
-      background: var(--accent-subtle);
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      color: #818cf8;
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      background: rgba(37, 99, 235, 0.18);
+      border: 1px solid rgba(96, 165, 250, 0.35);
+      color: #93c5fd;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -286,8 +386,8 @@
     /* Expandable Full Terms */
     .full-terms-box {
       display: none;
-      background: #0b1120;
-      border: 1px solid var(--border);
+      background: rgba(6, 12, 26, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
       padding: 16px;
       margin-bottom: 18px;
@@ -300,12 +400,12 @@
 
     .full-terms-box::-webkit-scrollbar { width: 5px; }
     .full-terms-box::-webkit-scrollbar-track { background: transparent; }
-    .full-terms-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+    .full-terms-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
 
     .full-terms-box h4 {
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 700;
-      color: #818cf8;
+      color: #93c5fd;
       margin-top: 12px;
       margin-bottom: 4px;
     }
@@ -315,13 +415,13 @@
     }
 
     .btn-expand-terms {
-      background: transparent;
-      border: 1px dashed rgba(255, 255, 255, 0.15);
+      background: rgba(37, 99, 235, 0.08);
+      border: 1px dashed rgba(96, 165, 250, 0.3);
       border-radius: 10px;
-      color: #818cf8;
+      color: #93c5fd;
       font-size: 12px;
       font-weight: 600;
-      padding: 8px 12px;
+      padding: 9px 12px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -329,12 +429,12 @@
       gap: 6px;
       width: 100%;
       margin-bottom: 18px;
-      transition: all 0.15s ease;
+      transition: all 0.2s ease;
     }
 
     .btn-expand-terms:hover {
-      background: var(--accent-subtle);
-      border-color: #818cf8;
+      background: rgba(37, 99, 235, 0.18);
+      border-color: #60a5fa;
       color: #ffffff;
     }
 
@@ -343,19 +443,25 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      background: var(--accent-subtle);
-      border: 1px solid rgba(99, 102, 241, 0.25);
+      background: rgba(37, 99, 235, 0.12);
+      border: 1px solid rgba(96, 165, 250, 0.3);
       border-radius: 12px;
-      padding: 12px 14px;
-      margin-bottom: 20px;
+      padding: 13px 15px;
+      margin-bottom: 22px;
       cursor: pointer;
       user-select: none;
+      transition: all 0.2s ease;
+    }
+
+    .acceptance-row:hover {
+      background: rgba(37, 99, 235, 0.2);
+      border-color: rgba(96, 165, 250, 0.5);
     }
 
     .acceptance-row input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      accent-color: #4f46e5;
+      width: 19px;
+      height: 19px;
+      accent-color: #2563eb;
       cursor: pointer;
       flex-shrink: 0;
     }
@@ -371,31 +477,33 @@
     .features-container {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
       margin-bottom: 22px;
-      max-height: 460px;
+      max-height: 480px;
       overflow-y: auto;
       padding-right: 4px;
     }
 
     .features-container::-webkit-scrollbar { width: 5px; }
     .features-container::-webkit-scrollbar-track { background: transparent; }
-    .features-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+    .features-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
 
     .feature-card {
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid var(--border);
+      background: rgba(13, 24, 52, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 14px;
       padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      transition: border-color 0.15s ease, transform 0.15s ease;
+      transition: all 0.2s ease;
     }
 
     .feature-card:hover {
-      border-color: rgba(99, 102, 241, 0.35);
-      transform: translateY(-1px);
+      border-color: rgba(96, 165, 250, 0.45);
+      background: rgba(18, 33, 72, 0.85);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px -6px rgba(0, 0, 0, 0.5);
     }
 
     .feature-card-header {
@@ -405,12 +513,12 @@
     }
 
     .feature-card-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: var(--accent-subtle);
-      border: 1px solid rgba(99, 102, 241, 0.35);
-      color: #818cf8;
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, rgba(225, 29, 72, 0.2), rgba(37, 99, 235, 0.25));
+      border: 1px solid rgba(96, 165, 250, 0.35);
+      color: #93c5fd;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -418,34 +526,35 @@
     }
 
     .feature-card-title {
-      font-size: 14px;
+      font-size: 14.5px;
       font-weight: 700;
       color: #ffffff;
     }
 
     .feature-card-badge {
       font-size: 10.5px;
-      font-weight: 600;
+      font-weight: 700;
       color: #38bdf8;
-      background: rgba(56, 189, 248, 0.1);
-      border: 1px solid rgba(56, 189, 248, 0.2);
-      padding: 2px 7px;
+      background: rgba(56, 189, 248, 0.14);
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      padding: 3px 8px;
       border-radius: 6px;
       margin-left: auto;
+      letter-spacing: 0.3px;
     }
 
     .feature-card-desc {
-      font-size: 12.5px;
-      line-height: 1.5;
+      font-size: 12.8px;
+      line-height: 1.55;
       color: var(--text-muted);
     }
 
     /* Styled Wireframe / Feature Preview Box */
     .screenshot-placeholder {
-      background: #0b1120;
+      background: rgba(6, 13, 28, 0.75);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 10px;
-      padding: 16px 14px;
+      padding: 14px 14px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -456,20 +565,20 @@
     }
 
     .screenshot-placeholder svg {
-      color: #818cf8;
-      opacity: 0.75;
+      color: #60a5fa;
+      opacity: 0.85;
       margin-bottom: 2px;
     }
 
     .placeholder-title {
-      font-size: 11.5px;
-      font-weight: 600;
-      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 700;
+      color: #e2e8f0;
     }
 
     .placeholder-sub {
-      font-size: 10px;
-      color: #64748b;
+      font-size: 10.5px;
+      color: #94a3b8;
     }
 
     /* License Input Form */
@@ -479,11 +588,11 @@
 
     .input-label {
       display: block;
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 700;
-      color: var(--text-dim);
+      color: #93c5fd;
       text-transform: uppercase;
-      letter-spacing: 0.7px;
+      letter-spacing: 0.8px;
       margin-bottom: 8px;
     }
 
@@ -494,53 +603,57 @@
 
     .license-input {
       width: 100%;
-      padding: 14px 16px;
-      background: #0b1120;
-      border: 1.5px solid rgba(99, 102, 241, 0.35);
-      border-radius: 12px;
+      padding: 15px 16px;
+      background: rgba(6, 13, 28, 0.85);
+      border: 1.5px solid rgba(96, 165, 250, 0.4);
+      border-radius: 14px;
       color: #ffffff;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 17px;
+      font-size: 18px;
       font-weight: 700;
-      letter-spacing: 2px;
+      letter-spacing: 2.2px;
       text-align: center;
       outline: none;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      transition: all 0.2s ease;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
     }
 
     .license-input:focus {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.5);
+      background: rgba(8, 16, 36, 0.95);
     }
 
     .license-input::placeholder {
       color: #475569;
-      letter-spacing: 1px;
+      letter-spacing: 1.5px;
       font-weight: 500;
     }
 
     /* Action Buttons */
     .btn-primary {
       width: 100%;
-      padding: 13px 22px;
-      background: var(--accent);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 12px;
+      padding: 14px 22px;
+      background: linear-gradient(135deg, var(--ewu-crimson) 0%, var(--ewu-blue) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 14px;
       color: #ffffff;
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 14.5px;
+      font-weight: 700;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      transition: background 0.15s ease, transform 0.15s ease;
+      transition: all 0.2s ease;
       touch-action: manipulation;
+      box-shadow: 0 8px 24px -4px rgba(225, 29, 72, 0.45);
     }
 
     .btn-primary:hover:not(:disabled) {
-      background: var(--accent-hover);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px -4px rgba(37, 99, 235, 0.55);
+      background: linear-gradient(135deg, var(--ewu-crimson-hover) 0%, var(--ewu-blue-hover) 100%);
     }
 
     .btn-primary:active:not(:disabled) {
@@ -551,16 +664,17 @@
       opacity: 0.45;
       cursor: not-allowed;
       transform: none;
+      box-shadow: none;
     }
 
     .btn-secondary {
       width: 100%;
       padding: 12px 18px;
-      background: var(--card-surface);
-      border: 1px solid var(--border);
+      background: rgba(19, 35, 75, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 12px;
       color: #cbd5e1;
-      font-size: 13px;
+      font-size: 13.5px;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
@@ -568,49 +682,51 @@
       justify-content: center;
       gap: 8px;
       text-decoration: none;
-      transition: all 0.15s ease;
+      transition: all 0.2s ease;
       touch-action: manipulation;
     }
 
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(37, 99, 235, 0.22);
       color: #ffffff;
-      border-color: rgba(99, 102, 241, 0.3);
+      border-color: rgba(96, 165, 250, 0.4);
+      transform: translateY(-1px);
     }
 
     .btn-support {
       display: inline-flex;
       width: auto;
       margin-top: 8px;
-      padding: 8px 16px;
-      color: #818cf8;
-      background: var(--accent-subtle);
-      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 9px 18px;
+      color: #93c5fd;
+      background: rgba(37, 99, 235, 0.16);
+      border: 1px solid rgba(96, 165, 250, 0.35);
       border-radius: 10px;
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 600;
       cursor: pointer;
       align-items: center;
-      gap: 6px;
-      transition: all 0.15s ease;
+      gap: 7px;
+      transition: all 0.2s ease;
       text-decoration: none;
     }
 
     .btn-support:hover {
-      background: rgba(99, 102, 241, 0.2);
-      border-color: #6366f1;
+      background: rgba(37, 99, 235, 0.3);
+      border-color: #60a5fa;
       color: #ffffff;
+      transform: translateY(-1px);
     }
 
     .status-box {
       margin-top: 16px;
-      padding: 12px 16px;
+      padding: 13px 16px;
       border-radius: 12px;
       font-size: 13px;
       display: none;
       line-height: 1.5;
       text-align: center;
-      font-weight: 500;
+      font-weight: 600;
       animation: fadeInStatus 0.2s ease;
     }
 
@@ -620,15 +736,15 @@
     }
 
     .status-box.success {
-      background: var(--emerald-subtle);
-      border: 1px solid rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.16);
+      border: 1px solid rgba(16, 185, 129, 0.45);
       color: #34d399;
     }
 
     .status-box.error {
-      background: var(--rose-subtle);
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      color: #f87171;
+      background: rgba(244, 63, 94, 0.16);
+      border: 1px solid rgba(244, 63, 94, 0.45);
+      color: #fb7185;
     }
 
     .spinner {
@@ -646,21 +762,22 @@
 
     /* Subscribed View Details */
     .success-badge-wrap {
-      width: 64px;
-      height: 64px;
-      border-radius: 18px;
+      width: 68px;
+      height: 68px;
+      border-radius: 20px;
       margin: 0 auto 18px;
-      background: var(--emerald-subtle);
-      border: 1px solid rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.18);
+      border: 1.5px solid rgba(16, 185, 129, 0.45);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--emerald);
+      color: #34d399;
+      box-shadow: 0 0 24px rgba(16, 185, 129, 0.35);
     }
 
     .sub-meta-box {
-      background: #0b1120;
-      border: 1px solid var(--border);
+      background: rgba(6, 13, 28, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 14px;
       padding: 18px;
       text-align: left;
@@ -680,6 +797,52 @@
       margin-bottom: 0;
     }
 
+    /* Campus Wallpaper Info Pill */
+    .campus-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 18px;
+      padding: 6px 14px;
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 30px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #cbd5e1;
+      backdrop-filter: blur(12px);
+    }
+
+    .campus-badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 8px #34d399;
+    }
+
+    .wallpaper-dots {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-left: 6px;
+    }
+
+    .w-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.25);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .w-dot.active {
+      background: #60a5fa;
+      width: 14px;
+      border-radius: 4px;
+    }
+
     /* Mobile Responsive */
     @media (max-width: 480px) {
       .page-wrapper {
@@ -688,7 +851,7 @@
 
       .onboard-card {
         padding: 24px 18px;
-        border-radius: 16px;
+        border-radius: 18px;
       }
 
       .brand-title {
@@ -698,7 +861,7 @@
       .license-input {
         font-size: 15px !important;
         padding: 12px 10px;
-        letter-spacing: 1.2px;
+        letter-spacing: 1.4px;
       }
 
       .btn-primary {
@@ -709,6 +872,17 @@
   </style>
 </head>
 <body>
+  <!-- Cinematic Background Slideshow -->
+  <div class="bg-slideshow" id="bgSlideshow">
+    <div class="bg-slide active" style="background-image: url('images/ewu_campus_day.jpg');" data-label="EWU Aftabnagar Main Campus"></div>
+    <div class="bg-slide" style="background-image: url('images/ewu_campus_plaza.jpg');" data-label="EWU Courtyard Plaza"></div>
+    <div class="bg-slide" style="background-image: url('images/ewu_campus_sunset.jpg');" data-label="EWU Twilight Horizon"></div>
+    <div class="bg-slide" style="background-image: url('images/ewu_campus_aerial.jpg');" data-label="EWU Aerial View"></div>
+  </div>
+  <div class="bg-overlay"></div>
+  <div class="glow-orb-1"></div>
+  <div class="glow-orb-2"></div>
+
   <div class="page-wrapper">
 
     <!-- Progress Indicator -->
@@ -733,11 +907,16 @@
     <div class="onboard-card">
       <div class="brand-header">
         <div class="brand-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
         </div>
         <div>
-          <h1 class="brand-title">EWU Portal Helper</h1>
-          <div class="brand-sub">Student Assistant &bull; Onboarding</div>
+          <h1 class="brand-title">
+            EWU Buddy
+            <span class="brand-badge">v2.0</span>
+          </h1>
+          <div class="brand-sub">East West University &bull; Student Assistant</div>
         </div>
       </div>
 
@@ -750,23 +929,33 @@
 
         <div class="terms-summary-grid">
           <div class="terms-card-item">
-            <div class="terms-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
+            <div class="terms-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            </div>
             <div><strong>Educational Productivity Tool:</strong> Built independently by students to streamline portal workflow, advising routines, and schedule planning.</div>
           </div>
           <div class="terms-card-item">
-            <div class="terms-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div class="terms-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
             <div><strong>User Responsibility:</strong> Provided for convenience. Users maintain responsibility for their course selections and portal interactions.</div>
           </div>
           <div class="terms-card-item">
-            <div class="terms-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+            <div class="terms-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
             <div><strong>Privacy Respect:</strong> Zero student credentials, personal information, or private portal passwords are harvested or transmitted.</div>
           </div>
           <div class="terms-card-item">
-            <div class="terms-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div class="terms-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
             <div><strong>University Compliance:</strong> Users must abide by East West University codes, academic integrity, and portal policies.</div>
           </div>
           <div class="terms-card-item">
-            <div class="terms-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+            <div class="terms-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
             <div><strong>Portal Updates:</strong> Compatibility is maintained actively; future university portal redesigns may require extension updates.</div>
           </div>
         </div>
@@ -816,15 +1005,15 @@
           <div class="feature-card">
             <div class="feature-card-header">
               <div class="feature-card-icon">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               </div>
               <div>
                 <div class="feature-card-title">1. Automated Captcha Solver</div>
               </div>
-              <span class="feature-card-badge">Login</span>
+              <span class="feature-card-badge">Login Helper</span>
             </div>
             <p class="feature-card-desc">
-              Instantly solves the math number security challenge on the student portal login page for seamless entry.
+              Instantly detects and solves the math security challenge on the EWU portal login page for seamless 1-click access.
             </p>
             <div class="screenshot-placeholder">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
@@ -837,20 +1026,20 @@
           <div class="feature-card">
             <div class="feature-card-header">
               <div class="feature-card-icon">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               </div>
               <div>
-                <div class="feature-card-title">2. Weekly Routine Timetable Matrix</div>
+                <div class="feature-card-title">2. Class Routine &amp; Calendar Export</div>
               </div>
-              <span class="feature-card-badge">Routine &amp; PDF</span>
+              <span class="feature-card-badge">Routine &amp; ICS</span>
             </div>
             <p class="feature-card-desc">
-              Converts enrolled course tables into a visual timetable grid with dropped-course filters and 1-click PNG/PDF export.
+              Converts enrolled course schedules into a color-coded timetable grid with PDF, PNG, and official Academic Calendar (.ics) export.
             </p>
             <div class="screenshot-placeholder">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-              <span class="placeholder-title">Ultra-HD Weekly Timetable Generator</span>
-              <span class="placeholder-sub">Visual schedule grid with single-click PDF export</span>
+              <span class="placeholder-title">Ultra-HD Weekly Timetable &amp; Calendar Sync</span>
+              <span class="placeholder-sub">Automatic holiday skips &amp; Google/Apple Calendar support</span>
             </div>
           </div>
 
@@ -858,20 +1047,20 @@
           <div class="feature-card">
             <div class="feature-card-header">
               <div class="feature-card-icon">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
               </div>
               <div>
-                <div class="feature-card-title">3. 10-Column Advising Suite &amp; Seat Heatmap</div>
+                <div class="feature-card-title">3. 10-Column Advising Suite</div>
               </div>
               <span class="feature-card-badge">Advising</span>
             </div>
             <p class="feature-card-desc">
-              Displays section details, faculty initials, room numbers, seat capacities, live availability, and color heatmaps.
+              Displays section details, faculty initials, room numbers, seat capacities, live availability, and color heatmaps with Ctrl+K search.
             </p>
             <div class="screenshot-placeholder">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h4M6 12h4M6 16h4M14 8h4M14 12h4M14 16h4"/></svg>
               <span class="placeholder-title">10-Column Table Layout &amp; Seat Heatmap</span>
-              <span class="placeholder-sub">Real-time seat occupancy with instant Ctrl+K search filter</span>
+              <span class="placeholder-sub">Real-time seat occupancy with instant search filter</span>
             </div>
           </div>
 
@@ -879,7 +1068,7 @@
           <div class="feature-card">
             <div class="feature-card-header">
               <div class="feature-card-icon">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
               </div>
               <div>
                 <div class="feature-card-title">4. Offline Advising Course Planner</div>
@@ -887,7 +1076,7 @@
               <span class="feature-card-badge">Planner</span>
             </div>
             <p class="feature-card-desc">
-              Build semester plans with drag-and-drop course selection, time conflict detection, and routine previews.
+              Build and test combination plans with PC drag-and-drop course selection, time conflict detection, and live routine previews.
             </p>
             <div class="screenshot-placeholder">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
@@ -900,7 +1089,7 @@
           <div class="feature-card">
             <div class="feature-card-header">
               <div class="feature-card-icon">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
               </div>
               <div>
                 <div class="feature-card-title">5. Offered Courses &amp; Sticky Headers</div>
@@ -952,10 +1141,10 @@
           <button type="button" id="btnCancelChange" class="btn-secondary">&larr; Cancel &amp; Keep Current Licence</button>
         </div>
 
-        <div style="font-size: 12.5px; margin-top: 22px; text-align: center; border-top: 1px solid var(--border); padding-top: 16px; color: var(--text-muted);">
+        <div style="font-size: 12.5px; margin-top: 22px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 16px; color: var(--text-muted);">
           Need a licence key? <br/>
           <button type="button" id="btnGetLicensePage" class="btn-support">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             Contact Developer (@AftabKabir)
           </button>
         </div>
@@ -964,7 +1153,7 @@
       <!-- ==================== STEP 4: EXTENSION READY (SUBSCRIBED VIEW) ==================== -->
       <div class="step-view" id="viewStep4Ready" style="text-align:center;">
         <div class="success-badge-wrap">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
         </div>
         
         <h2 style="font-size:20px; font-weight:700; color:#ffffff; margin-bottom:6px;">
@@ -977,7 +1166,7 @@
         <div class="sub-meta-box">
           <div class="sub-meta-row">
             <strong style="color:var(--text-dim);">Licence Prefix:</strong>
-            <span id="subKeyPrefix" style="font-family:'JetBrains Mono',monospace; color:#818cf8; font-weight:700;">XXXX-...</span>
+            <span id="subKeyPrefix" style="font-family:'JetBrains Mono',monospace; color:#93c5fd; font-weight:700;">XXXX-...</span>
           </div>
           <div class="sub-meta-row">
             <strong style="color:var(--text-dim);">Status:</strong>
@@ -993,7 +1182,7 @@
         </div>
 
         <div style="display:flex; flex-direction:column; gap:10px;">
-          <button type="button" id="btnVisitPortal" class="btn-primary" style="background:#059669;">
+          <button type="button" id="btnVisitPortal" class="btn-primary" style="background: linear-gradient(135deg, #059669 0%, #2563eb 100%);">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
             Launch Student Portal
           </button>
@@ -1003,7 +1192,7 @@
             Change Licence Key
           </button>
 
-          <a href="https://t.me/AftabKabir" target="_blank" class="btn-secondary" style="font-size:12px;">
+          <a href="https://t.me/AftabKabir" target="_blank" class="btn-secondary" style="font-size:12.5px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             Contact Support
           </a>
@@ -1011,8 +1200,63 @@
       </div>
 
     </div>
+
+    <!-- Campus Photo Pill Indicator -->
+    <div class="campus-badge">
+      <span class="campus-badge-dot"></span>
+      <span id="campusLabel">East West University Campus</span>
+      <div class="wallpaper-dots" id="wallpaperDots">
+        <span class="w-dot active" data-idx="0"></span>
+        <span class="w-dot" data-idx="1"></span>
+        <span class="w-dot" data-idx="2"></span>
+        <span class="w-dot" data-idx="3"></span>
+      </div>
+    </div>
   </div>
 
   <script src="activation.js"></script>
+  <script>
+    // Ambient Background Slideshow Controller
+    (function () {
+      var slides = document.querySelectorAll('.bg-slide');
+      var dots = document.querySelectorAll('.w-dot');
+      var label = document.getElementById('campusLabel');
+      var currentIndex = 0;
+      var timer = null;
+
+      function showSlide(index) {
+        if (!slides.length) return;
+        currentIndex = (index + slides.length) % slides.length;
+        slides.forEach(function (s, i) {
+          s.classList.toggle('active', i === currentIndex);
+        });
+        dots.forEach(function (d, i) {
+          d.classList.toggle('active', i === currentIndex);
+        });
+        if (label && slides[currentIndex]) {
+          label.textContent = slides[currentIndex].getAttribute('data-label') || 'East West University Campus';
+        }
+      }
+
+      function nextSlide() {
+        showSlide(currentIndex + 1);
+      }
+
+      function startTimer() {
+        if (timer) clearInterval(timer);
+        timer = setInterval(nextSlide, 7000);
+      }
+
+      dots.forEach(function (dot) {
+        dot.addEventListener('click', function () {
+          var idx = parseInt(this.getAttribute('data-idx'), 10) || 0;
+          showSlide(idx);
+          startTimer();
+        });
+      });
+
+      startTimer();
+    })();
+  </script>
 </body>
 </html>

@@ -2,29 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>EWU Portal Helper — Update Required</title>
+  <title>EWU Buddy — Update Required</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090d16;
-      --card-bg: #0f172a;
-      --card-surface: #1e293b;
-      --border: rgba(255, 255, 255, 0.08);
-      --border-focus: #6366f1;
-      --accent: #4f46e5;
-      --accent-hover: #4338ca;
-      --accent-subtle: rgba(99, 102, 241, 0.12);
+      --bg-dark: #070d1a;
+      --card-bg: rgba(11, 20, 42, 0.82);
+      --card-surface: rgba(19, 34, 68, 0.65);
+      --border: rgba(255, 255, 255, 0.12);
+      --border-focus: #3b82f6;
+      --ewu-crimson: #e11d48;
+      --ewu-crimson-hover: #be123c;
+      --ewu-crimson-subtle: rgba(225, 29, 72, 0.14);
+      --ewu-blue: #2563eb;
+      --ewu-blue-hover: #1d4ed8;
+      --ewu-blue-subtle: rgba(37, 99, 235, 0.14);
       --emerald: #10b981;
-      --emerald-subtle: rgba(16, 185, 129, 0.12);
-      --rose: #ef4444;
-      --rose-subtle: rgba(239, 68, 68, 0.12);
+      --emerald-subtle: rgba(16, 185, 129, 0.14);
+      --rose: #f43f5e;
+      --rose-subtle: rgba(244, 63, 94, 0.14);
       --amber: #f59e0b;
       --text: #f8fafc;
       --text-muted: #cbd5e1;
-      --text-dim: #64748b;
+      --text-dim: #94a3b8;
     }
 
     * {
@@ -39,26 +42,88 @@
       width: 100%;
       min-height: 100vh;
       min-height: 100dvh;
-      background: var(--bg);
+      background: var(--bg-dark);
       color: var(--text);
       overflow-x: hidden;
       position: relative;
     }
 
-    body::before {
-      content: "";
+    /* Cinematic Background Slideshow */
+    .bg-slideshow {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background-image: 
-        radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.1) 0%, transparent 60%),
-        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-      background-size: 100% 100%, 32px 32px, 32px 32px;
-      pointer-events: none;
       z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .bg-slide {
+      position: absolute;
+      top: -5%;
+      left: -5%;
+      width: 110%;
+      height: 110%;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 1.6s ease-in-out, transform 8s ease-out;
+      transform: scale(1);
+    }
+
+    .bg-slide.active {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+
+    .bg-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      background: 
+        radial-gradient(ellipse at 50% 15%, rgba(225, 29, 72, 0.22) 0%, rgba(7, 13, 26, 0.85) 60%, rgba(5, 9, 18, 0.96) 100%),
+        linear-gradient(180deg, rgba(6, 11, 23, 0.65) 0%, rgba(7, 13, 26, 0.94) 100%);
+      pointer-events: none;
+    }
+
+    /* Ambient Glow Spots */
+    .glow-orb-1 {
+      position: fixed;
+      top: 15%;
+      right: 15%;
+      width: 380px;
+      height: 380px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(225, 29, 72, 0.2) 0%, transparent 70%);
+      filter: blur(60px);
+      z-index: 1;
+      pointer-events: none;
+      animation: floatOrb 12s ease-in-out infinite alternate;
+    }
+
+    .glow-orb-2 {
+      position: fixed;
+      bottom: 15%;
+      left: 15%;
+      width: 420px;
+      height: 420px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.2) 0%, transparent 70%);
+      filter: blur(70px);
+      z-index: 1;
+      pointer-events: none;
+      animation: floatOrb 15s ease-in-out infinite alternate-reverse;
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-30px, 20px) scale(1.08); }
+      100% { transform: translate(20px, -30px) scale(0.95); }
     }
 
     .page-wrapper {
@@ -69,19 +134,24 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 24px 16px;
+      padding: 36px 16px;
       position: relative;
-      z-index: 1;
+      z-index: 2;
     }
 
     .update-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 20px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-      max-width: 520px;
+      border-radius: 22px;
+      box-shadow: 
+        0 30px 60px -12px rgba(0, 0, 0, 0.8),
+        0 0 40px rgba(225, 29, 72, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      max-width: 540px;
       width: 100%;
-      padding: 32px 28px;
+      padding: 36px 30px;
       position: relative;
       z-index: 1;
       overflow: hidden;
@@ -94,8 +164,8 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, #6366f1, #38bdf8, transparent);
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #e11d48, #3b82f6, #38bdf8, transparent);
     }
 
     /* Brand Header */
@@ -103,31 +173,32 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 22px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .brand-meta {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
     .brand-logo {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      background: var(--accent-subtle);
-      border: 1px solid rgba(99, 102, 241, 0.35);
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(225, 29, 72, 0.2), rgba(37, 99, 235, 0.25));
+      border: 1.5px solid rgba(96, 165, 250, 0.4);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #818cf8;
+      color: #93c5fd;
+      box-shadow: 0 0 14px rgba(37, 99, 235, 0.35);
     }
 
     .brand-title {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 800;
       color: #ffffff;
       text-align: left;
@@ -135,34 +206,35 @@
     }
 
     .brand-subtitle {
-      font-size: 10px;
-      font-weight: 700;
-      color: #818cf8;
-      letter-spacing: 0.6px;
-      text-transform: uppercase;
+      font-size: 11px;
+      font-weight: 600;
+      color: #93c5fd;
       text-align: left;
+      margin-top: 2px;
     }
 
     .status-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 4px 10px;
+      padding: 5px 12px;
       border-radius: 20px;
       font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      background: var(--rose-subtle);
-      border: 1px solid rgba(239, 68, 68, 0.35);
-      color: #f87171;
+      letter-spacing: 0.6px;
+      background: rgba(244, 63, 94, 0.16);
+      border: 1px solid rgba(244, 63, 94, 0.45);
+      color: #fda4af;
+      box-shadow: 0 0 12px rgba(244, 63, 94, 0.25);
     }
 
     .pulse-dot {
-      width: 6px;
-      height: 6px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
-      background: #ef4444;
+      background: #f43f5e;
+      box-shadow: 0 0 8px #f43f5e;
       animation: pulseAnim 1.8s infinite;
     }
 
@@ -175,8 +247,8 @@
     /* Hero Icon */
     .icon-wrapper {
       position: relative;
-      width: 72px;
-      height: 72px;
+      width: 76px;
+      height: 76px;
       margin: 0 auto 18px;
       display: flex;
       align-items: center;
@@ -184,22 +256,23 @@
     }
 
     .icon-badge {
-      width: 60px;
-      height: 60px;
-      border-radius: 16px;
-      background: var(--accent-subtle);
-      border: 1px solid rgba(99, 102, 241, 0.4);
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(225, 29, 72, 0.22), rgba(37, 99, 235, 0.28));
+      border: 1.5px solid rgba(96, 165, 250, 0.45);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #818cf8;
+      color: #93c5fd;
       position: relative;
       z-index: 2;
+      box-shadow: 0 0 24px rgba(225, 29, 72, 0.35);
     }
 
     h1 {
-      font-size: 20px;
-      font-weight: 700;
+      font-size: 21px;
+      font-weight: 800;
       letter-spacing: -0.4px;
       margin-bottom: 12px;
       color: #ffffff;
@@ -210,103 +283,105 @@
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      background: #0b1120;
-      border: 1px solid var(--border);
+      background: rgba(6, 13, 28, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       padding: 6px 14px;
-      border-radius: 12px;
+      border-radius: 14px;
       margin-bottom: 16px;
     }
 
     .ver-pill {
       font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 6px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 7px;
     }
 
     .ver-pill.old {
-      background: rgba(148, 163, 184, 0.1);
-      color: var(--text-dim);
-      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(148, 163, 184, 0.12);
+      color: #94a3b8;
+      border: 1px solid rgba(148, 163, 184, 0.25);
     }
 
     .ver-arrow {
-      color: #818cf8;
+      color: #60a5fa;
       display: flex;
       align-items: center;
     }
 
     .ver-pill.new {
-      background: var(--emerald-subtle);
+      background: rgba(16, 185, 129, 0.18);
       color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.35);
+      border: 1px solid rgba(16, 185, 129, 0.45);
     }
 
     .desc {
-      font-size: 13px;
+      font-size: 13.5px;
       color: var(--text-muted);
       line-height: 1.6;
-      margin-bottom: 20px;
+      margin-bottom: 22px;
     }
 
     /* Changelog Card */
     .changelog-box {
-      background: #0b1120;
-      border: 1px solid var(--border);
-      border-radius: 12px;
+      background: rgba(6, 13, 28, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
       padding: 16px;
       text-align: left;
-      margin-bottom: 20px;
+      margin-bottom: 22px;
       max-height: 180px;
       overflow-y: auto;
     }
 
     .changelog-box::-webkit-scrollbar { width: 5px; }
     .changelog-box::-webkit-scrollbar-track { background: transparent; }
-    .changelog-box::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+    .changelog-box::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
 
     .changelog-header {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 11px;
+      gap: 7px;
+      font-size: 11.5px;
       font-weight: 700;
-      color: #818cf8;
+      color: #93c5fd;
       text-transform: uppercase;
-      letter-spacing: 0.6px;
-      margin-bottom: 8px;
+      letter-spacing: 0.7px;
+      margin-bottom: 10px;
     }
 
     .changelog-content {
-      font-size: 12px;
+      font-size: 12.5px;
       color: #e2e8f0;
-      line-height: 1.6;
+      line-height: 1.65;
       white-space: pre-wrap;
     }
 
     /* CTA Button */
     .btn-update {
       width: 100%;
-      padding: 13px 20px;
-      border-radius: 12px;
-      background: var(--accent);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 14px 22px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--ewu-crimson) 0%, var(--ewu-blue) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       color: #ffffff;
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 14.5px;
+      font-weight: 700;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
       text-decoration: none;
-      transition: background 0.15s ease, transform 0.15s ease;
+      transition: all 0.2s ease;
+      box-shadow: 0 8px 24px -4px rgba(225, 29, 72, 0.45);
     }
 
     .btn-update:hover {
-      background: var(--accent-hover);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px -4px rgba(37, 99, 235, 0.55);
+      background: linear-gradient(135deg, var(--ewu-crimson-hover) 0%, var(--ewu-blue-hover) 100%);
       color: #ffffff;
     }
 
@@ -326,44 +401,79 @@
       align-items: center;
       justify-content: center;
       gap: 14px;
-      margin-top: 12px;
-      font-size: 12px;
+      margin-top: 14px;
+      font-size: 12.5px;
     }
 
     .footer-links a {
-      color: #818cf8;
+      color: #93c5fd;
       text-decoration: none;
       font-weight: 600;
       transition: color 0.15s ease;
     }
 
     .footer-links a:hover {
-      color: #c7d2fe;
+      color: #ffffff;
+    }
+
+    /* Campus Wallpaper Info Pill */
+    .campus-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 18px;
+      padding: 6px 14px;
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 30px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #cbd5e1;
+      backdrop-filter: blur(12px);
+    }
+
+    .campus-badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 8px #34d399;
     }
 
     @media (max-width: 480px) {
       .page-wrapper { padding: 16px 12px; }
-      .update-card { padding: 24px 18px; border-radius: 16px; }
+      .update-card { padding: 24px 18px; border-radius: 18px; }
       h1 { font-size: 18px; }
-      .icon-wrapper { width: 60px; height: 60px; margin-bottom: 14px; }
-      .icon-badge { width: 50px; height: 50px; }
+      .icon-wrapper { width: 64px; height: 64px; margin-bottom: 14px; }
+      .icon-badge { width: 52px; height: 52px; }
       .btn-update { padding: 12px 16px; font-size: 13.5px; }
     }
   </style>
 </head>
 <body>
+  <!-- Cinematic Background Slideshow -->
+  <div class="bg-slideshow" id="bgSlideshow">
+    <div class="bg-slide active" style="background-image: url('images/ewu_campus_plaza.jpg');"></div>
+    <div class="bg-slide" style="background-image: url('images/ewu_campus_day.jpg');"></div>
+    <div class="bg-slide" style="background-image: url('images/ewu_campus_sunset.jpg');"></div>
+    <div class="bg-slide" style="background-image: url('images/ewu_campus_aerial.jpg');"></div>
+  </div>
+  <div class="bg-overlay"></div>
+  <div class="glow-orb-1"></div>
+  <div class="glow-orb-2"></div>
+
   <div class="page-wrapper">
     <div class="update-card">
       <div class="brand-header">
         <div class="brand-meta">
           <div class="brand-logo">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
             </svg>
           </div>
           <div>
             <div class="brand-title">EWU Buddy</div>
-            <div class="brand-subtitle">Portal Assistant</div>
+            <div class="brand-subtitle">East West University &bull; Portal Assistant</div>
           </div>
         </div>
 
@@ -375,7 +485,7 @@
 
       <div class="icon-wrapper">
         <div class="icon-badge">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="16 16 12 12 8 16"/>
             <line x1="12" y1="12" x2="12" y2="21"/>
             <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
@@ -388,7 +498,7 @@
       <div class="version-container">
         <span class="ver-pill old" id="currentVerText">v1.1.0</span>
         <div class="ver-arrow">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="5" y1="12" x2="19" y2="12"/>
             <polyline points="12 5 19 12 12 19"/>
           </svg>
@@ -396,11 +506,11 @@
         <span class="ver-pill new" id="latestVerText">v1.2.0</span>
       </div>
 
-      <p class="desc" id="updateDesc">A critical update of EWU Portal Helper is required to ensure compatibility with recent East West University student portal updates.</p>
+      <p class="desc" id="updateDesc">A critical update of EWU Portal Helper is required to ensure full compatibility with recent East West University student portal updates.</p>
 
       <div class="changelog-box" id="changelogSection" style="display:none;">
         <div class="changelog-header">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
             <polyline points="14 2 14 8 20 8"/>
             <line x1="16" y1="13" x2="8" y2="13"/>
@@ -413,14 +523,14 @@
       </div>
 
       <a href="https://github.com/starkxxxwiz/ewu-ext/releases" id="updateBtn" target="_blank" class="btn-update">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="7 10 12 15 17 10"/>
           <line x1="12" y1="15" x2="12" y2="3"/>
         </svg>
         Download &amp; Install Update
       </a>
 
-      <p class="footer-note">After updating, refresh your portal tab to continue using all unlocked features.</p>
+      <p class="footer-note">After updating, reload your portal tab to continue using all unlocked features.</p>
 
       <div class="footer-links">
         <a href="https://t.me/AftabKabir" target="_blank">Contact Support</a>
@@ -428,8 +538,31 @@
         <a href="https://github.com/starkxxxwiz/ewu-ext" target="_blank">GitHub Releases</a>
       </div>
     </div>
+
+    <!-- Campus Photo Pill Indicator -->
+    <div class="campus-badge">
+      <span class="campus-badge-dot"></span>
+      <span>East West University Campus</span>
+    </div>
   </div>
 
   <script src="update.js"></script>
+  <script>
+    // Ambient Background Slideshow Controller
+    (function () {
+      var slides = document.querySelectorAll('.bg-slide');
+      var currentIndex = 0;
+
+      function nextSlide() {
+        if (!slides.length) return;
+        currentIndex = (currentIndex + 1) % slides.length;
+        slides.forEach(function (s, i) {
+          s.classList.toggle('active', i === currentIndex);
+        });
+      }
+
+      setInterval(nextSlide, 7000);
+    })();
+  </script>
 </body>
 </html>
