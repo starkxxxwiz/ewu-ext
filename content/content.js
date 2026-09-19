@@ -1589,6 +1589,9 @@
       }
       var classEndDate = endDates[endDates.length - 1];
 
+      var startMidnight = new Date(classStartDate.getFullYear(), classStartDate.getMonth(), classStartDate.getDate(), 0, 0, 0, 0);
+      var endMidnight = new Date(classEndDate.getFullYear(), classEndDate.getMonth(), classEndDate.getDate(), 23, 59, 59, 999);
+
       var holidayEntries = [];
       var holidayDatesMap = {};
 
@@ -1597,18 +1600,23 @@
         var hEv = hRow.eventStr;
         if (/\bholiday\b/i.test(hEv)) {
           var hDates = self._parseDateTokens(hRow.dateStr, baseYear, semStartMonth);
-          if (hDates.length) {
+          // Filter to only include holiday dates within the active class duration [classStartDate, classEndDate]
+          var inRangeDates = hDates.filter(function (d) {
+            return d >= startMidnight && d <= endMidnight;
+          });
+
+          if (inRangeDates.length) {
             var hName = hEv.replace(/^holiday\s*[:\-]?\s*/i, '').trim() || hEv;
             holidayEntries.push({
               rawDate: hRow.dateStr,
               rawEvent: hEv,
               name: hName,
-              dates: hDates
+              dates: inRangeDates
             });
-            for (var hd = 0; hd < hDates.length; hd++) {
-              var dKey = self._formatDateKey(hDates[hd]);
+            for (var hd = 0; hd < inRangeDates.length; hd++) {
+              var dKey = self._formatDateKey(inRangeDates[hd]);
               holidayDatesMap[dKey] = {
-                date: hDates[hd],
+                date: inRangeDates[hd],
                 name: hName
               };
             }
