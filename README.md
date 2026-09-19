@@ -1,13 +1,13 @@
 <div align="center">
 
-  <img src="icons/icon128.png" alt="EWU Buddy Logo" width="96" height="96" style="border-radius: 20px; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);" />
+  <img src="icons/icon128.png" alt="EWU Buddy Logo" width="96" height="96" style="border-radius: 20px; box-shadow: 0 10px 30px rgba(217, 78, 52, 0.4);" />
 
   # ⚡ EWU Buddy — Portal Helper
   ### *The Ultimate Intelligent Student Portal Assistant for East West University*
 
   <p align="center">
-    <a href="https://github.com/starkxxxwiz/ewu-ext"><img src="https://img.shields.io/badge/Manifest-V3-6366f1?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
-    <a href="https://github.com/starkxxxwiz/ewu-ext"><img src="https://img.shields.io/badge/Version-1.2.0_Production-38bdf8?style=for-the-badge&logo=semver&logoColor=white" alt="Version 1.2.0" /></a>
+    <a href="https://github.com/starkxxxwiz/ewu-ext"><img src="https://img.shields.io/badge/Manifest-V3-d94e34?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
+    <a href="https://github.com/starkxxxwiz/ewu-ext"><img src="https://img.shields.io/badge/Version-1.2.0_Production-0284c7?style=for-the-badge&logo=semver&logoColor=white" alt="Version 1.2.0" /></a>
     <a href="https://github.com/starkxxxwiz/ewu-ext/commits/main"><img src="https://img.shields.io/github/commits-since/starkxxxwiz/ewu-ext/0.0.1?style=for-the-badge&color=10b981&logo=git&logoColor=white" alt="Commits" /></a>
     <a href="https://github.com/starkxxxwiz/ewu-ext"><img src="https://img.shields.io/badge/Platform-Windows_/_Mac_/_Android-f59e0b?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Supported Platforms" /></a>
   </p>
@@ -15,7 +15,7 @@
   <p align="center">
     <img src="https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=flat-square&logo=javascript&logoColor=black" />
     <img src="https://img.shields.io/badge/HTML5-Modern_Semantic-E34F26?style=flat-square&logo=html5&logoColor=white" />
-    <img src="https://img.shields.io/badge/CSS3-Cyber_Glassmorphism-1572B6?style=flat-square&logo=css3&logoColor=white" />
+    <img src="https://img.shields.io/badge/CSS3-EWU_Terracotta_&_Navy-1572B6?style=flat-square&logo=css3&logoColor=white" />
   </p>
 
   <p align="center">
@@ -38,6 +38,7 @@
   * Dynamically queries the official EWU academic calendar for the current semester (e.g. `https://www.ewubd.edu/academic-calendar-details/{semester-slug}`).
   * Extracts the official **First Day of Classes** and **Last Day of Classes** to determine recurring schedule boundaries.
   * Dynamically extracts all university holidays, including single-day and **multi-day holiday ranges** (e.g., Durgapuja, Victory Day, Christmas Day).
+  * Automatically filters holidays strictly between the first day and last day of classes for pristine calendar accuracy.
   * Generates standard RFC 5545 iCalendar (`.ics`) files with `RRULE` recurrence and holiday exception dates (`EXDATE`) so classes automatically skip official holidays and end on the true last day of classes.
 * **Smart Drop/Withdraw Filter**: Excludes dropped and withdrawn courses from routine schedules and total credit calculations.
 * **Dynamic Active Days**: Automatically omits empty days (such as days with no classes) for a clean, compact grid.
@@ -54,6 +55,11 @@
 * Sticky table headers keep column names in view while scrolling through large course lists.
 * Quick filtering by course code, department, or instructor name.
 * Beautiful PDF catalog generator with sleek gradient styling.
+
+### 🎨 5. Responsive EWU Campus Visuals & Aesthetic UI
+* **Orientation-Aware Backgrounds**: Displays high-resolution landscape campus photography on desktop/laptop screens and automatically adapts to portrait photography on vertical mobile screens.
+* **Authentic EWU Identity**: Styled with EWU building terracotta brick red accents and student portal deep ocean navy slate tones.
+* **Modern Minimal Buttons**: Tactile, sleek buttons with micro-interactions, responsive sizing, and high-contrast accessibility.
 
 ---
 
