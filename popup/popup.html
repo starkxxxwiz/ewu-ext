@@ -3,44 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>EWU Portal Helper — Settings</title>
+  <title>EWU Buddy — Settings</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-base: #090d16;
-      --bg-surface: #0f172a;
-      --bg-surface-elevated: #1e293b;
-      --bg-card: rgba(15, 23, 42, 0.75);
-      --bg-card-hover: rgba(30, 41, 59, 0.7);
-      --bg-input: #0b1120;
+      --bg-base: #0b0f19;
+      --bg-surface: #111827;
+      --bg-elevated: #1f2937;
+      --bg-input: #0f172a;
       
-      --border-subtle: 1px solid rgba(255, 255, 255, 0.08);
-      --border-focus: 1px solid rgba(99, 102, 241, 0.6);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(217, 78, 52, 0.5);
       
-      --accent: #4f46e5;
-      --accent-hover: #4338ca;
-      --accent-subtle: rgba(99, 102, 241, 0.12);
+      --primary: #d94e34;
+      --primary-hover: #ea580c;
+      --primary-subtle: rgba(217, 78, 52, 0.12);
       
-      --cyan: #38bdf8;
+      --blue: #3b82f6;
       --emerald: #10b981;
       --emerald-subtle: rgba(16, 185, 129, 0.12);
       --amber: #f59e0b;
       --rose: #ef4444;
       --rose-subtle: rgba(239, 68, 68, 0.12);
       
-      --text-main: #f8fafc;
-      --text-muted: #cbd5e1;
-      --text-dim: #64748b;
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
       
       --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
       
-      --radius-lg: 14px;
-      --radius-md: 10px;
+      --radius-lg: 12px;
+      --radius-md: 8px;
       --radius-sm: 6px;
-      --transition: 0.15s ease;
     }
 
     * {
@@ -51,9 +48,9 @@
     }
 
     body {
-      width: 385px;
+      width: 380px;
       min-height: 520px;
-      max-height: 600px;
+      max-height: 590px;
       font-family: var(--font-sans);
       font-size: 13px;
       color: var(--text-main);
@@ -67,75 +64,50 @@
     body::-webkit-scrollbar-track { background: transparent; }
     body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
 
-    /* Top Accent Line */
-    .top-glow-line {
-      position: sticky;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: var(--accent);
-      z-index: 100;
-    }
-
     /* Header */
     .header {
       position: sticky;
-      top: 2px;
+      top: 0;
       z-index: 50;
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 12px 16px;
-      background: rgba(9, 13, 22, 0.95);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-bottom: var(--border-subtle);
+      background: rgba(11, 15, 25, 0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 9px;
     }
 
     .brand-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: var(--accent-subtle);
-      border: 1px solid rgba(99, 102, 241, 0.3);
+      width: 30px;
+      height: 30px;
+      border-radius: var(--radius-md);
+      background: var(--primary-subtle);
+      border: 1px solid rgba(217, 78, 52, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #818cf8;
-    }
-
-    .brand-text {
-      display: flex;
-      flex-direction: column;
+      color: #fda4af;
     }
 
     .brand-title {
-      font-size: 14.5px;
+      font-size: 14px;
       font-weight: 700;
-      letter-spacing: -0.2px;
       color: #ffffff;
+      line-height: 1.2;
     }
 
     .brand-sub {
-      font-size: 9.5px;
-      font-family: var(--font-mono);
+      font-size: 10px;
       font-weight: 600;
-      color: #818cf8;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-
-    .header-pills {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      color: #9ca3af;
+      letter-spacing: 0.3px;
     }
 
     .version-pill {
@@ -143,15 +115,68 @@
       font-size: 10.5px;
       font-weight: 700;
       padding: 3px 8px;
-      border-radius: 6px;
-      background: var(--accent-subtle);
-      color: #818cf8;
-      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.06);
+      color: #cbd5e1;
+      border: 1px solid var(--border);
     }
 
-    /* Quick Filter & Category Navigation */
-    .search-nav-container {
-      padding: 10px 14px 4px;
+    /* License Status Quick Bar */
+    .license-banner {
+      margin: 10px 14px 0 14px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .license-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--emerald);
+      flex-shrink: 0;
+    }
+
+    .status-dot.inactive {
+      background: var(--rose);
+    }
+
+    .status-text {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .btn-manage {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: #f1f5f9;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-manage:hover {
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+    }
+
+    /* Search & Tab Navigation */
+    .nav-container {
+      padding: 10px 14px 0;
     }
 
     .search-input-wrap {
@@ -165,101 +190,87 @@
       top: 50%;
       transform: translateY(-50%);
       color: var(--text-dim);
+      pointer-events: none;
     }
 
     .search-input {
       width: 100%;
-      padding: 8px 10px 8px 30px;
-      background: var(--bg-input);
-      border: var(--border-subtle);
+      padding: 7px 10px 7px 30px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
       border-radius: var(--radius-md);
-      color: #fff;
+      color: #ffffff;
       font-size: 12px;
-      font-family: var(--font-sans);
       outline: none;
-      transition: var(--transition);
+      transition: border-color 0.15s ease;
     }
 
     .search-input:focus {
-      border-color: #6366f1;
+      border-color: var(--border-focus);
     }
 
     .tab-bar {
       display: flex;
-      gap: 3px;
-      background: #0b1120;
-      padding: 3px;
-      border-radius: var(--radius-md);
-      border: var(--border-subtle);
+      gap: 4px;
       overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
     }
 
     .tab-bar::-webkit-scrollbar { display: none; }
 
     .tab-btn {
-      flex: 1;
-      min-width: 46px;
-      padding: 5.5px 4px;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-dim);
+      padding: 5px 10px;
       background: transparent;
-      border: none;
+      border: 1px solid transparent;
       border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-size: 11.5px;
+      font-weight: 600;
       cursor: pointer;
-      text-align: center;
-      transition: var(--transition);
       white-space: nowrap;
+      transition: all 0.15s ease;
     }
 
     .tab-btn:hover {
       color: #ffffff;
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.04);
     }
 
     .tab-btn.active {
-      background: var(--accent);
+      background: var(--bg-surface);
       color: #ffffff;
-      font-weight: 700;
+      border-color: var(--border);
     }
 
     /* Content Body */
     .content-body {
-      padding: 8px 14px 16px;
+      padding: 10px 14px 14px;
     }
 
-    .section-heading {
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #fda4af;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin: 10px 0 6px 2px;
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 10.5px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: #818cf8;
-      margin-top: 12px;
-      margin-bottom: 6px;
-      padding-left: 2px;
+      gap: 5px;
     }
 
-    .section-heading svg {
-      width: 12px;
-      height: 12px;
-    }
-
-    /* Setting Card */
     .setting-card {
-      background: var(--bg-card);
-      border: var(--border-subtle);
-      border-radius: var(--radius-lg);
-      padding: 12px 14px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
       margin-bottom: 8px;
-      transition: var(--transition);
+      transition: border-color 0.15s ease;
     }
 
     .setting-card:hover {
-      background: var(--bg-card-hover);
-      border-color: rgba(99, 102, 241, 0.25);
+      border-color: rgba(255, 255, 255, 0.14);
     }
 
     .card-row {
@@ -273,154 +284,111 @@
       display: flex;
       flex-direction: column;
       gap: 2px;
-      flex: 1;
     }
 
     .card-title {
       font-size: 12.5px;
       font-weight: 600;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      color: #f1f5f9;
     }
 
     .card-desc {
       font-size: 11px;
-      color: var(--text-dim);
-      line-height: 1.4;
+      color: var(--text-muted);
+      line-height: 1.35;
     }
 
+    /* Sub items */
     .card-sub-items {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
       margin-top: 8px;
       padding-top: 8px;
       border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
 
     .sub-item-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 6px 8px;
-      background: #0b1120;
-      border-radius: var(--radius-sm);
-      border: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 11.5px;
+      color: var(--text-muted);
+      padding: 2px 0;
     }
 
-    .sub-title {
-      font-size: 11px;
-      font-weight: 500;
-      color: #cbd5e1;
-    }
-
-    /* Switch */
-    .cyber-switch {
+    /* Form Controls */
+    .modern-switch {
       position: relative;
+      display: inline-block;
       width: 36px;
       height: 20px;
       flex-shrink: 0;
-      cursor: pointer;
     }
 
-    .cyber-switch input {
+    .modern-switch input {
       opacity: 0;
       width: 0;
       height: 0;
-      position: absolute;
     }
 
     .switch-slider {
       position: absolute;
-      inset: 0;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #374151;
       border-radius: 20px;
-      transition: var(--transition);
+      transition: all 0.2s ease;
     }
 
     .switch-slider::before {
-      content: '';
       position: absolute;
-      width: 14px;
+      content: "";
       height: 14px;
-      left: 2px;
-      top: 2px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
       background: #ffffff;
       border-radius: 50%;
-      transition: var(--transition);
+      transition: all 0.2s ease;
     }
 
-    .cyber-switch input:checked + .switch-slider {
-      background: var(--accent);
-      border-color: #6366f1;
+    .modern-switch input:checked + .switch-slider {
+      background: var(--primary);
     }
 
-    .cyber-switch input:checked + .switch-slider::before {
+    .modern-switch input:checked + .switch-slider::before {
       transform: translateX(16px);
-      background: #ffffff;
     }
 
-    /* Inputs */
-    .cyber-select {
+    .modern-select {
       background: var(--bg-input);
-      border: var(--border-subtle);
+      border: 1px solid var(--border);
       border-radius: var(--radius-sm);
-      color: #f8fafc;
-      font-size: 11px;
-      font-family: var(--font-sans);
-      font-weight: 500;
-      padding: 5px 20px 5px 8px;
+      color: #ffffff;
+      font-size: 11.5px;
+      padding: 3px 7px;
       outline: none;
-      cursor: pointer;
-      appearance: none;
-      -webkit-appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(255,255,255,0.5)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 6px center;
-      transition: var(--transition);
     }
 
-    .cyber-select:focus {
-      border-color: #6366f1;
-    }
-
-    .cyber-number-input {
+    .modern-number-input, .modern-text-input {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: #ffffff;
+      font-size: 11.5px;
+      padding: 4px 8px;
+      outline: none;
       width: 65px;
-      background: var(--bg-input);
-      border: var(--border-subtle);
-      border-radius: var(--radius-sm);
-      color: #f8fafc;
-      font-size: 11px;
-      font-family: var(--font-mono);
-      font-weight: 600;
-      padding: 5px 6px;
-      text-align: center;
-      outline: none;
-      transition: var(--transition);
+      text-align: right;
     }
 
-    .cyber-number-input:focus {
-      border-color: #6366f1;
-    }
-
-    .cyber-text-input {
-      width: 140px;
-      background: var(--bg-input);
-      border: var(--border-subtle);
-      border-radius: var(--radius-sm);
-      color: #f8fafc;
-      font-size: 11px;
-      font-family: var(--font-sans);
-      padding: 5px 8px;
-      outline: none;
-      transition: var(--transition);
-    }
-
-    .cyber-text-input:focus {
-      border-color: #6366f1;
+    .modern-text-input {
+      width: 130px;
+      text-align: left;
     }
 
     /* Buttons */
@@ -428,79 +396,85 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      margin-top: 8px;
+      margin-top: 6px;
     }
 
-    .cyber-btn {
-      display: flex;
+    .btn-action {
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      padding: 8px 12px;
-      font-size: 11px;
-      font-weight: 600;
-      font-family: var(--font-sans);
-      border-radius: var(--radius-md);
-      border: var(--border-subtle);
-      background: var(--bg-surface-elevated);
-      color: var(--text-main);
-      cursor: pointer;
-      transition: var(--transition);
+      transition: all 0.15s ease;
+      text-decoration: none;
     }
 
-    .cyber-btn:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(99, 102, 241, 0.35);
-      color: #ffffff;
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
     }
 
-    .cyber-btn-danger {
-      color: var(--rose);
+    .btn-danger {
+      color: #fca5a5;
       border-color: rgba(239, 68, 68, 0.25);
     }
 
-    .cyber-btn-danger:hover {
+    .btn-danger:hover {
       background: var(--rose-subtle);
       border-color: var(--rose);
       color: #ffffff;
     }
 
+    /* Empty state */
+    .empty-state {
+      padding: 30px 16px;
+      text-align: center;
+      color: var(--text-dim);
+    }
+
+    .empty-state svg {
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    .empty-state-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    /* Footer */
     .footer {
-      padding: 10px 14px 8px;
-      border-top: var(--border-subtle);
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
       background: #090d16;
       text-align: center;
-    }
-
-    .footer-text {
-      font-size: 10px;
+      font-size: 10.5px;
       color: var(--text-dim);
-      line-height: 1.4;
-    }
-
-    .footer-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      margin-top: 4px;
-      font-size: 9.5px;
-      color: var(--emerald);
     }
 
     /* Toast */
     .toast {
       position: fixed;
-      bottom: 14px;
+      bottom: 12px;
       left: 50%;
       transform: translateX(-50%) translateY(20px);
       padding: 6px 14px;
-      background: var(--bg-surface-elevated);
-      border: 1px solid var(--border-focus);
+      background: var(--bg-elevated);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 16px;
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 600;
       color: #ffffff;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s ease, transform 0.2s ease;
@@ -512,48 +486,42 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
-
-    @keyframes pulseDot {
-      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
-      70% { box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-    }
   </style>
 </head>
 <body>
-
-  <div class="top-glow-line"></div>
 
   <!-- Header -->
   <div class="header">
     <div class="brand">
       <div class="brand-icon">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
       </div>
-      <div class="brand-text">
-        <span class="brand-title">EWU Buddy</span>
-        <span class="brand-sub">Portal Helper</span>
+      <div>
+        <div class="brand-title">EWU Buddy</div>
+        <div class="brand-sub">Portal Helper</div>
       </div>
     </div>
-    <div class="header-pills">
-      <span class="version-pill">v1.2</span>
-    </div>
+    <span class="version-pill">v1.1.0</span>
   </div>
 
-  <!-- License Status Quick Card -->
-  <div id="licenseStatusCard" style="margin: 10px 14px 0 14px; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <span id="licBadgeDot" style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block; animation: pulseDot 2s infinite;"></span>
-      <div id="licStatusText" style="font-size: 11.5px; font-weight: 700; color: #ffffff;">Checking Licence...</div>
+  <!-- Quick Licence Status -->
+  <div class="license-banner">
+    <div class="license-info">
+      <span class="status-dot" id="licBadgeDot"></span>
+      <span class="status-text" id="licStatusText">Checking Licence...</span>
     </div>
-    <button id="btnManageLicense" style="background: var(--accent); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #ffffff; font-size: 11px; font-weight: 600; padding: 5px 12px; cursor: pointer; transition: background 0.15s ease;">Manage</button>
+    <button class="btn-manage" id="btnManageLicense">Manage</button>
   </div>
 
-  <!-- Quick Filter & Category Navigation -->
-  <div class="search-nav-container">
+  <!-- Quick Filter & Tabs -->
+  <div class="nav-container">
     <div class="search-input-wrap">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="settingsSearch" class="search-input" placeholder="Search settings..." autocomplete="off" />
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" id="settingsSearch" class="search-input" placeholder="Search settings..." autocomplete="off" spellcheck="false" />
     </div>
     <div class="tab-bar">
       <button type="button" class="tab-btn active" data-tab="general">General</button>
@@ -562,42 +530,37 @@
       <button type="button" class="tab-btn" data-tab="routine">Routine</button>
       <button type="button" class="tab-btn" data-tab="login">Login</button>
       <button type="button" class="tab-btn" data-tab="license">Licence</button>
-      <button type="button" class="tab-btn" data-tab="system">System</button>
+      <button type="button" class="tab-btn" data-tab="system">Data</button>
     </div>
   </div>
 
-  <!-- Settings Groups Container -->
+  <!-- Content Body -->
   <div class="content-body" id="contentBody">
 
-    <!-- ==================== GENERAL SETTINGS ==================== -->
+    <!-- GENERAL SETTINGS -->
     <div class="setting-group" data-group="general">
-      <div class="section-heading">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        <span>Core Controls</span>
-      </div>
+      <div class="section-title">Core Controls</div>
 
-      <!-- Master Switch -->
       <div class="setting-card">
         <div class="card-row">
           <div class="card-info">
             <span class="card-title">Enable Portal Helper</span>
             <span class="card-desc">Master switch to toggle all extension modules</span>
           </div>
-          <label class="cyber-switch">
+          <label class="modern-switch">
             <input type="checkbox" id="toggleEnabled" />
             <span class="switch-slider"></span>
           </label>
         </div>
       </div>
 
-      <!-- Toast Notifications -->
       <div class="setting-card">
         <div class="card-row">
           <div class="card-info">
             <span class="card-title">Toast Notifications</span>
             <span class="card-desc">Show non-intrusive status popups on portal</span>
           </div>
-          <label class="cyber-switch">
+          <label class="modern-switch">
             <input type="checkbox" id="toggleToast" />
             <span class="switch-slider"></span>
           </label>
@@ -605,20 +568,17 @@
       </div>
     </div>
 
-    <!-- ==================== ADVISING ASSISTANT ==================== -->
+    <!-- ADVISING -->
     <div class="setting-group" data-group="advising" style="display:none;">
-      <div class="section-heading">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <span>Offline Course Planner</span>
-      </div>
+      <div class="section-title">Offline Course Planner</div>
 
       <div class="setting-card">
         <div class="card-row">
           <div class="card-info">
             <span class="card-title">Offline Advising Planner</span>
-            <span class="card-desc">Simulate course combinations &amp; timetable</span>
+            <span class="card-desc">Simulate course combinations and timetable</span>
           </div>
-          <label class="cyber-switch">
+          <label class="modern-switch">
             <input type="checkbox" id="toggleAdvisingOffline" />
             <span class="switch-slider"></span>
           </label>
@@ -626,38 +586,35 @@
 
         <div class="card-sub-items" id="subAdvisingOffline">
           <div class="sub-item-row">
-            <span class="sub-title">Recommended Courses Tab</span>
-            <label class="cyber-switch">
+            <span>Recommended Courses Tab</span>
+            <label class="modern-switch">
               <input type="checkbox" id="toggleOfflineRecommended" />
               <span class="switch-slider"></span>
             </label>
           </div>
           <div class="sub-item-row">
-            <span class="sub-title">Course Planner Tab</span>
-            <label class="cyber-switch">
+            <span>Course Planner Tab</span>
+            <label class="modern-switch">
               <input type="checkbox" id="toggleOfflinePlanner" />
               <span class="switch-slider"></span>
             </label>
           </div>
           <div class="sub-item-row">
-            <span class="sub-title">Max Allowed Credits</span>
-            <input type="number" id="inputPlannerCreditLimit" class="cyber-number-input" min="1" max="30" step="0.5" value="15" />
+            <span>Max Allowed Credits</span>
+            <input type="number" id="inputPlannerCreditLimit" class="modern-number-input" min="1" max="30" step="0.5" value="15" />
           </div>
         </div>
       </div>
 
-      <div class="section-heading">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-        <span>Live Advising Portal Enhancer</span>
-      </div>
+      <div class="section-title">Live Advising Portal Enhancer</div>
 
       <div class="setting-card">
         <div class="card-row">
           <div class="card-info">
             <span class="card-title">Advising Table Enhancements</span>
-            <span class="card-desc">10-column layout, seats heatmap &amp; search</span>
+            <span class="card-desc">10-column layout, seat heatmap &amp; search</span>
           </div>
-          <label class="cyber-switch">
+          <label class="modern-switch">
             <input type="checkbox" id="toggleAdvisingEnhancer" />
             <span class="switch-slider"></span>
           </label>
@@ -665,15 +622,15 @@
 
         <div class="card-sub-items" id="subAdvisingOnline">
           <div class="sub-item-row">
-            <span class="sub-title">Seat Occupancy Heatmap</span>
-            <label class="cyber-switch">
+            <span>Seat Occupancy Heatmap</span>
+            <label class="modern-switch">
               <input type="checkbox" id="toggleAdvColorLeft" />
               <span class="switch-slider"></span>
             </label>
           </div>
           <div class="sub-item-row">
-            <span class="sub-title">Quick Search Filter Bar</span>
-            <label class="cyber-switch">
+            <span>Quick Search Filter Bar</span>
+            <label class="modern-switch">
               <input type="checkbox" id="toggleAdvSearchBox" />
               <span class="switch-slider"></span>
             </label>
@@ -682,12 +639,9 @@
       </div>
     </div>
 
-    <!-- ==================== OFFERED COURSES ==================== -->
+    <!-- OFFERED COURSES -->
     <div class="setting-group" data-group="courses" style="display:none;">
-      <div class="section-heading">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-        <span>Offered Courses Catalog</span>
-      </div>
+      <div class="section-title">Offered Courses Catalog</div>
 
       <div class="setting-card">
         <div class="card-row">
@@ -695,7 +649,7 @@
             <span class="card-title">Offered Courses Enhancer</span>
             <span class="card-desc">Sticky table headers, search &amp; seat heatmap</span>
           </div>
-          <label class="cyber-switch">
+          <label class="modern-switch">
             <input type="checkbox" id="toggleOfferedCourses" />
             <span class="switch-slider"></span>
           </label>
@@ -703,40 +657,37 @@
 
         <div class="card-sub-items" id="subOfferedCourses">
           <div class="sub-item-row">
-            <span class="sub-title">Sticky Table Header</span>
-            <label class="cyber-switch">
+            <span>Sticky Table Header</span>
+            <label class="modern-switch">
               <input type="checkbox" id="toggleOCStickyHeader" />
               <span class="switch-slider"></span>
             </label>
           </div>
           <div class="sub-item-row">
-            <span class="sub-title">Seat Occupancy Heatmap</span>
-            <label class="cyber-switch">
+            <span>Seat Occupancy Heatmap</span>
+            <label class="modern-switch">
               <input type="checkbox" id="toggleOCColorLeft" />
               <span class="switch-slider"></span>
             </label>
           </div>
           <div class="sub-item-row">
-            <span class="sub-title">Instant Search Filter Box</span>
-            <label class="cyber-switch">
+            <span>Instant Search Filter Box</span>
+            <label class="modern-switch">
               <input type="checkbox" id="toggleOCSearchBox" />
               <span class="switch-slider"></span>
             </label>
           </div>
           <div class="sub-item-row">
-            <span class="sub-title">Search Placeholder</span>
-            <input type="text" id="inputOCSearchPlaceholder" class="cyber-text-input" placeholder="Search..." />
+            <span>Search Placeholder</span>
+            <input type="text" id="inputOCSearchPlaceholder" class="modern-text-input" placeholder="Search..." />
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ==================== ROUTINE & SCHEDULE ==================== -->
+    <!-- ROUTINE & SCHEDULE -->
     <div class="setting-group" data-group="routine" style="display:none;">
-      <div class="section-heading">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <span>Routine Generator &amp; Calendar</span>
-      </div>
+      <div class="section-title">Routine Generator &amp; Calendar</div>
 
       <div class="setting-card">
         <div class="card-row">
@@ -744,7 +695,7 @@
             <span class="card-title">Routine Generator</span>
             <span class="card-desc">Build weekly timetable grid, PDF &amp; Calendar (.ics)</span>
           </div>
-          <label class="cyber-switch">
+          <label class="modern-switch">
             <input type="checkbox" id="toggleRoutine" />
             <span class="switch-slider"></span>
           </label>
@@ -752,30 +703,30 @@
 
         <div class="card-sub-items" id="subRoutine">
           <div class="sub-item-row">
-            <span class="sub-title">Compact Table Spacing</span>
-            <label class="cyber-switch">
+            <span>Compact Table Spacing</span>
+            <label class="modern-switch">
               <input type="checkbox" id="toggleCompact" />
               <span class="switch-slider"></span>
             </label>
           </div>
           <div class="sub-item-row">
-            <span class="sub-title">Display University Logo</span>
-            <label class="cyber-switch">
+            <span>Display University Logo</span>
+            <label class="modern-switch">
               <input type="checkbox" id="toggleShowLogo" />
               <span class="switch-slider"></span>
             </label>
           </div>
           <div class="sub-item-row">
-            <span class="sub-title">Theme Palette Style</span>
-            <select id="selectBlueIntensity" class="cyber-select">
+            <span>Theme Palette Style</span>
+            <select id="selectBlueIntensity" class="modern-select">
               <option value="light">Subtle Light</option>
               <option value="medium" selected>Classic Blue</option>
               <option value="strong">Deep Vibrant</option>
             </select>
           </div>
           <div class="sub-item-row">
-            <span class="sub-title">Export Render Quality</span>
-            <select id="selectExportQuality" class="cyber-select">
+            <span>Export Render Quality</span>
+            <select id="selectExportQuality" class="modern-select">
               <option value="standard" selected>Standard (2x)</option>
               <option value="high">Ultra-HD (3x)</option>
             </select>
@@ -783,10 +734,7 @@
         </div>
       </div>
 
-      <div class="section-heading">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        <span>Schedule Table Enhancer</span>
-      </div>
+      <div class="section-title">Schedule Table Enhancer</div>
 
       <div class="setting-card">
         <div class="card-row">
@@ -794,7 +742,7 @@
             <span class="card-title">Schedule Table Links</span>
             <span class="card-desc">Direct faculty email links &amp; credit summaries</span>
           </div>
-          <label class="cyber-switch">
+          <label class="modern-switch">
             <input type="checkbox" id="toggleScheduleEnhancer" />
             <span class="switch-slider"></span>
           </label>
@@ -802,15 +750,15 @@
 
         <div class="card-sub-items" id="subScheduleEnhancer">
           <div class="sub-item-row">
-            <span class="sub-title">Faculty Mailto Links</span>
-            <label class="cyber-switch">
+            <span>Faculty Mailto Links</span>
+            <label class="modern-switch">
               <input type="checkbox" id="toggleScheduleEmailLink" />
               <span class="switch-slider"></span>
             </label>
           </div>
           <div class="sub-item-row">
-            <span class="sub-title">Enrolled Credits Card</span>
-            <label class="cyber-switch">
+            <span>Enrolled Credits Card</span>
+            <label class="modern-switch">
               <input type="checkbox" id="toggleScheduleSummaryCard" />
               <span class="switch-slider"></span>
             </label>
@@ -819,12 +767,9 @@
       </div>
     </div>
 
-    <!-- ==================== LOGIN HELPER ==================== -->
+    <!-- LOGIN HELPER -->
     <div class="setting-group" data-group="login" style="display:none;">
-      <div class="section-heading">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        <span>Captcha Solver</span>
-      </div>
+      <div class="section-title">Captcha Solver</div>
 
       <div class="setting-card">
         <div class="card-row">
@@ -832,7 +777,7 @@
             <span class="card-title">Login Captcha Solver</span>
             <span class="card-desc">Auto-calculates the login security captcha</span>
           </div>
-          <label class="cyber-switch">
+          <label class="modern-switch">
             <input type="checkbox" id="toggleLoginHelper" />
             <span class="switch-slider"></span>
           </label>
@@ -840,19 +785,19 @@
 
         <div class="card-sub-items" id="subLogin">
           <div class="sub-item-row">
-            <span class="sub-title">Auto-Fill on Page Load</span>
-            <label class="cyber-switch">
+            <span>Auto-Fill on Page Load</span>
+            <label class="modern-switch">
               <input type="checkbox" id="toggleAutoFill" />
               <span class="switch-slider"></span>
             </label>
           </div>
           <div class="sub-item-row">
-            <span class="sub-title">Fill Delay (ms)</span>
-            <input type="number" id="inputDelay" class="cyber-number-input" min="0" max="3000" step="50" value="300" />
+            <span>Fill Delay (ms)</span>
+            <input type="number" id="inputDelay" class="modern-number-input" min="0" max="3000" step="50" value="300" />
           </div>
           <div class="sub-item-row">
-            <span class="sub-title">Verbose Debug Logging</span>
-            <label class="cyber-switch">
+            <span>Debug Logging</span>
+            <label class="modern-switch">
               <input type="checkbox" id="toggleDebug" />
               <span class="switch-slider"></span>
             </label>
@@ -861,128 +806,115 @@
       </div>
     </div>
 
-    <!-- ==================== LICENCE MANAGEMENT ==================== -->
+    <!-- LICENCE MANAGEMENT -->
     <div class="setting-group" data-group="license" style="display:none;">
-      <div class="section-heading">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <span>Licence Status &amp; Details</span>
-      </div>
+      <div class="section-title">Licence Details</div>
 
       <div class="setting-card">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
           <div style="display:flex; align-items:center; gap:8px;">
-            <span id="tabLicDot" style="width:8px; height:8px; border-radius:50%; background:#10b981; display:inline-block;"></span>
+            <span id="tabLicDot" class="status-dot"></span>
             <strong id="tabLicStatusText" style="font-size:12.5px; color:#ffffff;">Checking Status...</strong>
           </div>
-          <span id="tabLicTypeBadge" style="font-size:10px; font-weight:700; color:#818cf8; background:var(--accent-subtle); border:1px solid rgba(99,102,241,0.3); padding:2px 7px; border-radius:6px;">ACTIVE</span>
+          <span id="tabLicTypeBadge" class="version-pill" style="color:var(--emerald);">ACTIVE</span>
         </div>
-        <div class="card-sub-items" style="display:flex; flex-direction:column; gap:6px; padding-top:2px;">
+        <div class="card-sub-items" style="display:flex; flex-direction:column; gap:6px; padding-top:4px;">
           <div class="sub-item-row">
-            <span class="sub-title">Licence Prefix</span>
-            <span id="tabLicPrefix" style="font-family:var(--font-mono); font-weight:700; color:#818cf8;">XXXX-...</span>
+            <span>Licence Prefix</span>
+            <span id="tabLicPrefix" style="font-family:var(--font-mono); font-weight:700; color:#fda4af;">XXXX-...</span>
           </div>
           <div class="sub-item-row">
-            <span class="sub-title">Access Duration</span>
+            <span>Access Duration</span>
             <span id="tabLicExpiry" style="font-weight:600; color:#cbd5e1;">Lifetime Access</span>
           </div>
           <div class="sub-item-row">
-            <span class="sub-title">Device Authorization</span>
+            <span>Device Authorization</span>
             <span style="font-weight:600; color:var(--emerald);">Authorized on this PC</span>
           </div>
         </div>
       </div>
 
-      <div class="section-heading">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L14 9m-1.5 1.5L10 13l-4 4-4-4 4-4 2.5-2.5m1.5-1.5L16.5 3.5 18 2z"/><circle cx="7.5" cy="16.5" r="1.5"/></svg>
-        <span>Manage Licence</span>
-      </div>
-
+      <div class="section-title">Manage Licence</div>
       <div class="btn-grid">
-        <button type="button" class="cyber-btn" id="btnChangeLicenseKey">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L14 9m-1.5 1.5L10 13l-4 4-4-4 4-4 2.5-2.5m1.5-1.5L16.5 3.5 18 2z"/></svg>
+        <button type="button" class="btn-action" id="btnChangeLicenseKey">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L14 9m-1.5 1.5L10 13l-4 4-4-4 4-4 2.5-2.5m1.5-1.5L16.5 3.5 18 2z"/></svg>
           Change Key
         </button>
-        <button type="button" class="cyber-btn" id="btnRefreshLicense">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        <button type="button" class="btn-action" id="btnRefreshLicense">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
           Sync Status
         </button>
       </div>
 
-      <div class="section-heading" style="margin-top:14px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <span>Support &amp; Inquiries</span>
-      </div>
-
+      <div class="section-title" style="margin-top:14px;">Support &amp; Inquiries</div>
       <div class="setting-card">
-        <div style="font-size:11.5px; color:var(--text-muted); line-height:1.5; margin-bottom:10px;">
-          For licence inquiries, key transfers, or bug reports, contact the developer directly.
+        <div style="font-size:11.5px; color:var(--text-muted); line-height:1.45; margin-bottom:9px;">
+          For licence assistance, inquiries, or bug reports, contact the developer directly.
         </div>
-        <button type="button" class="cyber-btn" id="btnContactSupport" style="width:100%; justify-content:center; background:var(--accent-subtle); border-color:rgba(99,102,241,0.35); color:#818cf8;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <button type="button" class="btn-action" id="btnContactSupport" style="width:100%;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Contact Developer (@AftabKabir)
         </button>
       </div>
     </div>
 
-    <!-- ==================== SYSTEM & PRESETS ==================== -->
+    <!-- DATA MANAGEMENT -->
     <div class="setting-group" data-group="system" style="display:none;">
-      <div class="section-heading">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-        <span>UI Customization</span>
-      </div>
+      <div class="section-title">UI Customization</div>
 
       <div class="setting-card">
         <div class="card-row">
           <div class="card-info">
             <span class="card-title">Smooth UI Animations</span>
-            <span class="card-desc">Enable subtle transition effects and animations</span>
+            <span class="card-desc">Enable transition effects on portal elements</span>
           </div>
-          <label class="cyber-switch">
+          <label class="modern-switch">
             <input type="checkbox" id="toggleAnimations" />
             <span class="switch-slider"></span>
           </label>
         </div>
       </div>
 
-      <div class="section-heading">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span>Data &amp; Presets</span>
-      </div>
+      <div class="section-title">Data &amp; Presets</div>
 
       <div class="btn-grid">
-        <button type="button" class="cyber-btn" id="btnExport">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <button type="button" class="btn-action" id="btnExport">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           Export JSON
         </button>
-        <button type="button" class="cyber-btn" id="btnImport">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <button type="button" class="btn-action" id="btnImport">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Import JSON
         </button>
       </div>
+
       <div style="margin-top: 8px;">
-        <button type="button" class="cyber-btn cyber-btn-danger" id="btnReset" style="width: 100%;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-          Reset to Factory Defaults
+        <button type="button" class="btn-action btn-danger" id="btnReset" style="width: 100%;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          Reset to Defaults
         </button>
       </div>
 
       <input type="file" id="fileImport" accept=".json" style="display:none;" />
     </div>
 
+    <!-- Empty Search State -->
+    <div id="emptySearchState" class="empty-state" style="display:none;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <div class="empty-state-text">No settings found matching your search</div>
+      <button type="button" class="btn-action" id="btnClearSearch" style="padding: 4px 12px; font-size: 11px;">Clear Search</button>
+    </div>
+
   </div>
 
   <!-- Footer -->
   <div class="footer">
-    <div class="footer-text">
-      East West University Student Portal Helper
-    </div>
-    <div class="footer-badge">
-      <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
-      <span>Live Sync Active</span>
-    </div>
+    East West University Student Portal Helper
   </div>
 
-  <!-- Toast Element -->
+  <!-- Toast -->
   <div class="toast" id="toast"></div>
 
   <script src="popup.js"></script>

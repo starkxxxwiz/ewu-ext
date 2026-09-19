@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "EWU Portal Helper",
-  "version": "1.1",
-  "description": "Professional helper extension for East West University Student Portal. Auto-solves login captcha, generates class routines, and enhances offered courses table.",
+  "name": "EWU Buddy — Portal Helper",
+  "version": "1.1.0",
+  "description": "Professional helper extension for East West University Student Portal. Auto-solves login captcha, generates class routines, and enhances advising and offered courses tables.",
 
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "alarms"
   ],
 
   "host_permissions": [

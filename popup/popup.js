@@ -1,5 +1,5 @@
 /* =============================================================
-   EWU Buddy - Cyber Command Settings Popup Script
+   EWU Buddy - Settings Popup Script
    ============================================================= */
 
 (function () {
@@ -9,8 +9,7 @@
      CONSTANTS & DEFAULTS
      ----------------------------------------------------------- */
   const STORAGE_KEY = 'ewu_portal_helper_settings';
-  const WORKER_URL = 'https://ewu-helper-license-worker.tonystarkxxx31.workers.dev';
-  const LOG_PREFIX = '[EWU Cyber Settings]';
+  const LOG_PREFIX = '[EWU Settings]';
 
   const DEFAULT_SETTINGS = {
     enabled: true,
@@ -54,6 +53,8 @@
     tabBtns: document.querySelectorAll('.tab-btn'),
     settingGroups: document.querySelectorAll('.setting-group'),
     settingCards: document.querySelectorAll('.setting-card'),
+    emptySearchState: document.getElementById('emptySearchState'),
+    btnClearSearch: document.getElementById('btnClearSearch'),
 
     // Master / General
     toggleEnabled: document.getElementById('toggleEnabled'),
@@ -110,7 +111,6 @@
     // License Badge & Button
     licBadgeDot: document.getElementById('licBadgeDot'),
     licStatusText: document.getElementById('licStatusText'),
-    licSubText: document.getElementById('licSubText'),
     btnManageLicense: document.getElementById('btnManageLicense'),
 
     // Dedicated Licence Tab Elements
@@ -133,6 +133,7 @@
   function log(...args) { console.log(LOG_PREFIX, ...args); }
 
   function deepMerge(target, source) {
+    if (!source || typeof source !== 'object') return target;
     for (const key of Object.keys(source)) {
       if (
         source[key] && typeof source[key] === 'object' && !Array.isArray(source[key]) &&
@@ -147,7 +148,7 @@
   }
 
   function showToast(message, duration) {
-    duration = duration || 2000;
+    duration = duration || 2200;
     if (!els.toast) return;
     els.toast.textContent = message;
     els.toast.classList.add('show');
@@ -173,11 +174,15 @@
   function loadSettings() {
     return new Promise((resolve) => {
       if (typeof chrome === 'undefined' || !chrome.storage) {
+        const local = localStorage.getItem(STORAGE_KEY);
+        if (local) {
+          try { resolve(deepMerge(structuredClone(DEFAULT_SETTINGS), JSON.parse(local))); return; } catch (_) {}
+        }
         resolve(structuredClone(DEFAULT_SETTINGS));
         return;
       }
       chrome.storage.local.get(STORAGE_KEY, (result) => {
-        const stored = result[STORAGE_KEY] || {};
+        const stored = result && result[STORAGE_KEY] ? result[STORAGE_KEY] : {};
         resolve(deepMerge(structuredClone(DEFAULT_SETTINGS), stored));
       });
     });
@@ -186,6 +191,7 @@
   function saveSettings(settings) {
     return new Promise((resolve) => {
       if (typeof chrome === 'undefined' || !chrome.storage) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
         resolve();
         return;
       }
@@ -196,6 +202,7 @@
   function broadcastSettings(settings) {
     if (typeof chrome === 'undefined' || !chrome.tabs) return;
     chrome.tabs.query({ url: 'https://portal.ewubd.edu/*' }, (tabs) => {
+      if (!tabs) return;
       for (const tab of tabs) {
         chrome.tabs.sendMessage(tab.id, {
           type: 'EWU_SETTINGS_UPDATED',
@@ -267,7 +274,6 @@
      BIND EVENTS
      ----------------------------------------------------------- */
   function bindEvents() {
-    // Tab Filter Navigation
     let currentTab = 'general';
 
     function applyTabFilter(tab) {
@@ -286,6 +292,7 @@
       });
 
       els.settingCards.forEach(c => { c.style.display = 'block'; });
+      if (els.emptySearchState) els.emptySearchState.style.display = 'none';
     }
 
     // Header Manage Licence Button -> Navigate to Licence tab
@@ -341,15 +348,29 @@
           return;
         }
 
+        let totalVisibleCards = 0;
         els.settingCards.forEach((card) => {
           const text = card.textContent.toLowerCase();
-          card.style.display = text.includes(query) ? 'block' : 'none';
+          const match = text.includes(query);
+          card.style.display = match ? 'block' : 'none';
+          if (match) totalVisibleCards++;
         });
 
         els.settingGroups.forEach((grp) => {
           const hasVisible = Array.from(grp.querySelectorAll('.setting-card')).some(c => c.style.display !== 'none');
           grp.style.display = hasVisible ? 'block' : 'none';
         });
+
+        if (els.emptySearchState) {
+          els.emptySearchState.style.display = totalVisibleCards === 0 ? 'block' : 'none';
+        }
+      });
+    }
+
+    if (els.btnClearSearch) {
+      els.btnClearSearch.addEventListener('click', () => {
+        if (els.settingsSearch) els.settingsSearch.value = '';
+        applyTabFilter(currentTab);
       });
     }
 
@@ -472,7 +493,7 @@
     }
     if (els.selectBlueIntensity) {
       els.selectBlueIntensity.addEventListener('change', () => {
-        updateSetting(s => { s.modules.routineBlueIntensity = els.selectBlueIntensity.value; }, 'Theme intensity saved');
+        updateSetting(s => { s.modules.routineBlueIntensity = els.selectBlueIntensity.value; }, 'Theme palette saved');
       });
     }
     if (els.selectExportQuality) {
@@ -583,14 +604,14 @@
   }
 
   /* -----------------------------------------------------------
-     LICENSING & REMOTE STATUS ENFORCEMENT (PRIORITY SYSTEM)
+     LICENSING & REMOTE STATUS ENFORCEMENT
      ----------------------------------------------------------- */
   function isLicenseAuthorizedLocally(res) {
     if (!res || !res.ewu_license_token) return false;
     if (res.ewu_license_status === 'inactive' || res.ewu_license_status === 'revoked' || res.ewu_license_status === 'expired') {
       return false;
     }
-    var licExp = res.ewu_license_expiry;
+    const licExp = res.ewu_license_expiry;
     if (licExp && typeof licExp === 'number' && licExp > 0) {
       if (Date.now() > licExp) return false;
     }
@@ -604,7 +625,6 @@
       'ewu_license_token',
       'ewu_license_status',
       'ewu_license_expiry',
-      'ewu_license_exp',
       'ewu_license_prefix',
       'ewu_system_shutdown',
       'ewu_system_update',
@@ -614,7 +634,7 @@
       const update = res.ewu_system_update || { isMandatory: false, minVersion: '1.1.0' };
       const notice = res.ewu_system_notice || { enabled: false };
 
-      const container = document.querySelector('.search-nav-container');
+      const navContainer = document.querySelector('.nav-container');
       const content = document.querySelector('.content-body');
 
       // Clear any prior lock overlays or notice banners
@@ -625,70 +645,61 @@
       const oldUpNotice = document.getElementById('ewu-popup-update-banner');
       if (oldUpNotice) oldUpNotice.remove();
 
-      if (container) { container.style.filter = ''; container.style.pointerEvents = ''; }
+      if (navContainer) { navContainer.style.filter = ''; navContainer.style.pointerEvents = ''; }
       if (content) { content.style.filter = ''; content.style.pointerEvents = ''; }
 
       const manifestVer = (chrome.runtime.getManifest && chrome.runtime.getManifest().version) || '1.1.0';
       const isOutdated = isVersionOutdated(manifestVer, update.minVersion);
       const isUpdateAvailable = update.latestVersion && isVersionOutdated(manifestVer, update.latestVersion);
 
-      // ---------------------------------------------------------
-      // PRIORITY 1: Emergency Remote Killswitch / Shutdown
-      // ---------------------------------------------------------
+      // PRIORITY 1: Emergency Remote Killswitch
       if (shutdown.enabled) {
         if (els.licBadgeDot) {
-          els.licBadgeDot.style.background = '#f43f5e';
-          els.licBadgeDot.style.boxShadow = '0 0 8px rgba(244,63,94,0.7)';
+          els.licBadgeDot.className = 'status-dot inactive';
         }
         if (els.licStatusText) els.licStatusText.textContent = 'System Shutdown';
-        if (els.licSubText) els.licSubText.textContent = 'Disabled by administrator';
 
-        if (container) { container.style.filter = 'blur(6px)'; container.style.pointerEvents = 'none'; }
-        if (content) { content.style.filter = 'blur(6px)'; content.style.pointerEvents = 'none'; }
+        if (navContainer) { navContainer.style.filter = 'blur(5px)'; navContainer.style.pointerEvents = 'none'; }
+        if (content) { content.style.filter = 'blur(5px)'; content.style.pointerEvents = 'none'; }
 
         const overlay = document.createElement('div');
         overlay.id = 'ewu-popup-lock-overlay';
-        overlay.style.cssText = 'position:absolute; top:120px; left:0; width:100%; height:calc(100% - 120px); background:rgba(7,10,19,0.88); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); box-sizing:border-box; text-align:center;';
+        overlay.style.cssText = 'position:absolute; top:110px; left:0; width:100%; height:calc(100% - 110px); background:rgba(11,15,25,0.92); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; box-sizing:border-box; text-align:center;';
         overlay.innerHTML = `
-          <div style="width:100%; max-width:320px; background:rgba(15,23,42,0.95); border:1px solid rgba(244,63,94,0.4); border-radius:14px; padding:24px 20px; box-shadow:0 12px 32px rgba(0,0,0,0.8), 0 0 20px rgba(244,63,94,0.2); box-sizing:border-box;">
-            <div style="width:48px; height:48px; border-radius:12px; background:rgba(244,63,94,0.15); border:1px solid rgba(244,63,94,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; color:#f43f5e;">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div style="width:100%; max-width:320px; background:#111827; border:1px solid rgba(239,68,68,0.3); border-radius:12px; padding:20px 16px; box-sizing:border-box;">
+            <div style="width:40px; height:40px; border-radius:10px; background:rgba(239,68,68,0.15); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; color:#ef4444;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </div>
-            <h3 style="color:#fff; font-size:15px; font-weight:800; margin-bottom:8px;">${shutdown.title || 'System Temporarily Offline'}</h3>
-            <p style="color:#cbd5e1; font-size:12px; line-height:1.6; margin-bottom:16px;">${shutdown.message || 'EWU Portal Helper is currently disabled by administrator.'}</p>
-            <span style="display:inline-block; font-size:11px; font-weight:600; color:#f43f5e; background:rgba(244,63,94,0.1); border:1px solid rgba(244,63,94,0.25); padding:4px 12px; border-radius:12px;">All Features Locked</span>
+            <h3 style="color:#fff; font-size:14px; font-weight:700; margin-bottom:6px;">${shutdown.title || 'System Temporarily Offline'}</h3>
+            <p style="color:#9ca3af; font-size:11.5px; line-height:1.5; margin-bottom:12px;">${shutdown.message || 'EWU Portal Helper is currently disabled by administrator.'}</p>
+            <span style="font-size:10.5px; font-weight:600; color:#ef4444; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); padding:3px 10px; border-radius:10px;">Modules Locked</span>
           </div>
         `;
         document.body.appendChild(overlay);
         return;
       }
 
-      // ---------------------------------------------------------
-      // PRIORITY 2: Mandatory Extension Update Enforced
-      // ---------------------------------------------------------
+      // PRIORITY 2: Mandatory Extension Update
       if (update.isMandatory && isOutdated) {
         if (els.licBadgeDot) {
-          els.licBadgeDot.style.background = '#f59e0b';
-          els.licBadgeDot.style.boxShadow = '0 0 8px rgba(245,158,11,0.7)';
+          els.licBadgeDot.className = 'status-dot inactive';
         }
         if (els.licStatusText) els.licStatusText.textContent = 'Update Required';
-        if (els.licSubText) els.licSubText.textContent = `v${manifestVer} -> v${update.latestVersion || update.minVersion}`;
 
-        if (container) { container.style.filter = 'blur(6px)'; container.style.pointerEvents = 'none'; }
-        if (content) { content.style.filter = 'blur(6px)'; content.style.pointerEvents = 'none'; }
+        if (navContainer) { navContainer.style.filter = 'blur(5px)'; navContainer.style.pointerEvents = 'none'; }
+        if (content) { content.style.filter = 'blur(5px)'; content.style.pointerEvents = 'none'; }
 
         const overlay = document.createElement('div');
         overlay.id = 'ewu-popup-lock-overlay';
-        overlay.style.cssText = 'position:absolute; top:120px; left:0; width:100%; height:calc(100% - 120px); background:rgba(7,10,19,0.88); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); box-sizing:border-box; text-align:center;';
+        overlay.style.cssText = 'position:absolute; top:110px; left:0; width:100%; height:calc(100% - 110px); background:rgba(11,15,25,0.92); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; box-sizing:border-box; text-align:center;';
         overlay.innerHTML = `
-          <div style="width:100%; max-width:320px; background:rgba(15,23,42,0.95); border:1px solid rgba(99,102,241,0.4); border-radius:14px; padding:24px 20px; box-shadow:0 12px 32px rgba(0,0,0,0.8), 0 0 20px rgba(99,102,241,0.25); box-sizing:border-box;">
-            <div style="width:48px; height:48px; border-radius:12px; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; color:#818cf8;">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+          <div style="width:100%; max-width:320px; background:#111827; border:1px solid rgba(217,78,52,0.3); border-radius:12px; padding:20px 16px; box-sizing:border-box;">
+            <div style="width:40px; height:40px; border-radius:10px; background:rgba(217,78,52,0.15); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; color:#fda4af;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
             </div>
-            <h3 style="color:#fff; font-size:15px; font-weight:800; margin-bottom:6px;">${update.title || 'Update Required'}</h3>
-            <p style="color:#cbd5e1; font-size:12px; line-height:1.5; margin-bottom:14px;">A required update is available (v${update.latestVersion || update.minVersion}). Please update to continue using EWU Buddy.</p>
-            <button id="btnPopupUpdateAction" style="width:100%; padding:11px; border-radius:10px; background:linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; border:none; font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <h3 style="color:#fff; font-size:14px; font-weight:700; margin-bottom:6px;">${update.title || 'Update Required'}</h3>
+            <p style="color:#9ca3af; font-size:11.5px; line-height:1.5; margin-bottom:14px;">A required update is available (v${update.latestVersion || update.minVersion}). Please update to continue using EWU Buddy.</p>
+            <button id="btnPopupUpdateAction" class="btn-action" style="width:100%; background:var(--primary); border:none; justify-content:center;">
               Download Update Now
             </button>
           </div>
@@ -707,43 +718,36 @@
         return;
       }
 
-      // ---------------------------------------------------------
       // PRIORITY 3: License Authorization Check
-      // ---------------------------------------------------------
       const hasValidLicense = isLicenseAuthorizedLocally(res);
 
       if (!hasValidLicense) {
         if (els.licBadgeDot) {
-          els.licBadgeDot.style.background = '#f43f5e';
-          els.licBadgeDot.style.boxShadow = '0 0 8px rgba(244, 63, 94, 0.7)';
+          els.licBadgeDot.className = 'status-dot inactive';
         }
         if (els.licStatusText) els.licStatusText.textContent = 'Licence Inactive';
-        if (els.licSubText) els.licSubText.style.display = 'none';
 
-        // Update dedicated Licence tab fields
-        if (els.tabLicDot) els.tabLicDot.style.background = '#f43f5e';
+        if (els.tabLicDot) els.tabLicDot.className = 'status-dot inactive';
         if (els.tabLicStatusText) els.tabLicStatusText.textContent = 'Licence Inactive';
-        if (els.tabLicTypeBadge) { els.tabLicTypeBadge.textContent = 'INACTIVE'; els.tabLicTypeBadge.style.color = '#f43f5e'; els.tabLicTypeBadge.style.borderColor = 'rgba(244,63,94,0.4)'; }
+        if (els.tabLicTypeBadge) { els.tabLicTypeBadge.textContent = 'INACTIVE'; els.tabLicTypeBadge.style.color = 'var(--rose)'; }
         if (els.tabLicPrefix) els.tabLicPrefix.textContent = 'None';
         if (els.tabLicExpiry) els.tabLicExpiry.textContent = 'Activation Required';
 
-        // Blur settings and show centered activation warning overlay
-        if (container) { container.style.filter = 'blur(7px)'; container.style.pointerEvents = 'none'; }
-        if (content) { content.style.filter = 'blur(7px)'; content.style.pointerEvents = 'none'; }
+        if (navContainer) { navContainer.style.filter = 'blur(5px)'; navContainer.style.pointerEvents = 'none'; }
+        if (content) { content.style.filter = 'blur(5px)'; content.style.pointerEvents = 'none'; }
 
         const overlay = document.createElement('div');
         overlay.id = 'ewu-popup-lock-overlay';
-        overlay.style.cssText = 'position:absolute; top:124px; left:0; width:100%; height:calc(100% - 124px); background:rgba(6,9,19,0.85); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:18px; box-sizing:border-box; text-align:center; animation: fadeInOverlay 0.25s ease;';
+        overlay.style.cssText = 'position:absolute; top:110px; left:0; width:100%; height:calc(100% - 110px); background:rgba(11,15,25,0.92); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:18px; box-sizing:border-box; text-align:center;';
         overlay.innerHTML = `
-          <div style="width:100%; max-width:320px; background:rgba(13,19,33,0.95); border:1px solid rgba(99,102,241,0.35); border-radius:16px; padding:24px 20px; box-shadow:0 12px 35px rgba(0,0,0,0.7), 0 0 20px rgba(99,102,241,0.15); box-sizing:border-box;">
-            <div style="width:48px; height:48px; border-radius:14px; background:rgba(99,102,241,0.14); border:1px solid rgba(99,102,241,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; color:#818cf8;">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div style="width:100%; max-width:320px; background:#111827; border:1px solid var(--border); border-radius:12px; padding:22px 18px; box-sizing:border-box;">
+            <div style="width:40px; height:40px; border-radius:10px; background:rgba(217,78,52,0.12); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; color:#fda4af;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
-            <h3 style="color:#ffffff; font-size:15px; font-weight:800; margin-bottom:6px; letter-spacing:-0.2px;">Licence Activation Required</h3>
-            <p style="color:#cbd5e1; font-size:12px; line-height:1.55; margin-bottom:18px;">Activate your licence key to unlock automatic captcha solving, routine timetables, and advising planner.</p>
-            <button id="btnPopupActivateAction" style="width:100%; padding:11px 18px; border-radius:10px; background:linear-gradient(135deg, #4f46e5, #3b82f6); color:#ffffff; border:1px solid rgba(255,255,255,0.15); font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 14px rgba(79,70,229,0.35); transition:transform 0.15s ease;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 2l-2 2m-1.5 1.5L14 9m-1.5 1.5L10 13l-4 4-4-4 4-4 2.5-2.5m1.5-1.5L16.5 3.5 18 2z"/><circle cx="7.5" cy="16.5" r="1.5"/></svg>
-              Activate Licence
+            <h3 style="color:#ffffff; font-size:14px; font-weight:700; margin-bottom:6px;">Licence Activation Required</h3>
+            <p style="color:#9ca3af; font-size:11.5px; line-height:1.5; margin-bottom:16px;">Activate your licence key to unlock automatic captcha solving, class routines, and advising planner.</p>
+            <button id="btnPopupActivateAction" class="btn-action" style="width:100%; background:var(--primary); border:none; justify-content:center;">
+              Activate Licence Key
             </button>
           </div>
         `;
@@ -762,20 +766,15 @@
         return;
       }
 
-      // ---------------------------------------------------------
-      // PRIORITY 4, 5, 6: User is Authorized! Render Features + Banners
-      // ---------------------------------------------------------
+      // User is Authorized
       if (els.licBadgeDot) {
-        els.licBadgeDot.style.background = '#10b981';
-        els.licBadgeDot.style.boxShadow = '0 0 8px rgba(16, 185, 129, 0.7)';
+        els.licBadgeDot.className = 'status-dot';
       }
       if (els.licStatusText) els.licStatusText.textContent = 'Licence Active';
-      if (els.licSubText) els.licSubText.style.display = 'none';
 
-      // Update dedicated Licence tab fields
-      if (els.tabLicDot) els.tabLicDot.style.background = '#10b981';
+      if (els.tabLicDot) els.tabLicDot.className = 'status-dot';
       if (els.tabLicStatusText) els.tabLicStatusText.textContent = 'Licence Active & Verified';
-      if (els.tabLicTypeBadge) { els.tabLicTypeBadge.textContent = 'ACTIVE'; els.tabLicTypeBadge.style.color = 'var(--emerald)'; els.tabLicTypeBadge.style.borderColor = 'rgba(16,185,129,0.4)'; }
+      if (els.tabLicTypeBadge) { els.tabLicTypeBadge.textContent = 'ACTIVE'; els.tabLicTypeBadge.style.color = 'var(--emerald)'; }
       if (els.tabLicPrefix) els.tabLicPrefix.textContent = res.ewu_license_prefix || 'XXXX-...';
       if (els.tabLicExpiry) {
         if (res.ewu_license_expiry && Number(res.ewu_license_expiry) > 0) {
@@ -788,42 +787,42 @@
 
       const headerEl = document.querySelector('.header');
 
-      // PRIORITY 4: Optional Update Available Banner
+      // Optional Update Available Banner
       const showUpdateNotice = (typeof update.showNotice === 'boolean') ? update.showNotice : (update.show_update_notice !== false);
       if (isUpdateAvailable && !update.isMandatory && showUpdateNotice) {
         const upBanner = document.createElement('div');
         upBanner.id = 'ewu-popup-update-banner';
-        upBanner.style.cssText = 'margin:8px 14px 0 14px; background:rgba(99,102,241,0.14); border:1px solid rgba(99,102,241,0.35); border-radius:10px; padding:8px 12px; font-size:11.5px; line-height:1.4; color:#f1f5f9; display:flex; justify-content:space-between; align-items:center;';
+        upBanner.style.cssText = 'margin:8px 14px 0 14px; background:rgba(59,130,246,0.12); border:1px solid rgba(59,130,246,0.3); border-radius:8px; padding:7px 10px; font-size:11.5px; line-height:1.4; color:#f1f5f9; display:flex; justify-content:space-between; align-items:center;';
         upBanner.innerHTML = `
-          <span><strong style="color:#818cf8;">Update v${update.latestVersion} available!</strong></span>
-          <a href="${update.updateUrl || 'https://t.me/AftabKabir'}" target="_blank" style="color:#38bdf8; font-weight:700; text-decoration:underline; margin-left:8px;">Download &rarr;</a>
+          <span><strong style="color:#60a5fa;">Update v${update.latestVersion} available!</strong></span>
+          <a href="${update.updateUrl || 'https://t.me/AftabKabir'}" target="_blank" style="color:#60a5fa; font-weight:600; text-decoration:underline; margin-left:8px;">Download &rarr;</a>
         `;
         if (headerEl && headerEl.nextSibling) {
           headerEl.parentNode.insertBefore(upBanner, headerEl.nextSibling);
         }
       }
 
-      // PRIORITY 5: Broadcast Notice Announcement Banner
+      // Broadcast Notice Banner
       if (notice.enabled && (notice.title || notice.message)) {
-        let bannerBg = 'rgba(56, 189, 248, 0.12)';
-        let bannerBorder = 'rgba(56, 189, 248, 0.3)';
-        let bannerColor = '#38bdf8';
+        let bannerBg = 'rgba(59, 130, 246, 0.12)';
+        let bannerBorder = 'rgba(59, 130, 246, 0.3)';
+        let bannerColor = '#60a5fa';
         if (notice.type === 'warning') {
           bannerBg = 'rgba(245, 158, 11, 0.12)';
           bannerBorder = 'rgba(245, 158, 11, 0.3)';
           bannerColor = '#f59e0b';
         } else if (notice.type === 'alert') {
-          bannerBg = 'rgba(244, 63, 94, 0.12)';
-          bannerBorder = 'rgba(244, 63, 94, 0.3)';
-          bannerColor = '#f43f5e';
+          bannerBg = 'rgba(239, 68, 68, 0.12)';
+          bannerBorder = 'rgba(239, 68, 68, 0.3)';
+          bannerColor = '#ef4444';
         }
 
         const banner = document.createElement('div');
         banner.id = 'ewu-popup-broadcast-banner';
-        banner.style.cssText = `margin:8px 14px 0 14px; background:${bannerBg}; border:1px solid ${bannerBorder}; border-radius:10px; padding:10px 12px; font-size:11.5px; line-height:1.5; color:#f1f5f9; position:relative;`;
+        banner.style.cssText = `margin:8px 14px 0 14px; background:${bannerBg}; border:1px solid ${bannerBorder}; border-radius:8px; padding:8px 10px; font-size:11.5px; line-height:1.45; color:#f1f5f9; position:relative;`;
         banner.innerHTML = `
-          <button style="position:absolute; top:6px; right:8px; background:transparent; border:none; color:#94a3b8; font-size:13px; cursor:pointer;" onclick="this.parentElement.remove()">✕</button>
-          ${notice.title ? `<strong style="display:block; color:${bannerColor}; font-size:12px; margin-bottom:2px;">${notice.title}</strong>` : ''}
+          <button style="position:absolute; top:4px; right:6px; background:transparent; border:none; color:#9ca3af; font-size:12px; cursor:pointer;" onclick="this.parentElement.remove()">✕</button>
+          ${notice.title ? `<strong style="display:block; color:${bannerColor}; font-size:11.5px; margin-bottom:2px;">${notice.title}</strong>` : ''}
           <span>${notice.message}</span>
         `;
         if (headerEl && headerEl.nextSibling) {
@@ -837,7 +836,7 @@
      INITIALIZATION
      ----------------------------------------------------------- */
   async function init() {
-    log('Initializing Cyber Settings UI...');
+    log('Initializing Settings UI...');
     bindEvents();
     const settings = await loadSettings();
     renderUI(settings);
