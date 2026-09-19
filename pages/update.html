@@ -9,21 +9,21 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-dark: #070d1a;
-      --card-bg: rgba(11, 20, 42, 0.82);
-      --card-surface: rgba(19, 34, 68, 0.65);
-      --border: rgba(255, 255, 255, 0.12);
-      --border-focus: #3b82f6;
-      --ewu-crimson: #e11d48;
-      --ewu-crimson-hover: #be123c;
-      --ewu-crimson-subtle: rgba(225, 29, 72, 0.14);
-      --ewu-blue: #2563eb;
-      --ewu-blue-hover: #1d4ed8;
-      --ewu-blue-subtle: rgba(37, 99, 235, 0.14);
+      --bg-dark: #070c18;
+      --card-bg: rgba(13, 20, 36, 0.86);
+      --card-surface: rgba(20, 30, 54, 0.7);
+      --border: rgba(255, 255, 255, 0.1);
+      --border-focus: #38bdf8;
+      --ewu-brick: #d94e34;
+      --ewu-brick-dark: #b91c1c;
+      --ewu-brick-hover: #ea580c;
+      --ewu-navy: #0f172a;
+      --ewu-blue: #0284c7;
+      --ewu-blue-subtle: rgba(2, 132, 199, 0.14);
       --emerald: #10b981;
       --emerald-subtle: rgba(16, 185, 129, 0.14);
-      --rose: #f43f5e;
-      --rose-subtle: rgba(244, 63, 94, 0.14);
+      --rose: #ef4444;
+      --rose-subtle: rgba(239, 68, 68, 0.14);
       --amber: #f59e0b;
       --text: #f8fafc;
       --text-muted: #cbd5e1;
@@ -48,7 +48,7 @@
       position: relative;
     }
 
-    /* Cinematic Background Slideshow */
+    /* Responsive Background Slideshow */
     .bg-slideshow {
       position: fixed;
       top: 0;
@@ -62,20 +62,38 @@
 
     .bg-slide {
       position: absolute;
-      top: -5%;
-      left: -5%;
-      width: 110%;
-      height: 110%;
+      top: -4%;
+      left: -4%;
+      width: 108%;
+      height: 108%;
       background-size: cover;
       background-position: center;
       opacity: 0;
-      transition: opacity 1.6s ease-in-out, transform 8s ease-out;
+      transition: opacity 1.4s ease-in-out, transform 7s ease-out;
       transform: scale(1);
     }
 
     .bg-slide.active {
       opacity: 1;
-      transform: scale(1.05);
+      transform: scale(1.04);
+    }
+
+    /* Show landscape images on desktop / wide screens */
+    .bg-slide.landscape {
+      display: block;
+    }
+    .bg-slide.portrait {
+      display: none;
+    }
+
+    /* Show portrait vertical images on mobile / portrait screens */
+    @media (max-width: 768px), (orientation: portrait) {
+      .bg-slide.landscape {
+        display: none;
+      }
+      .bg-slide.portrait {
+        display: block;
+      }
     }
 
     .bg-overlay {
@@ -86,8 +104,8 @@
       height: 100vh;
       z-index: 1;
       background: 
-        radial-gradient(ellipse at 50% 15%, rgba(225, 29, 72, 0.22) 0%, rgba(7, 13, 26, 0.85) 60%, rgba(5, 9, 18, 0.96) 100%),
-        linear-gradient(180deg, rgba(6, 11, 23, 0.65) 0%, rgba(7, 13, 26, 0.94) 100%);
+        radial-gradient(ellipse at 50% 12%, rgba(217, 78, 52, 0.22) 0%, rgba(8, 14, 28, 0.88) 60%, rgba(5, 9, 18, 0.97) 100%),
+        linear-gradient(180deg, rgba(6, 11, 23, 0.65) 0%, rgba(7, 13, 26, 0.95) 100%);
       pointer-events: none;
     }
 
@@ -99,7 +117,7 @@
       width: 380px;
       height: 380px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(225, 29, 72, 0.2) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(217, 78, 52, 0.16) 0%, transparent 70%);
       filter: blur(60px);
       z-index: 1;
       pointer-events: none;
@@ -113,7 +131,7 @@
       width: 420px;
       height: 420px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(37, 99, 235, 0.2) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(2, 132, 199, 0.16) 0%, transparent 70%);
       filter: blur(70px);
       z-index: 1;
       pointer-events: none;
@@ -142,16 +160,16 @@
     .update-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 22px;
+      border-radius: 20px;
       box-shadow: 
-        0 30px 60px -12px rgba(0, 0, 0, 0.8),
-        0 0 40px rgba(225, 29, 72, 0.18),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(28px) saturate(190%);
-      -webkit-backdrop-filter: blur(28px) saturate(190%);
-      max-width: 540px;
+        0 24px 50px -10px rgba(0, 0, 0, 0.8),
+        0 0 30px rgba(217, 78, 52, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      max-width: 520px;
       width: 100%;
-      padding: 36px 30px;
+      padding: 34px 28px;
       position: relative;
       z-index: 1;
       overflow: hidden;
@@ -164,8 +182,8 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, transparent, #e11d48, #3b82f6, #38bdf8, transparent);
+      height: 2.5px;
+      background: linear-gradient(90deg, transparent, #d94e34, #0284c7, transparent);
     }
 
     /* Brand Header */
@@ -173,9 +191,9 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 24px;
+      margin-bottom: 22px;
       padding-bottom: 16px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     .brand-meta {
@@ -188,13 +206,13 @@
       width: 42px;
       height: 42px;
       border-radius: 12px;
-      background: linear-gradient(135deg, rgba(225, 29, 72, 0.2), rgba(37, 99, 235, 0.25));
-      border: 1.5px solid rgba(96, 165, 250, 0.4);
+      background: linear-gradient(135deg, rgba(217, 78, 52, 0.25), rgba(2, 132, 199, 0.25));
+      border: 1.2px solid rgba(217, 78, 52, 0.45);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #93c5fd;
-      box-shadow: 0 0 14px rgba(37, 99, 235, 0.35);
+      color: #fda4af;
+      box-shadow: 0 0 14px rgba(217, 78, 52, 0.25);
     }
 
     .brand-title {
@@ -208,7 +226,7 @@
     .brand-subtitle {
       font-size: 11px;
       font-weight: 600;
-      color: #93c5fd;
+      color: #94a3b8;
       text-align: left;
       margin-top: 2px;
     }
@@ -223,18 +241,18 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.6px;
-      background: rgba(244, 63, 94, 0.16);
-      border: 1px solid rgba(244, 63, 94, 0.45);
+      background: rgba(217, 78, 52, 0.16);
+      border: 1px solid rgba(217, 78, 52, 0.4);
       color: #fda4af;
-      box-shadow: 0 0 12px rgba(244, 63, 94, 0.25);
+      box-shadow: 0 0 12px rgba(217, 78, 52, 0.2);
     }
 
     .pulse-dot {
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background: #f43f5e;
-      box-shadow: 0 0 8px #f43f5e;
+      background: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
       animation: pulseAnim 1.8s infinite;
     }
 
@@ -247,33 +265,33 @@
     /* Hero Icon */
     .icon-wrapper {
       position: relative;
-      width: 76px;
-      height: 76px;
-      margin: 0 auto 18px;
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 16px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
     .icon-badge {
-      width: 64px;
-      height: 64px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, rgba(225, 29, 72, 0.22), rgba(37, 99, 235, 0.28));
-      border: 1.5px solid rgba(96, 165, 250, 0.45);
+      width: 60px;
+      height: 60px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(217, 78, 52, 0.2), rgba(2, 132, 199, 0.25));
+      border: 1.2px solid rgba(217, 78, 52, 0.4);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #93c5fd;
+      color: #fda4af;
       position: relative;
       z-index: 2;
-      box-shadow: 0 0 24px rgba(225, 29, 72, 0.35);
+      box-shadow: 0 0 20px rgba(217, 78, 52, 0.25);
     }
 
     h1 {
-      font-size: 21px;
+      font-size: 20px;
       font-weight: 800;
-      letter-spacing: -0.4px;
+      letter-spacing: -0.3px;
       margin-bottom: 12px;
       color: #ffffff;
     }
@@ -283,10 +301,10 @@
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      background: rgba(6, 13, 28, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(8, 14, 26, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       padding: 6px 14px;
-      border-radius: 14px;
+      border-radius: 12px;
       margin-bottom: 16px;
     }
 
@@ -295,7 +313,7 @@
       font-size: 12px;
       font-weight: 700;
       padding: 3px 9px;
-      border-radius: 7px;
+      border-radius: 6px;
     }
 
     .ver-pill.old {
@@ -305,7 +323,7 @@
     }
 
     .ver-arrow {
-      color: #60a5fa;
+      color: #38bdf8;
       display: flex;
       align-items: center;
     }
@@ -317,82 +335,84 @@
     }
 
     .desc {
-      font-size: 13.5px;
+      font-size: 13px;
       color: var(--text-muted);
       line-height: 1.6;
-      margin-bottom: 22px;
+      margin-bottom: 20px;
     }
 
     /* Changelog Card */
     .changelog-box {
-      background: rgba(6, 13, 28, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 14px;
-      padding: 16px;
+      background: rgba(8, 14, 26, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 15px;
       text-align: left;
-      margin-bottom: 22px;
-      max-height: 180px;
+      margin-bottom: 20px;
+      max-height: 170px;
       overflow-y: auto;
     }
 
-    .changelog-box::-webkit-scrollbar { width: 5px; }
+    .changelog-box::-webkit-scrollbar { width: 4px; }
     .changelog-box::-webkit-scrollbar-track { background: transparent; }
-    .changelog-box::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+    .changelog-box::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.18); border-radius: 4px; }
 
     .changelog-header {
       display: flex;
       align-items: center;
       gap: 7px;
-      font-size: 11.5px;
+      font-size: 11px;
       font-weight: 700;
-      color: #93c5fd;
+      color: #fda4af;
       text-transform: uppercase;
       letter-spacing: 0.7px;
-      margin-bottom: 10px;
+      margin-bottom: 9px;
     }
 
     .changelog-content {
-      font-size: 12.5px;
+      font-size: 12px;
       color: #e2e8f0;
-      line-height: 1.65;
+      line-height: 1.6;
       white-space: pre-wrap;
     }
 
-    /* CTA Button */
+    /* Sleek, Modern, Minimal Buttons */
     .btn-update {
       width: 100%;
-      padding: 14px 22px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, var(--ewu-crimson) 0%, var(--ewu-blue) 100%);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #d94e34 0%, #b91c1c 100%);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 11px;
       color: #ffffff;
-      font-size: 14.5px;
+      font-size: 13.8px;
       font-weight: 700;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 7px;
       text-decoration: none;
-      transition: all 0.2s ease;
-      box-shadow: 0 8px 24px -4px rgba(225, 29, 72, 0.45);
+      transition: all 0.15s ease;
+      touch-action: manipulation;
+      box-shadow: 0 4px 14px -2px rgba(185, 28, 28, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
 
     .btn-update:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 28px -4px rgba(37, 99, 235, 0.55);
-      background: linear-gradient(135deg, var(--ewu-crimson-hover) 0%, var(--ewu-blue-hover) 100%);
+      background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px -2px rgba(234, 88, 12, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25);
       color: #ffffff;
     }
 
     .btn-update:active {
       transform: translateY(0);
+      box-shadow: 0 2px 8px -2px rgba(185, 28, 28, 0.4);
     }
 
     .footer-note {
-      font-size: 12px;
+      font-size: 11.5px;
       color: var(--text-dim);
-      margin-top: 18px;
+      margin-top: 16px;
       line-height: 1.5;
     }
 
@@ -402,11 +422,11 @@
       justify-content: center;
       gap: 14px;
       margin-top: 14px;
-      font-size: 12.5px;
+      font-size: 12px;
     }
 
     .footer-links a {
-      color: #93c5fd;
+      color: #fda4af;
       text-decoration: none;
       font-weight: 600;
       transition: color 0.15s ease;
@@ -416,47 +436,27 @@
       color: #ffffff;
     }
 
-    /* Campus Wallpaper Info Pill */
-    .campus-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      margin-top: 18px;
-      padding: 6px 14px;
-      background: rgba(15, 23, 42, 0.65);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 30px;
-      font-size: 11.5px;
-      font-weight: 600;
-      color: #cbd5e1;
-      backdrop-filter: blur(12px);
-    }
-
-    .campus-badge-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #34d399;
-      box-shadow: 0 0 8px #34d399;
-    }
-
     @media (max-width: 480px) {
       .page-wrapper { padding: 16px 12px; }
-      .update-card { padding: 24px 18px; border-radius: 18px; }
+      .update-card { padding: 22px 16px; border-radius: 16px; }
       h1 { font-size: 18px; }
-      .icon-wrapper { width: 64px; height: 64px; margin-bottom: 14px; }
-      .icon-badge { width: 52px; height: 52px; }
-      .btn-update { padding: 12px 16px; font-size: 13.5px; }
+      .icon-wrapper { width: 60px; height: 60px; margin-bottom: 12px; }
+      .icon-badge { width: 50px; height: 50px; }
+      .btn-update { padding: 11px 16px; font-size: 13px; }
     }
   </style>
 </head>
 <body>
-  <!-- Cinematic Background Slideshow -->
+  <!-- Responsive Background Slideshow (Landscape on desktop, Portrait on mobile) -->
   <div class="bg-slideshow" id="bgSlideshow">
-    <div class="bg-slide active" style="background-image: url('images/ewu_campus_plaza.jpg');"></div>
-    <div class="bg-slide" style="background-image: url('images/ewu_campus_day.jpg');"></div>
-    <div class="bg-slide" style="background-image: url('images/ewu_campus_sunset.jpg');"></div>
-    <div class="bg-slide" style="background-image: url('images/ewu_campus_aerial.jpg');"></div>
+    <!-- Landscape Slides (Desktop / Wide) -->
+    <div class="bg-slide landscape active" style="background-image: url('images/ewu_campus_plaza.jpg');"></div>
+    <div class="bg-slide landscape" style="background-image: url('images/ewu_campus_day.jpg');"></div>
+    <div class="bg-slide landscape" style="background-image: url('images/ewu_campus_aerial.jpg');"></div>
+
+    <!-- Portrait Slides (Mobile / Portrait) -->
+    <div class="bg-slide portrait" style="background-image: url('images/ewu_campus_sunset.jpg');"></div>
+    <div class="bg-slide portrait" style="background-image: url('images/ewu_campus_facade.jpg');"></div>
   </div>
   <div class="bg-overlay"></div>
   <div class="glow-orb-1"></div>
@@ -485,7 +485,7 @@
 
       <div class="icon-wrapper">
         <div class="icon-badge">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="16 16 12 12 8 16"/>
             <line x1="12" y1="12" x2="12" y2="21"/>
             <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
@@ -523,7 +523,7 @@
       </div>
 
       <a href="https://github.com/starkxxxwiz/ewu-ext/releases" id="updateBtn" target="_blank" class="btn-update">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="7 10 12 15 17 10"/>
           <line x1="12" y1="15" x2="12" y2="3"/>
         </svg>
@@ -538,30 +538,39 @@
         <a href="https://github.com/starkxxxwiz/ewu-ext" target="_blank">GitHub Releases</a>
       </div>
     </div>
-
-    <!-- Campus Photo Pill Indicator -->
-    <div class="campus-badge">
-      <span class="campus-badge-dot"></span>
-      <span>East West University Campus</span>
-    </div>
   </div>
 
   <script src="update.js"></script>
   <script>
-    // Ambient Background Slideshow Controller
+    // Responsive Ambient Background Slideshow Controller
     (function () {
-      var slides = document.querySelectorAll('.bg-slide');
-      var currentIndex = 0;
-
-      function nextSlide() {
-        if (!slides.length) return;
-        currentIndex = (currentIndex + 1) % slides.length;
-        slides.forEach(function (s, i) {
-          s.classList.toggle('active', i === currentIndex);
-        });
+      function isPortrait() {
+        return window.matchMedia('(max-width: 768px), (orientation: portrait)').matches;
       }
 
-      setInterval(nextSlide, 7000);
+      var landscapeIndex = 0;
+      var portraitIndex = 0;
+
+      function rotateSlides() {
+        var portraitMode = isPortrait();
+        var selector = portraitMode ? '.bg-slide.portrait' : '.bg-slide.landscape';
+        var slides = document.querySelectorAll(selector);
+        if (!slides.length) return;
+
+        if (portraitMode) {
+          portraitIndex = (portraitIndex + 1) % slides.length;
+          slides.forEach(function (s, i) {
+            s.classList.toggle('active', i === portraitIndex);
+          });
+        } else {
+          landscapeIndex = (landscapeIndex + 1) % slides.length;
+          slides.forEach(function (s, i) {
+            s.classList.toggle('active', i === landscapeIndex);
+          });
+        }
+      }
+
+      setInterval(rotateSlides, 7000);
     })();
   </script>
 </body>
