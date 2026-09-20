@@ -129,6 +129,37 @@ You can use Chromium browsers with extension support (such as **Kiwi Browser** o
 
 ---
 
+## 🔄 How to Update EWU Buddy
+
+When a new update or patch is released, follow these simple steps to update your extension:
+
+### 📱 For Android Phones / Tablets (Kiwi Browser, Quetta, Lemur)
+
+1. **Download the new `.zip`**: Get the latest `ewu-buddy-vX.X.zip` from [GitHub Releases](https://github.com/starkxxxwiz/ewu-ext/releases).
+2. **Open Extensions page**: Open Kiwi / Quetta &rarr; tap **⋮ (Menu)** &rarr; **Extensions**.
+3. **Remove previous version**: Tap **Remove** on the old EWU Buddy card.
+4. **Install new version**: Tap **+ (from .zip / .crx / .user.js)** and select the new downloaded `.zip` file.
+5. ✨ **Done!** The updated version is now installed.
+
+---
+
+### 🖥️ For PC / Desktop / Laptop (Chrome, Brave, Edge, Opera)
+
+#### 🔹 Method 1: Replace Folder & Reload (Fastest — Recommended)
+1. Download the new version `.zip` and extract it.
+2. Copy and replace all files inside your existing EWU Buddy folder.
+3. Open `chrome://extensions/` (or `brave://extensions/` / `edge://extensions/`).
+4. Find **EWU Buddy** and click the **🔄 (Reload / Refresh)** icon on the card.
+5. ✨ **Done!** The latest version is active immediately without re-adding.
+
+#### 🔹 Method 2: Re-load Unpacked
+1. Extract the new `.zip` to a folder on your computer.
+2. Navigate to `chrome://extensions/` and click **Remove** on the old version.
+3. Click **Load unpacked** and select the new extracted folder.
+4. ✨ **Done!**
+
+---
+
 ## 🔑 License Activation & Management
 
 1. Upon first install, the **Onboarding & Activation** page will open automatically (or click the **EWU Buddy** icon in your browser toolbar &rarr; **Licence** tab).
