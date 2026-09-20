@@ -10,9 +10,9 @@
   <style>
     :root {
       --bg-dark: #070c18;
-      --card-bg: rgba(13, 20, 36, 0.86);
-      --card-surface: rgba(20, 30, 54, 0.7);
-      --border: rgba(255, 255, 255, 0.1);
+      --card-bg: rgba(13, 20, 36, 0.65);
+      --card-surface: rgba(20, 30, 54, 0.55);
+      --border: rgba(255, 255, 255, 0.14);
       --border-focus: #38bdf8;
       --ewu-brick: #d94e34;
       --ewu-brick-dark: #b91c1c;
@@ -69,13 +69,14 @@
       background-size: cover;
       background-position: center;
       opacity: 0;
-      transition: opacity 1.4s ease-in-out, transform 7s ease-out;
+      filter: brightness(0.95) contrast(1.05);
+      transition: opacity 1.4s ease-in-out, transform 8s ease-out;
       transform: scale(1);
     }
 
     .bg-slide.active {
       opacity: 1;
-      transform: scale(1.04);
+      transform: scale(1.05);
     }
 
     /* Show landscape images on desktop / wide screens */
@@ -93,6 +94,7 @@
       }
       .bg-slide.portrait {
         display: block;
+        background-position: center top;
       }
     }
 
@@ -104,20 +106,20 @@
       height: 100vh;
       z-index: 1;
       background: 
-        radial-gradient(ellipse at 50% 12%, rgba(217, 78, 52, 0.22) 0%, rgba(8, 14, 28, 0.88) 60%, rgba(5, 9, 18, 0.97) 100%),
-        linear-gradient(180deg, rgba(6, 11, 23, 0.65) 0%, rgba(7, 13, 26, 0.95) 100%);
+        radial-gradient(ellipse at 50% 8%, rgba(217, 78, 52, 0.18) 0%, rgba(8, 14, 28, 0.45) 50%, rgba(5, 9, 18, 0.82) 100%),
+        linear-gradient(180deg, rgba(6, 11, 23, 0.3) 0%, rgba(7, 13, 26, 0.78) 100%);
       pointer-events: none;
     }
 
     /* Ambient Glow Spots */
     .glow-orb-1 {
       position: fixed;
-      top: 15%;
-      right: 15%;
+      top: 10%;
+      right: 12%;
       width: 380px;
       height: 380px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(217, 78, 52, 0.16) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(217, 78, 52, 0.18) 0%, transparent 70%);
       filter: blur(60px);
       z-index: 1;
       pointer-events: none;
@@ -126,12 +128,12 @@
 
     .glow-orb-2 {
       position: fixed;
-      bottom: 15%;
-      left: 15%;
+      bottom: 10%;
+      left: 12%;
       width: 420px;
       height: 420px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(2, 132, 199, 0.16) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(2, 132, 199, 0.18) 0%, transparent 70%);
       filter: blur(70px);
       z-index: 1;
       pointer-events: none;
@@ -140,8 +142,8 @@
 
     @keyframes floatOrb {
       0% { transform: translate(0, 0) scale(1); }
-      50% { transform: translate(-30px, 20px) scale(1.08); }
-      100% { transform: translate(20px, -30px) scale(0.95); }
+      50% { transform: translate(-25px, 20px) scale(1.08); }
+      100% { transform: translate(20px, -25px) scale(0.95); }
     }
 
     .page-wrapper {
@@ -152,7 +154,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 36px 16px;
+      padding: 36px 18px;
       position: relative;
       z-index: 2;
     }
@@ -160,20 +162,21 @@
     .update-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 22px;
       box-shadow: 
-        0 24px 50px -10px rgba(0, 0, 0, 0.8),
-        0 0 30px rgba(217, 78, 52, 0.12),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      max-width: 520px;
+        0 24px 50px -10px rgba(0, 0, 0, 0.75),
+        0 0 35px rgba(217, 78, 52, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.16);
+      backdrop-filter: blur(24px) saturate(190%);
+      -webkit-backdrop-filter: blur(24px) saturate(190%);
+      max-width: 500px;
       width: 100%;
-      padding: 34px 28px;
+      padding: 32px 28px;
       position: relative;
       z-index: 1;
       overflow: hidden;
       text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
     .update-card::before {
@@ -191,9 +194,9 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 22px;
+      margin-bottom: 20px;
       padding-bottom: 16px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.09);
     }
 
     .brand-meta {
@@ -203,10 +206,10 @@
     }
 
     .brand-logo {
-      width: 42px;
-      height: 42px;
+      width: 40px;
+      height: 40px;
       border-radius: 12px;
-      background: linear-gradient(135deg, rgba(217, 78, 52, 0.25), rgba(2, 132, 199, 0.25));
+      background: linear-gradient(135deg, rgba(217, 78, 52, 0.28), rgba(2, 132, 199, 0.28));
       border: 1.2px solid rgba(217, 78, 52, 0.45);
       display: flex;
       align-items: center;
@@ -216,7 +219,7 @@
     }
 
     .brand-title {
-      font-size: 16px;
+      font-size: 15.5px;
       font-weight: 800;
       color: #ffffff;
       text-align: left;
@@ -235,14 +238,14 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 5px 12px;
+      padding: 5px 11px;
       border-radius: 20px;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.6px;
-      background: rgba(217, 78, 52, 0.16);
-      border: 1px solid rgba(217, 78, 52, 0.4);
+      background: rgba(217, 78, 52, 0.2);
+      border: 1px solid rgba(217, 78, 52, 0.45);
       color: #fda4af;
       box-shadow: 0 0 12px rgba(217, 78, 52, 0.2);
     }
@@ -265,20 +268,20 @@
     /* Hero Icon */
     .icon-wrapper {
       position: relative;
-      width: 72px;
-      height: 72px;
-      margin: 0 auto 16px;
+      width: 68px;
+      height: 68px;
+      margin: 0 auto 14px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
     .icon-badge {
-      width: 60px;
-      height: 60px;
+      width: 58px;
+      height: 58px;
       border-radius: 16px;
-      background: linear-gradient(135deg, rgba(217, 78, 52, 0.2), rgba(2, 132, 199, 0.25));
-      border: 1.2px solid rgba(217, 78, 52, 0.4);
+      background: linear-gradient(135deg, rgba(217, 78, 52, 0.22), rgba(2, 132, 199, 0.25));
+      border: 1.2px solid rgba(217, 78, 52, 0.42);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -289,7 +292,7 @@
     }
 
     h1 {
-      font-size: 20px;
+      font-size: 19.5px;
       font-weight: 800;
       letter-spacing: -0.3px;
       margin-bottom: 12px;
@@ -301,11 +304,12 @@
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      background: rgba(8, 14, 26, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(8, 14, 26, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       padding: 6px 14px;
       border-radius: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 15px;
+      backdrop-filter: blur(10px);
     }
 
     .ver-pill {
@@ -317,8 +321,8 @@
     }
 
     .ver-pill.old {
-      background: rgba(148, 163, 184, 0.12);
-      color: #94a3b8;
+      background: rgba(148, 163, 184, 0.15);
+      color: #cbd5e1;
       border: 1px solid rgba(148, 163, 184, 0.25);
     }
 
@@ -329,7 +333,7 @@
     }
 
     .ver-pill.new {
-      background: rgba(16, 185, 129, 0.18);
+      background: rgba(16, 185, 129, 0.2);
       color: #34d399;
       border: 1px solid rgba(16, 185, 129, 0.45);
     }
@@ -338,19 +342,20 @@
       font-size: 13px;
       color: var(--text-muted);
       line-height: 1.6;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     /* Changelog Card */
     .changelog-box {
-      background: rgba(8, 14, 26, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(8, 14, 26, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
-      padding: 15px;
+      padding: 14px 16px;
       text-align: left;
-      margin-bottom: 20px;
-      max-height: 170px;
+      margin-bottom: 18px;
+      max-height: 160px;
       overflow-y: auto;
+      backdrop-filter: blur(10px);
     }
 
     .changelog-box::-webkit-scrollbar { width: 4px; }
@@ -366,7 +371,7 @@
       color: #fda4af;
       text-transform: uppercase;
       letter-spacing: 0.7px;
-      margin-bottom: 9px;
+      margin-bottom: 8px;
     }
 
     .changelog-content {
@@ -381,8 +386,8 @@
       width: 100%;
       padding: 12px 20px;
       background: linear-gradient(135deg, #d94e34 0%, #b91c1c 100%);
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      border-radius: 11px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
       color: #ffffff;
       font-size: 13.8px;
       font-weight: 700;
@@ -392,15 +397,15 @@
       justify-content: center;
       gap: 7px;
       text-decoration: none;
-      transition: all 0.15s ease;
+      transition: all 0.18s ease;
       touch-action: manipulation;
-      box-shadow: 0 4px 14px -2px rgba(185, 28, 28, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 16px -2px rgba(185, 28, 28, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.22);
     }
 
     .btn-update:hover {
       background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
       transform: translateY(-1px);
-      box-shadow: 0 6px 18px -2px rgba(234, 88, 12, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      box-shadow: 0 6px 20px -2px rgba(234, 88, 12, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.3);
       color: #ffffff;
     }
 
@@ -412,7 +417,7 @@
     .footer-note {
       font-size: 11.5px;
       color: var(--text-dim);
-      margin-top: 16px;
+      margin-top: 15px;
       line-height: 1.5;
     }
 
@@ -436,13 +441,48 @@
       color: #ffffff;
     }
 
-    @media (max-width: 480px) {
-      .page-wrapper { padding: 16px 12px; }
-      .update-card { padding: 22px 16px; border-radius: 16px; }
-      h1 { font-size: 18px; }
-      .icon-wrapper { width: 60px; height: 60px; margin-bottom: 12px; }
-      .icon-badge { width: 50px; height: 50px; }
-      .btn-update { padding: 11px 16px; font-size: 13px; }
+    /* Mobile Responsive Optimizations */
+    @media (max-width: 600px) {
+      .page-wrapper {
+        padding: 20px 14px;
+        min-height: 100vh;
+        min-height: 100dvh;
+        justify-content: center;
+      }
+
+      .bg-overlay {
+        background: 
+          radial-gradient(ellipse at 50% 12%, rgba(217, 78, 52, 0.2) 0%, rgba(8, 14, 28, 0.38) 45%, rgba(5, 9, 18, 0.72) 100%),
+          linear-gradient(180deg, rgba(6, 11, 23, 0.22) 0%, rgba(7, 13, 26, 0.65) 100%);
+      }
+
+      .update-card {
+        padding: 24px 18px;
+        border-radius: 18px;
+        max-width: 420px;
+        background: rgba(11, 18, 32, 0.68);
+        backdrop-filter: blur(20px) saturate(200%);
+        -webkit-backdrop-filter: blur(20px) saturate(200%);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        box-shadow: 
+          0 18px 40px -8px rgba(0, 0, 0, 0.7),
+          0 0 30px rgba(217, 78, 52, 0.16),
+          inset 0 1px 0 rgba(255, 255, 255, 0.18);
+      }
+
+      h1 { font-size: 17.5px; margin-bottom: 10px; }
+      .brand-title { font-size: 14.5px; }
+      .brand-subtitle { font-size: 10.5px; }
+      .status-badge { font-size: 9.5px; padding: 4px 9px; }
+      .icon-wrapper { width: 56px; height: 56px; margin-bottom: 10px; }
+      .icon-badge { width: 48px; height: 48px; border-radius: 13px; }
+      .version-container { padding: 5px 12px; margin-bottom: 13px; }
+      .ver-pill { font-size: 11px; padding: 2.5px 7px; }
+      .desc { font-size: 12.5px; margin-bottom: 15px; }
+      .changelog-box { padding: 12px; max-height: 140px; margin-bottom: 15px; }
+      .btn-update { padding: 11px 16px; font-size: 13px; border-radius: 10px; }
+      .footer-note { font-size: 11px; margin-top: 13px; }
+      .footer-links { margin-top: 12px; font-size: 11.5px; }
     }
   </style>
 </head>
@@ -455,8 +495,9 @@
     <div class="bg-slide landscape" style="background-image: url('images/ewu_campus_aerial.jpg');"></div>
 
     <!-- Portrait Slides (Mobile / Portrait) -->
-    <div class="bg-slide portrait" style="background-image: url('images/ewu_campus_sunset.jpg');"></div>
+    <div class="bg-slide portrait active" style="background-image: url('images/ewu_campus_sunset.jpg');"></div>
     <div class="bg-slide portrait" style="background-image: url('images/ewu_campus_facade.jpg');"></div>
+    <div class="bg-slide portrait" style="background-image: url('images/ewu_campus_plaza.jpg');"></div>
   </div>
   <div class="bg-overlay"></div>
   <div class="glow-orb-1"></div>

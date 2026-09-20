@@ -120,27 +120,88 @@
 
       var manifestVer = (chrome.runtime.getManifest && chrome.runtime.getManifest().version) || '1.1.0';
 
-      // PRIORITY 2: Mandatory Extension Update
+      // PRIORITY 2: Mandatory Extension Update — One-time top-right toast notification
       if (update.isMandatory && isVersionOutdated(manifestVer, update.minVersion)) {
-        var uBanner = document.createElement('div');
-        uBanner.id = 'ewu-portal-system-banner';
-        uBanner.style.cssText = 'position:fixed; top:18px; right:18px; z-index:999999; max-width:400px; background:rgba(13,19,33,0.95); border:1px solid rgba(99,102,241,0.55); border-radius:16px; padding:16px 20px; box-shadow:0 15px 40px rgba(0,0,0,0.8), 0 0 25px rgba(99,102,241,0.3); color:#fff; font-family:-apple-system,BlinkMacSystemFont,sans-serif; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); transition:all 0.3s ease;';
-        uBanner.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;"><span style="color:#818cf8; font-weight:800; font-size:13.5px; letter-spacing:0.3px;">' + (update.title || 'Extension Update Required') + '</span><button style="background:transparent; border:none; color:#94a3b8; font-size:16px; cursor:pointer; padding:2px 6px; line-height:1;" onclick="this.closest(\'#ewu-portal-system-banner\').remove()">✕</button></div><div style="font-size:12.5px; color:#cbd5e1; line-height:1.5; margin-bottom:12px;">Please update EWU Buddy (v' + (update.latestVersion || update.minVersion) + ') to continue.</div><a href="' + (update.updateUrl || 'https://t.me/AftabKabir') + '" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; font-size:12px; font-weight:700; border-radius:10px; text-decoration:none; box-shadow:0 4px 14px rgba(99,102,241,0.4);">Update Now &rarr;</a>';
-        document.body.appendChild(uBanner);
+        var updateKey = 'ewu_mand_toast_' + (update.latestVersion || update.minVersion || 'v1');
+        var alreadySeen = false;
+        try {
+          alreadySeen = sessionStorage.getItem(updateKey) === '1' || localStorage.getItem(updateKey + '_dismissed') === '1';
+        } catch (_) {}
+
+        if (!alreadySeen && !document.getElementById('ewu-portal-mandatory-update-toast')) {
+          try { sessionStorage.setItem(updateKey, '1'); } catch (_) {}
+
+          var uToast = document.createElement('div');
+          uToast.id = 'ewu-portal-mandatory-update-toast';
+          uToast.style.cssText = 'position:fixed; top:20px; right:20px; z-index:9999999; max-width:380px; width:calc(100vw - 40px); background:rgba(13,20,36,0.96); border:1.5px solid rgba(217,78,52,0.65); border-radius:16px; padding:16px 18px; box-shadow:0 18px 45px rgba(0,0,0,0.85), 0 0 30px rgba(217,78,52,0.3); color:#ffffff; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); animation:ewuToastIn 0.35s cubic-bezier(0.16,1,0.3,1) forwards; box-sizing:border-box;';
+          
+          var targetVer = update.latestVersion || update.minVersion || 'latest';
+          var updateTitle = update.title || 'Mandatory Update Required';
+          var updateUrl = update.updateUrl || 'https://t.me/AftabKabir';
+
+          uToast.innerHTML = '<style>@keyframes ewuToastIn { from { opacity:0; transform:translateX(30px) scale(0.96); } to { opacity:1; transform:translateX(0) scale(1); } }</style>' +
+            '<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; gap:8px;">' +
+              '<div style="display:flex; align-items:center; gap:9px;">' +
+                '<div style="width:32px; height:32px; border-radius:9px; background:rgba(217,78,52,0.22); border:1.2px solid rgba(217,78,52,0.45); display:flex; align-items:center; justify-content:center; color:#fda4af; flex-shrink:0;">' +
+                  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>' +
+                '</div>' +
+                '<div>' +
+                  '<strong style="color:#fda4af; font-size:13.5px; font-weight:800; display:block; line-height:1.2;">' + updateTitle + '</strong>' +
+                  '<span style="font-size:10.5px; font-weight:600; color:#94a3b8;">v' + manifestVer + ' &rarr; v' + targetVer + '</span>' +
+                '</div>' +
+              '</div>' +
+              '<button id="btnDismissMandatoryToast" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#94a3b8; width:26px; height:26px; border-radius:7px; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; transition:all 0.15s ease;" title="Close">✕</button>' +
+            '</div>' +
+            '<div style="font-size:12px; color:#cbd5e1; line-height:1.5; margin-bottom:12px;">' +
+              'Extension features are currently paused. Please update EWU Buddy to v' + targetVer + ' to continue using automated tools on the student portal.' +
+            '</div>' +
+            '<div style="display:flex; align-items:center; gap:8px;">' +
+              '<button id="btnToastOpenUpdate" style="flex:1; padding:9px 14px; background:linear-gradient(135deg,#d94e34 0%,#b91c1c 100%); color:#ffffff; font-size:12px; font-weight:700; border:1px solid rgba(255,255,255,0.2); border-radius:9px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 14px rgba(185,28,28,0.4); text-decoration:none;">' +
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
+                'Update Extension' +
+              '</button>' +
+            '</div>';
+
+          document.body.appendChild(uToast);
+
+          var btnClose = document.getElementById('btnDismissMandatoryToast');
+          if (btnClose) {
+            btnClose.addEventListener('click', function () {
+              try {
+                sessionStorage.setItem(updateKey, '1');
+                localStorage.setItem(updateKey + '_dismissed', '1');
+              } catch (_) {}
+              uToast.remove();
+            });
+            btnClose.addEventListener('mouseenter', function () {
+              btnClose.style.background = 'rgba(255,255,255,0.15)';
+              btnClose.style.color = '#ffffff';
+            });
+            btnClose.addEventListener('mouseleave', function () {
+              btnClose.style.background = 'rgba(255,255,255,0.06)';
+              btnClose.style.color = '#94a3b8';
+            });
+          }
+
+          var btnUpdateAction = document.getElementById('btnToastOpenUpdate');
+          if (btnUpdateAction) {
+            btnUpdateAction.addEventListener('click', function () {
+              if (typeof chrome !== 'undefined' && chrome.runtime) {
+                chrome.runtime.sendMessage({ type: 'OPEN_UPDATE_PAGE' }, function () {
+                  if (chrome.runtime.lastError) {
+                    window.open(updateUrl, '_blank');
+                  }
+                });
+              } else {
+                window.open(updateUrl, '_blank');
+              }
+            });
+          }
+        }
         return;
       }
 
-      // PRIORITY 4: Optional Update Notice (non-blocking)
-      var showUpdateNotice = (typeof update.showNotice === 'boolean') ? update.showNotice : (update.show_update_notice !== false);
-      if (!update.isMandatory && showUpdateNotice && update.latestVersion && isVersionOutdated(manifestVer, update.latestVersion)) {
-        var optBanner = document.createElement('div');
-        optBanner.id = 'ewu-portal-opt-update';
-        optBanner.style.cssText = 'width:100%; background:rgba(99,102,241,0.18); border-bottom:1px solid rgba(99,102,241,0.4); padding:8px 18px; color:#ffffff; font-size:12.5px; font-family:-apple-system,BlinkMacSystemFont,sans-serif; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box; z-index:99998;';
-        optBanner.innerHTML = '<div><strong style="color:#818cf8; margin-right:6px;">EWU Buddy Update Available (v' + update.latestVersion + '):</strong><span>' + (update.title || 'New features & advising updates ready.') + '</span></div><div style="display:flex; align-items:center; gap:10px;"><a href="' + (update.updateUrl || 'https://t.me/AftabKabir') + '" target="_blank" style="color:#38bdf8; font-weight:700; text-decoration:underline; font-size:12px;">Download Update &rarr;</a><button style="background:transparent; border:none; color:#94a3b8; font-size:14px; cursor:pointer; padding:0 4px;" onclick="this.closest(\'#ewu-portal-opt-update\').remove()">✕</button></div>';
-        var topBarEl = document.body.firstElementChild;
-        if (topBarEl) document.body.insertBefore(optBanner, topBarEl);
-        else document.body.appendChild(optBanner);
-      }
+      // Optional updates do NOT show top bar notices in portal page per user preferences (only in popup)
 
       // PRIORITY 5: Broadcast Notice Banner (non-blocking)
       if (notice.enabled && (notice.title || notice.message)) {
@@ -209,15 +270,27 @@
   }
 
   function showUnactivatedPrompt() {
+    try {
+      if (sessionStorage.getItem('ewu_unact_prompt_dismissed') === '1') return;
+    } catch (_) {}
+
     var existingPrompt = document.getElementById('ewu-unactivated-prompt');
     if (existingPrompt) return;
 
     var prompt = document.createElement('div');
     prompt.id = 'ewu-unactivated-prompt';
     prompt.style.cssText = 'position:fixed; bottom:20px; right:20px; z-index:999999; background:rgba(13,19,33,0.95); border:1px solid rgba(99,102,241,0.45); border-radius:14px; padding:14px 18px; box-shadow:0 12px 35px rgba(0,0,0,0.7), 0 0 20px rgba(99,102,241,0.25); color:#ffffff; font-family:-apple-system,BlinkMacSystemFont,sans-serif; backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); display:flex; align-items:center; gap:12px; font-size:13px; max-width:360px;';
-    prompt.innerHTML = '<div style="width:34px; height:34px; border-radius:10px; background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#818cf8;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div><strong style="display:block; font-size:13px; margin-bottom:2px;">Activate EWU Portal Helper</strong><span style="font-size:11.5px; color:#cbd5e1;">Enter your license key to unlock automated captcha &amp; advising tools.</span></div><button id="btnPromptActivate" style="padding:7px 12px; background:linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; margin-left:4px;">Activate &rarr;</button><button style="background:transparent; border:none; color:#94a3b8; font-size:14px; cursor:pointer; padding:0 2px;" onclick="this.closest(\'#ewu-unactivated-prompt\').remove()">✕</button>';
+    prompt.innerHTML = '<div style="width:34px; height:34px; border-radius:10px; background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#818cf8;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div><strong style="display:block; font-size:13px; margin-bottom:2px;">Activate EWU Portal Helper</strong><span style="font-size:11.5px; color:#cbd5e1;">Enter your license key to unlock automated captcha &amp; advising tools.</span></div><button id="btnPromptActivate" style="padding:7px 12px; background:linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; margin-left:4px;">Activate &rarr;</button><button id="btnDismissUnactPrompt" style="background:transparent; border:none; color:#94a3b8; font-size:14px; cursor:pointer; padding:0 2px;">✕</button>';
     
     document.body.appendChild(prompt);
+
+    var btnClose = document.getElementById('btnDismissUnactPrompt');
+    if (btnClose) {
+      btnClose.addEventListener('click', function () {
+        try { sessionStorage.setItem('ewu_unact_prompt_dismissed', '1'); } catch (_) {}
+        prompt.remove();
+      });
+    }
 
     var btnAct = document.getElementById('btnPromptActivate');
     if (btnAct) {
@@ -4483,12 +4556,6 @@
               '<div class="ewu-option-desc">Automatically fetch current semester routine data via portal API.</div>' +
             '</div>' +
             '<label class="ewu-option-card" style="margin:0;">' +
-              '<input type="file" id="ewu-cp-file-json" accept=".json" style="display:none;">' +
-              '<div class="ewu-option-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>' +
-              '<div class="ewu-option-title">Upload Custom JSON</div>' +
-              '<div class="ewu-option-desc">Upload a pre-saved routine JSON file from your computer.</div>' +
-            '</label>' +
-            '<label class="ewu-option-card" style="margin:0;">' +
               '<input type="file" id="ewu-cp-file-pdf" accept=".pdf" style="display:none;">' +
               '<div class="ewu-option-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>' +
               '<div class="ewu-option-title">Upload Routine PDF</div>' +
@@ -4504,13 +4571,6 @@
 
       safeQuery('#ewu-cp-btn-fetch').addEventListener('click', function () {
         self._fetchCoursesData();
-      });
-
-      safeQuery('#ewu-cp-file-json').addEventListener('change', function (e) {
-        if (e.target.files && e.target.files[0]) {
-          self._parseJSONFile(e.target.files[0]);
-          e.target.value = '';
-        }
       });
 
       safeQuery('#ewu-cp-file-pdf').addEventListener('change', function (e) {
@@ -4543,22 +4603,6 @@
         log('Course Planner fetch error:', err);
         Toast.show('Fetch failed: ' + err.message, 'error');
       }
-    },
-
-    _parseJSONFile: function (file) {
-      var self = this;
-      var reader = new FileReader();
-      reader.onload = function (e) {
-        try {
-          var data = JSON.parse(e.target.result);
-          if (!Array.isArray(data)) throw new Error('JSON content is not a valid routine array.');
-          Toast.show('JSON routine loaded successfully.', 'success', 2500);
-          self._processRawData(data);
-        } catch (err) {
-          Toast.show('Failed to parse JSON file: ' + err.message, 'error');
-        }
-      };
-      reader.readAsText(file);
     },
 
     _parsePDFFile: async function (file) {
@@ -4647,7 +4691,7 @@
         }
 
         if (!courses.length) {
-          throw new Error('No valid course sections recognized in this PDF. Please ensure you uploaded an official EWU class routine PDF, or use "Fetch Courses from Portal" / "Upload Custom JSON".');
+          throw new Error('No valid course sections recognized in this PDF. Please ensure you uploaded an official EWU class routine PDF, or use "Fetch Courses from Portal".');
         }
         Toast.show('Parsed ' + courses.length + ' course entries from PDF file.', 'success', 2500);
         self._processRawData(courses);

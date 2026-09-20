@@ -61,6 +61,15 @@
 * **Authentic EWU Identity**: Styled with EWU building terracotta brick red accents and student portal deep ocean navy slate tones.
 * **Modern Minimal Buttons**: Tactile, sleek buttons with micro-interactions, responsive sizing, and high-contrast accessibility.
 
+### 🛡️ 6. Cloudflare Edge Backend & Admin Command Center
+* **Edge-Powered Licensing**: Built on Cloudflare Workers & Cloudflare D1 with sub-millisecond global latency and SHA-256 HMAC cryptographic token signatures.
+* **Security & IP Firewall Protection**:
+  * Auto-expiring 20-minute administrator session tokens.
+  * Adaptive brute-force IP lockout protection (locks out unauthorized IPs after 5 failed password attempts).
+  * Real-time Login Audit Trail and IP Blocklist management directly in the Admin Command Center.
+* **Remote Fleet Control**: Instant emergency remote kill-switch / shutdown, real-time broadcast banners, and mandatory version update controls.
+* **Smart Student Pass Generator**: One-click custom license card sharing with customizable templates (Cyber Minimalist, Student Card, Telegram VIP, Discord Rich) and direct Telegram sharing integration.
+
 ---
 
 ## 🧭 First-Start Onboarding Experience

@@ -1,31 +1,51 @@
 document.addEventListener('DOMContentLoaded', function () {
-  var manifest = chrome.runtime.getManifest();
-  var currentVersion = manifest.version || '1.1.0';
+  var manifestVer = (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getManifest) ? (chrome.runtime.getManifest().version || '1.1.0') : '1.1.0';
 
-  document.getElementById('currentVerText').textContent = 'v' + currentVersion;
+  var curEl = document.getElementById('currentVerText');
+  if (curEl) curEl.textContent = 'v' + manifestVer;
 
-  chrome.storage.local.get(['ewu_system_update'], function (res) {
-    var update = res.ewu_system_update || {};
-    
-    if (update.title) {
-      document.getElementById('updateTitle').textContent = update.title;
-    }
-    if (update.latestVersion) {
-      document.getElementById('latestVerText').textContent = 'v' + update.latestVersion;
-    }
-    if (update.changelog) {
-      document.getElementById('changelogText').textContent = update.changelog;
-      document.getElementById('changelogSection').style.display = 'block';
-    }
-    
-    var updateBtn = document.getElementById('updateBtn');
-    var targetUrl = update.updateUrl || 'https://t.me/AftabKabir';
-    updateBtn.href = targetUrl;
-    
-    updateBtn.addEventListener('click', function () {
-      chrome.tabs.create({ url: targetUrl });
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    chrome.storage.local.get(['ewu_system_update'], function (res) {
+      var update = (res && res.ewu_system_update) || {};
+      
+      if (update.title) {
+        var tEl = document.getElementById('updateTitle');
+        if (tEl) tEl.textContent = update.title;
+      }
+      if (update.latestVersion) {
+        var lEl = document.getElementById('latestVerText');
+        if (lEl) lEl.textContent = 'v' + update.latestVersion;
+      }
+      if (update.changelog) {
+        var cEl = document.getElementById('changelogText');
+        var cSec = document.getElementById('changelogSection');
+        if (cEl) cEl.textContent = update.changelog;
+        if (cSec) cSec.style.display = 'block';
+      }
+      
+      var updateBtn = document.getElementById('updateBtn');
+      var targetUrl = update.updateUrl || 'https://t.me/AftabKabir';
+      if (updateBtn) {
+        updateBtn.href = targetUrl;
+        updateBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          if (typeof chrome !== 'undefined' && chrome.tabs) {
+            chrome.tabs.create({ url: targetUrl });
+          } else {
+            window.open(targetUrl, '_blank');
+          }
+        });
+      }
     });
-  });
+  } else {
+    var updateBtn = document.getElementById('updateBtn');
+    if (updateBtn) {
+      updateBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        window.open(updateBtn.href || 'https://t.me/AftabKabir', '_blank');
+      });
+    }
+  }
 
   // Responsive Ambient Background Slideshow Controller
   (function initBackgroundSlideshow() {

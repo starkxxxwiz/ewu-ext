@@ -708,10 +708,12 @@
         const btnUp = document.getElementById('btnPopupUpdateAction');
         if (btnUp) {
           btnUp.addEventListener('click', () => {
-            if (update.updateUrl) {
-              window.open(update.updateUrl, '_blank');
-            } else if (chrome.tabs) {
+            if (typeof chrome !== 'undefined' && chrome.tabs) {
               chrome.tabs.create({ url: chrome.runtime.getURL('pages/update.html') });
+            } else if (update.updateUrl) {
+              window.open(update.updateUrl, '_blank');
+            } else {
+              window.open('pages/update.html', '_blank');
             }
           });
         }
@@ -792,11 +794,23 @@
       if (isUpdateAvailable && !update.isMandatory && showUpdateNotice) {
         const upBanner = document.createElement('div');
         upBanner.id = 'ewu-popup-update-banner';
-        upBanner.style.cssText = 'margin:8px 14px 0 14px; background:rgba(59,130,246,0.12); border:1px solid rgba(59,130,246,0.3); border-radius:8px; padding:7px 10px; font-size:11.5px; line-height:1.4; color:#f1f5f9; display:flex; justify-content:space-between; align-items:center;';
+        upBanner.style.cssText = 'margin:8px 14px 0 14px; background:rgba(59,130,246,0.14); border:1px solid rgba(59,130,246,0.35); border-radius:10px; padding:8px 12px; font-size:11.5px; line-height:1.4; color:#f1f5f9; display:flex; justify-content:space-between; align-items:center; cursor:pointer; transition:all 0.15s ease;';
         upBanner.innerHTML = `
-          <span><strong style="color:#60a5fa;">Update v${update.latestVersion} available!</strong></span>
-          <a href="${update.updateUrl || 'https://t.me/AftabKabir'}" target="_blank" style="color:#60a5fa; font-weight:600; text-decoration:underline; margin-left:8px;">Download &rarr;</a>
+          <div style="display:flex; align-items:center; gap:7px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+            <span style="font-weight:600;"><strong style="color:#60a5fa;">Update v${update.latestVersion}</strong> available</span>
+          </div>
+          <span style="color:#38bdf8; font-weight:700; font-size:11.5px; display:inline-flex; align-items:center; gap:3px;">Update &rarr;</span>
         `;
+        upBanner.addEventListener('click', () => {
+          if (typeof chrome !== 'undefined' && chrome.tabs) {
+            chrome.tabs.create({ url: chrome.runtime.getURL('pages/update.html') });
+          } else if (update.updateUrl) {
+            window.open(update.updateUrl, '_blank');
+          } else {
+            window.open('pages/update.html', '_blank');
+          }
+        });
         if (headerEl && headerEl.nextSibling) {
           headerEl.parentNode.insertBefore(upBanner, headerEl.nextSibling);
         }
