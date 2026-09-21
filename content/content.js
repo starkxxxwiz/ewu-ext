@@ -69,20 +69,24 @@
     { path: '/Home/Advising',              id: 'advising',       label: 'Advising Page' },
     { path: '/home/advising',              id: 'advising',       label: 'Advising Page' },
     { path: '/Home/AdvisingOffline',       id: 'advisingOffline', label: 'Advising Offline' },
-    { path: '/home/advisingoffline',       id: 'advisingOffline', label: 'Advising Offline' },
+    { path: '/home/advisingoffline',       id: 'advisingOffline', label: 'Advising Offline' }
   ];
 
   function detectPage() {
     var pn = location.pathname;
+    var pnl = pn.toLowerCase();
+
+    // Check exact & lowercase matches
     for (var i = 0; i < ALLOWED_PATHS.length; i++) {
       var ap = ALLOWED_PATHS[i];
-      if (pn === ap.path || pn.toLowerCase() === ap.path.toLowerCase()) {
+      if (pn === ap.path || pnl === ap.path.toLowerCase()) {
         return { id: ap.id, label: ap.label };
       }
       if (ap.path === '/' && (pn === '/' || pn === '')) {
         return { id: ap.id, label: ap.label };
       }
     }
+
     return null;
   }
 
@@ -3179,13 +3183,15 @@
     _timer: null,
     _searchTimer: null,
 
-    init: async function (settings) {
+    init: function (settings) {
       this._settings = settings;
       var mods = settings.modules || {};
       if (mods.advisingTableEnhancer === false) return;
 
       var pn = location.pathname.toLowerCase();
       var isAdvPage = (pn.indexOf('/home/advising') !== -1) ||
+                      (pn.indexOf('advisingonline') !== -1) ||
+                      (pn.indexOf('advising') !== -1) ||
                       !!safeQuery('.btn2') ||
                       !!safeQuery('[href*="/Home/Advising"]') ||
                       !!safeQuery('#form_part_1');
@@ -3196,7 +3202,6 @@
       this._listenForPageHookMessages();
       this._watchTables();
       this._injectControlsBar();
-      this._injectTopPDFButton();
       this._enhanceTables();
     },
 
@@ -3227,58 +3232,117 @@
         if (item.SectionId) {
           this._apiMapBySectionId[item.SectionId] = item;
         }
-        var cc = safeText(item.CourseCode);
-        var sec = safeText(item.SectionName);
+        var cc = safeText(item.CourseCode).toUpperCase().trim();
+        var sec = safeText(item.SectionName).trim();
         if (cc && sec) {
           this._apiMapByKey[cc + '_' + sec] = item;
+          var secNum = parseInt(sec, 10);
+          if (!isNaN(secNum)) {
+            this._apiMapByKey[cc + '_' + String(secNum)] = item;
+          }
         }
       }
 
       debugLog('ADV: ' + items.length + ' routine items captured');
       Toast.show('Advising course data loaded (' + items.length + ' sections)', 'success', 2500);
-      this._scheduleEnhance();
+      this._enhanceTables();
+      this._applyFilters();
     },
 
     _watchTables: function () {
-      var targetNode = safeQuery('#form_part_1') || safeQuery('.main-wrapper') || document.body;
+      var targetNode = safeQuery('.body-content') || safeQuery('.common-container') || safeQuery('.main-wrapper') || document.body;
       if (!targetNode) return;
       var self = this;
 
       if (this._observer) this._observer.disconnect();
-      this._observer = new MutationObserver(function () {
-        if (!self._timer) self._scheduleEnhance();
+      this._observer = new MutationObserver(function (mutations) {
+        var shouldEnhance = false;
+        for (var m = 0; m < mutations.length; m++) {
+          var mut = mutations[m];
+          if (mut.addedNodes && mut.addedNodes.length > 0) {
+            for (var n = 0; n < mut.addedNodes.length; n++) {
+              var node = mut.addedNodes[n];
+              if (node.nodeType === 1) {
+                if (node.tagName === 'TR' || node.tagName === 'TABLE' || (node.querySelector && node.querySelector('table, tr'))) {
+                  shouldEnhance = true;
+                  break;
+                }
+              }
+            }
+          }
+          if (shouldEnhance) break;
+        }
+
+        if (shouldEnhance && !self._timer) {
+          self._scheduleEnhance();
+        }
       });
       this._observer.observe(targetNode, { childList: true, subtree: true });
 
-      // Tab button clicks (.btn1, .btn2, .btn3, .btn4)
+      // Tab button clicks (.btn1, .btn2, .btn3, .btn4) & Refresh buttons
       document.addEventListener('click', function (e) {
-        var btn = e.target.closest ? e.target.closest('.btn1, .btn2, .btn3, .btn4') : null;
-        if (btn) {
+        var tabBtn = e.target.closest ? e.target.closest('.btn1, .btn2, .btn3, .btn4') : null;
+        if (tabBtn) {
           setTimeout(function () {
             self._enhanceTables();
-          }, 100);
+            self._applyFilters();
+          }, 40);
+          return;
+        }
+
+        var refreshBtn = e.target.closest ? e.target.closest('#btn-refresh-seats, [ng-click*="refreshSeatCapacity"], [ng-click*="GetAllRoutine"], [ng-click*="Refresh"], .btn-refresh') : null;
+        if (refreshBtn) {
+          Toast.show('Refreshing seat capacities...', 'info', 1800);
+          setTimeout(function () {
+            self._scheduleEnhance();
+          }, 350);
         }
       });
     },
 
     _injectControlsBar: function () {
       if (safeQuery('#ewu-adv-controls')) return;
-      var container = safeQuery('#form_part_1');
-      if (!container) return;
+
+      // Find optimal placement: directly above tab buttons (.btn1)
+      var btn1 = safeQuery('.btn1');
+      var insertTarget = null;
+      var insertParent = null;
+
+      if (btn1) {
+        var btnCol = btn1.closest ? btn1.closest('.col-sm-3, .col-xs-3, .col-md-3, [class*="col-"]') : null;
+        insertTarget = btnCol || btn1;
+        insertParent = insertTarget.parentNode;
+      } else {
+        var form3 = safeQuery('#form_part_3');
+        if (form3 && form3.parentNode) {
+          insertTarget = form3.nextSibling;
+          insertParent = form3.parentNode;
+        } else {
+          var container = safeQuery('#form_part_1') || safeQuery('.common-container');
+          if (container) {
+            insertTarget = container.firstChild;
+            insertParent = container;
+          }
+        }
+      }
+
+      if (!insertParent) return;
 
       var bar = document.createElement('div');
       bar.id = 'ewu-adv-controls';
       bar.className = 'ewu-oc-controls';
-      bar.style.cssText = 'margin-bottom: 12px; margin-top: 10px;';
+      bar.style.cssText = 'width: 100%; margin: 8px 0 14px 0; clear: both; box-sizing: border-box;';
 
-      // Search group
+      // Left: Search group
       var searchGroup = document.createElement('div');
       searchGroup.className = 'ewu-oc-search-group';
+      searchGroup.style.flex = '1';
+      searchGroup.style.minWidth = '220px';
 
       var searchLabel = document.createElement('label');
       searchLabel.className = 'ewu-oc-search-label';
       searchLabel.setAttribute('for', 'ewu-adv-search-input');
-      searchLabel.textContent = 'Search Advising Courses';
+      searchLabel.textContent = 'Instant Advising Search';
       searchGroup.appendChild(searchLabel);
 
       var searchWrap = document.createElement('div');
@@ -3294,7 +3358,7 @@
       input.type = 'text';
       input.id = 'ewu-adv-search-input';
       input.className = 'ewu-oc-search-input';
-      input.placeholder = 'Search by course, faculty, or timing...';
+      input.placeholder = 'Search course, section, faculty, time, room...';
       input.setAttribute('autocomplete', 'off');
       input.setAttribute('spellcheck', 'false');
 
@@ -3303,26 +3367,27 @@
       clearBtn.id = 'ewu-adv-search-clear';
       clearBtn.className = 'ewu-oc-search-clear';
       clearBtn.innerHTML = '\u00D7';
-      clearBtn.title = 'Clear';
+      clearBtn.title = 'Clear search';
+      clearBtn.style.display = 'none';
 
       searchWrap.appendChild(input);
       searchWrap.appendChild(clearBtn);
       searchGroup.appendChild(searchWrap);
       bar.appendChild(searchGroup);
 
-      // Right wrap: stats + toggle
+      // Right: stats badge + Available only toggle + single PDF button
       var rightWrap = document.createElement('div');
       rightWrap.className = 'ewu-oc-controls-right';
 
       var statsEl = document.createElement('span');
       statsEl.id = 'ewu-adv-stats';
       statsEl.className = 'ewu-oc-stats';
-      statsEl.textContent = 'Advising Sections: 0';
+      statsEl.textContent = 'Sections: 0';
       rightWrap.appendChild(statsEl);
 
       var toggleWrap = document.createElement('label');
       toggleWrap.className = 'ewu-oc-toggle-label';
-      toggleWrap.title = 'Show only courses with available seats';
+      toggleWrap.title = 'Show only courses with available seats (Left > 0)';
 
       var toggleInput = document.createElement('input');
       toggleInput.type = 'checkbox';
@@ -3334,21 +3399,23 @@
 
       var toggleText = document.createElement('span');
       toggleText.className = 'ewu-oc-toggle-text';
-      toggleText.textContent = 'Show available';
+      toggleText.textContent = 'Available only';
 
       toggleWrap.appendChild(toggleInput);
       toggleWrap.appendChild(toggleTrack);
       toggleWrap.appendChild(toggleText);
       rightWrap.appendChild(toggleWrap);
 
-      // PDF Export button in controls bar
-      var pdfBtn = document.createElement('a');
-      pdfBtn.href = '';
+      // Single PDF Export button in controls bar
+      var pdfBtn = document.createElement('button');
+      pdfBtn.type = 'button';
       pdfBtn.id = 'ewu-adv-export-pdf-btn';
       pdfBtn.className = 'btn btn-primary ewu-oc-export-pdf-btn';
-      pdfBtn.title = 'Export Advising Table to PDF';
+      pdfBtn.title = 'Export advising courses to PDF';
       pdfBtn.innerHTML = '<span class="fa fa-file-pdf"></span>';
       pdfBtn.style.cssText = 'margin-left: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; height: 32px; width: 34px; padding: 0; border-radius: 6px;';
+      
+      var self = this;
       pdfBtn.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -3358,58 +3425,32 @@
 
       bar.appendChild(rightWrap);
 
-      // Insert above tab buttons or inside container
-      var firstBtnCol = container.querySelector('.col-sm-3');
-      if (firstBtnCol && firstBtnCol.parentNode) {
-        firstBtnCol.parentNode.parentNode.insertBefore(bar, firstBtnCol.parentNode);
+      if (insertTarget) {
+        insertParent.insertBefore(bar, insertTarget);
       } else {
-        container.insertBefore(bar, container.firstChild);
+        insertParent.appendChild(bar);
       }
 
-      var self = this;
       input.addEventListener('input', function () {
         if (self._searchTimer) clearTimeout(self._searchTimer);
         self._searchTimer = setTimeout(function () {
           self._searchTimer = null;
           self._applyFilters();
           clearBtn.style.display = input.value.trim() ? 'flex' : 'none';
-        }, 150);
+        }, 20);
       });
+
       clearBtn.addEventListener('click', function () {
         input.value = '';
         self._applyFilters();
         clearBtn.style.display = 'none';
         input.focus();
       });
+
       toggleInput.addEventListener('change', function () {
         self._showAvailable = toggleInput.checked;
         self._applyFilters();
       });
-    },
-
-    _injectTopPDFButton: function () {
-      if (safeQuery('#ewu-adv-top-pdf-btn')) return;
-      var refreshBtn = safeQuery('#btn-refresh-seats') || safeQuery('button[ng-click*="refreshSeatCapacity"]');
-      if (!refreshBtn) return;
-
-      var topPdfBtn = document.createElement('a');
-      topPdfBtn.href = '';
-      topPdfBtn.id = 'ewu-adv-top-pdf-btn';
-      topPdfBtn.className = 'btn btn-primary ewu-oc-export-pdf-btn';
-      topPdfBtn.title = 'Export to PDF';
-      topPdfBtn.innerHTML = '<span class="fa fa-file-pdf"></span>';
-      topPdfBtn.style.cssText = 'margin-left: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; height: 32px; width: 34px; border-radius: 20px;';
-
-      var self = this;
-      topPdfBtn.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        self._exportAdvisingPDF();
-      });
-
-      if (refreshBtn.parentNode) {
-        refreshBtn.parentNode.insertBefore(topPdfBtn, refreshBtn.nextSibling);
-      }
     },
 
     _scheduleEnhance: function () {
@@ -3418,24 +3459,72 @@
       this._timer = setTimeout(function () {
         self._timer = null;
         self._enhanceTables();
-      }, 150);
+      }, 50);
     },
 
     _enhanceTables: function () {
-      var tables = safeQueryAll('#div1 table, #div2 table, #div3 table, #div4 table, .grid-table');
+      var self = this;
+      var tables = safeQueryAll('#div1 table, #div2 table, #div3 table, #div4 table, .One table, .Two table, .Three table, .Four table, .grid-table');
       if (!tables || !tables.length) return;
 
       var colorLeft = (this._settings && this._settings.modules && this._settings.modules.advisingColorLeft !== false);
 
       for (var ti = 0; ti < tables.length; ti++) {
         var table = tables[ti];
-        var parentContainer = table.closest ? table.closest('#div1, #div2, #div3, #div4, .One, .Two, .Three, .Four') : null;
+        var parentContainer = table.closest ? table.closest('.One, .Two, .Three, .Four, #div1, #div2, #div3, #div4') : null;
         if (!parentContainer) continue;
+
+        // Ensure parent scroll container has proper class for sticky support
+        var scrollWrapper = table.closest ? table.closest('div[style*="height"], .row[style*="overflow"], .ewu-adv-scroll-container') : null;
+        if (scrollWrapper && !scrollWrapper.classList.contains('ewu-adv-scroll-container')) {
+          scrollWrapper.classList.add('ewu-adv-scroll-container');
+        }
+
+        var respWrapper = table.closest ? table.closest('.table-responsive') : null;
+        if (respWrapper) {
+          respWrapper.style.overflow = 'visible';
+        }
 
         table.classList.add('ewu-oc-table');
         if (table.getAttribute('border') !== '1') table.setAttribute('border', '1');
 
-        // Header replacement: Course | Section | Faculty | Seat(C/T) | Left | Timing | Room | Credit | Max cr | Prereq
+        // Determine column mapping for this specific advising table before replacing header
+        var isDiv2 = !!table.closest('.Two, #div2');
+        var isDiv1 = !!table.closest('.One') && !isDiv2;
+        var isDiv3 = !!table.closest('.Three, #div3');
+        var isDiv4 = !!table.closest('.Four, #div4');
+
+        var colMap = {
+          course: 0,
+          section: 1,
+          credit: 2,
+          maxCr: isDiv2 ? 3 : -1,
+          timing: isDiv2 ? 4 : (isDiv1 ? 4 : 3),
+          faculty: isDiv2 ? 5 : (isDiv1 ? 5 : 4),
+          room: isDiv2 ? 6 : (isDiv1 ? 6 : 5),
+          cap: isDiv2 ? 7 : (isDiv1 ? 7 : 6),
+          taken: isDiv2 ? 8 : (isDiv1 ? 8 : 7),
+          prereq: isDiv2 ? 9 : (isDiv1 ? 3 : 8)
+        };
+
+        var origThs = table.querySelectorAll('tr:first-child th, thead th');
+        if (origThs && origThs.length >= 7 && !table.querySelector('.ewu-oc-sticky-header')) {
+          for (var hIdx = 0; hIdx < origThs.length; hIdx++) {
+            var thTxt = origThs[hIdx].textContent.trim().toLowerCase();
+            if (thTxt.indexOf('course') !== -1) colMap.course = hIdx;
+            else if (thTxt.indexOf('section') !== -1 || thTxt === 'sec') colMap.section = hIdx;
+            else if (thTxt.indexOf('max') !== -1) colMap.maxCr = hIdx;
+            else if (thTxt.indexOf('credit') !== -1) colMap.credit = hIdx;
+            else if (thTxt.indexOf('tim') !== -1) colMap.timing = hIdx;
+            else if (thTxt.indexOf('faculty') !== -1) colMap.faculty = hIdx;
+            else if (thTxt.indexOf('room') !== -1) colMap.room = hIdx;
+            else if (thTxt.indexOf('cap') !== -1) colMap.cap = hIdx;
+            else if (thTxt.indexOf('take') !== -1) colMap.taken = hIdx;
+            else if (thTxt.indexOf('prereq') !== -1) colMap.prereq = hIdx;
+          }
+        }
+
+        // Standard 10-column header: Course | Section | Faculty | Seat(C/T) | Left | Timing | Room | Credit | Max cr | Prereq
         var existingThead = table.querySelector('thead');
         var headers = ['Course', 'Section', 'Faculty', 'Seat(C/T)', 'Left', 'Timing', 'Room', 'Credit', 'Max cr', 'Prereq'];
         
@@ -3446,13 +3535,15 @@
         headerHTML += '</tr></thead>';
 
         if (existingThead) {
-          existingThead.outerHTML = headerHTML;
+          if (!existingThead.querySelector('.ewu-oc-sticky-header')) {
+            existingThead.outerHTML = headerHTML;
+          }
         } else {
           var firstTr = table.querySelector('tr');
-          if (firstTr && firstTr.parentNode.tagName.toLowerCase() !== 'tbody') {
+          if (firstTr && (firstTr.querySelector('th') || firstTr.parentNode.tagName.toLowerCase() !== 'tbody')) {
             firstTr.outerHTML = headerHTML;
-          } else if (firstTr && firstTr.querySelectorAll('th').length > 0) {
-            firstTr.outerHTML = headerHTML;
+          } else {
+            table.insertAdjacentHTML('afterbegin', headerHTML);
           }
         }
 
@@ -3462,14 +3553,15 @@
           tbody = document.createElement('tbody');
           table.appendChild(tbody);
         }
+
         var dataRows = tbody.querySelectorAll('tr');
         if ((!dataRows || dataRows.length === 0) && this._apiData && this._apiData.length > 0) {
           var html = '';
           for (var itemIndex = 0; itemIndex < this._apiData.length; itemIndex++) {
             var itm = this._apiData[itemIndex];
             if (!itm) continue;
-            var cCap = itm.SeatCapacity != null ? itm.SeatCapacity : 0;
-            var cTaken = itm.SeatTaken != null ? itm.SeatTaken : 0;
+            var cCap = itm.SeatCapacity != null ? parseInt(itm.SeatCapacity, 10) || 0 : 0;
+            var cTaken = itm.SeatTaken != null ? parseInt(itm.SeatTaken, 10) || 0 : 0;
             var cLeft = Math.max(0, cCap - cTaken);
             html += '<tr>' +
               '<td>' + escapeHTML(String(itm.CourseCode || '')) + '</td>' +
@@ -3487,7 +3579,7 @@
           tbody.innerHTML = html;
         }
 
-        var rows = table.querySelectorAll('tbody tr, tr');
+        var rows = tbody.querySelectorAll('tr');
         for (var ri = 0; ri < rows.length; ri++) {
           var tr = rows[ri];
           if (tr.querySelector('th')) continue; // skip header row
@@ -3495,85 +3587,71 @@
           var cells = tr.querySelectorAll('td');
           if (!cells || cells.length < 3) continue;
 
-          // Attempt Angular scope extraction
-          var scopeSc = null;
-          try {
-            if (window.angular) {
-              var scope = window.angular.element(tr).scope();
-              if (scope && scope.sc) scopeSc = scope.sc;
-            }
-          } catch (_) {}
+          var rawCode = '';
+          var rawSec = '';
+          var faculty = '';
+          var timing = '';
+          var room = '';
+          var cap = 0;
+          var taken = 0;
+          var credit = '-';
+          var maxCr = '-';
+          var prereq = '-';
 
-          var rawCode = (scopeSc ? scopeSc.CourseCode : (cells[0] ? cells[0].textContent : '')).trim();
-          var rawSec  = (scopeSc ? scopeSc.SectionName : (cells[1] ? cells[1].textContent : '')).trim();
-          if (!rawCode) continue;
-
-          // Find matching API item
-          var apiItem = (scopeSc && scopeSc.SectionId && this._apiMapBySectionId[scopeSc.SectionId]) ||
-                        this._apiMapByKey[rawCode + '_' + rawSec] || null;
-
-          var faculty = (scopeSc && scopeSc.ShortName) ? scopeSc.ShortName :
-                        (apiItem ? (apiItem.ShortName || apiItem.FacultyName) : '');
-          if (!faculty || faculty === 'null' || faculty === 'undefined') {
-            for (var ci = 0; ci < cells.length; ci++) {
-              var txt = (cells[ci].textContent || '').trim();
-              if (txt.length >= 2 && txt.length <= 4 && txt === txt.toUpperCase() && !/\d/.test(txt) && txt !== rawCode) {
-                faculty = txt; break;
-              }
-            }
+          if (tr.getAttribute('data-ewu-enhanced') === 'true') {
+            // Already enhanced row: read stored attributes
+            rawCode = tr.getAttribute('data-code') || '';
+            rawSec  = tr.getAttribute('data-sec') || '';
+            faculty = tr.getAttribute('data-faculty') || '-';
+            timing  = tr.getAttribute('data-time') || '-';
+            room    = tr.getAttribute('data-room') || '-';
+            cap     = parseInt(tr.getAttribute('data-cap') || '0', 10);
+            taken   = parseInt(tr.getAttribute('data-taken') || '0', 10);
+            credit  = tr.getAttribute('data-credit') || '-';
+            maxCr   = tr.getAttribute('data-maxcr') || '-';
+            prereq  = tr.getAttribute('data-prereq') || '-';
+          } else {
+            // Fresh un-enhanced row from portal HTML: parse accurately via colMap
+            rawCode = (colMap.course >= 0 && cells[colMap.course] ? cells[colMap.course].textContent : (cells[0] ? cells[0].textContent : '')).trim();
+            rawSec  = (colMap.section >= 0 && cells[colMap.section] ? cells[colMap.section].textContent : (cells[1] ? cells[1].textContent : '')).trim();
+            credit  = (colMap.credit >= 0 && cells[colMap.credit] ? cells[colMap.credit].textContent : '-').trim();
+            maxCr   = (colMap.maxCr >= 0 && cells[colMap.maxCr] ? cells[colMap.maxCr].textContent : '-').trim();
+            timing  = (colMap.timing >= 0 && cells[colMap.timing] ? cells[colMap.timing].textContent : '-').trim();
+            faculty = (colMap.faculty >= 0 && cells[colMap.faculty] ? cells[colMap.faculty].textContent : '-').trim();
+            room    = (colMap.room >= 0 && cells[colMap.room] ? cells[colMap.room].textContent : '-').trim();
+            cap     = (colMap.cap >= 0 && cells[colMap.cap] ? parseInt(cells[colMap.cap].textContent.trim(), 10) || 0 : 0);
+            taken   = (colMap.taken >= 0 && cells[colMap.taken] ? parseInt(cells[colMap.taken].textContent.trim(), 10) || 0 : 0);
+            prereq  = (colMap.prereq >= 0 && cells[colMap.prereq] ? cells[colMap.prereq].textContent : '-').trim();
           }
-          if (!faculty) faculty = '-';
 
-          var credit = (scopeSc && scopeSc.CreditHour != null) ? scopeSc.CreditHour :
-                       (apiItem ? apiItem.CreditHour : (cells[2] ? cells[2].textContent.trim() : '-'));
-          if (credit == null || credit === 'null') credit = '-';
+          // Skip empty or uncompiled template rows
+          if (!rawCode || rawCode.indexOf('{{') !== -1) continue;
 
-          var maxCr = (scopeSc && scopeSc.MaxCredit != null) ? scopeSc.MaxCredit :
-                      (apiItem && apiItem.MaxCredit != null ? apiItem.MaxCredit : '-');
-          if (maxCr == null || maxCr === 'null') maxCr = '-';
+          // Check if intercepted API routine data is available for fresh seat counts
+          var ccKey = rawCode.toUpperCase();
+          var apiItem = this._apiMapByKey[ccKey + '_' + rawSec] ||
+                        this._apiMapByKey[ccKey + '_' + (parseInt(rawSec, 10) || rawSec)] || null;
 
-          var timing = (scopeSc && scopeSc.TimeSlotName) ? scopeSc.TimeSlotName :
-                       (apiItem ? apiItem.TimeSlotName : '');
-          if (!timing) {
-            for (var cj = 0; cj < cells.length; cj++) {
-              var tText = (cells[cj].textContent || '').trim();
-              if (/AM|PM|\d+:\d+/i.test(tText)) { timing = tText; break; }
-            }
+          if (apiItem) {
+            if (apiItem.SeatCapacity != null) cap = parseInt(apiItem.SeatCapacity, 10) || 0;
+            if (apiItem.SeatTaken != null) taken = parseInt(apiItem.SeatTaken, 10) || 0;
+            if (apiItem.ShortName || apiItem.FacultyName) faculty = apiItem.ShortName || apiItem.FacultyName;
+            if (apiItem.TimeSlotName) timing = apiItem.TimeSlotName;
+            if (apiItem.RoomCode || apiItem.RoomName) room = apiItem.RoomCode || apiItem.RoomName;
+            if (apiItem.CreditHour != null) credit = apiItem.CreditHour;
+            if (apiItem.MaxCredit != null) maxCr = apiItem.MaxCredit;
+            if (apiItem.PrerequisiteCourseCodes) prereq = apiItem.PrerequisiteCourseCodes;
           }
-          if (!timing) timing = '-';
 
-          var room = (scopeSc && scopeSc.RoomCode) ? scopeSc.RoomCode :
-                     (scopeSc && scopeSc.RoomName ? scopeSc.RoomName :
-                     (apiItem ? (apiItem.RoomCode || apiItem.RoomName) : ''));
-          if (!room || room === 'null') {
-            for (var cr = 0; cr < cells.length; cr++) {
-              var rTxt = (cells[cr].textContent || '').trim();
-              if (/(FUB|AB\d+|\d{3})/i.test(rTxt) && rTxt !== rawCode && rTxt !== faculty) {
-                room = rTxt; break;
-              }
-            }
-          }
-          if (!room) room = '-';
-
-          var cap = (scopeSc && scopeSc.SeatCapacity != null) ? parseInt(scopeSc.SeatCapacity, 10) :
-                    (apiItem ? parseInt(apiItem.SeatCapacity, 10) : 0);
-          var taken = (scopeSc && scopeSc.SeatTaken != null) ? parseInt(scopeSc.SeatTaken, 10) :
-                      (apiItem ? parseInt(apiItem.SeatTaken, 10) : 0);
-          
-          if (!cap && cells.length >= 8) {
-            for (var ck = 0; ck < cells.length; ck++) {
-              var num = parseInt(cells[ck].textContent.trim(), 10);
-              if (!isNaN(num) && num > 0 && num <= 200 && !cap) cap = num;
-              else if (!isNaN(num) && cap && !taken) taken = num;
-            }
-          }
+          if (!faculty || faculty === 'null' || faculty === '') faculty = '-';
+          if (!timing || timing === 'null' || timing === '') timing = '-';
+          if (!room || room === 'null' || room === '') room = '-';
+          if (!credit || credit === 'null' || credit === '') credit = '-';
+          if (!maxCr || maxCr === 'null' || maxCr === '') maxCr = '-';
+          if (!prereq || prereq === 'null' || prereq === '') prereq = '-';
 
           var left = Math.max(0, cap - taken);
           var seatCTLabel = cap + ' / ' + taken;
-
-          var prereq = (scopeSc && scopeSc.PrerequisiteCourseCodes) ? scopeSc.PrerequisiteCourseCodes :
-                       (apiItem ? apiItem.PrerequisiteCourseCodes : '');
-          if (!prereq || prereq === 'null') prereq = '-';
 
           var leftClass = 'ewu-oc-left';
           if (colorLeft) {
@@ -3581,6 +3659,19 @@
             else if (left <= 10)  leftClass += ' ewu-oc-left-yellow';
             else                  leftClass += ' ewu-oc-left-green';
           }
+
+          // Store raw values on row attributes
+          tr.setAttribute('data-code', rawCode);
+          tr.setAttribute('data-sec', rawSec);
+          tr.setAttribute('data-faculty', faculty);
+          tr.setAttribute('data-time', timing);
+          tr.setAttribute('data-room', room);
+          tr.setAttribute('data-cap', String(cap));
+          tr.setAttribute('data-taken', String(taken));
+          tr.setAttribute('data-credit', String(credit));
+          tr.setAttribute('data-maxcr', String(maxCr));
+          tr.setAttribute('data-prereq', String(prereq));
+          tr.setAttribute('data-ewu-enhanced', 'true');
 
           // Build row HTML: Course | Section | Faculty | Seat(C/T) | Left | Timing | Room | Credit | Max cr | Prereq
           var newRowHTML = '';
@@ -3602,15 +3693,19 @@
           tr.setAttribute('data-left', String(left));
           tr.className = 'ewu-oc-row ' + (ri % 2 === 0 ? 'ewu-oc-row-even' : 'ewu-oc-row-odd');
 
-          // Preserve / attach course add click handler for advising experience
-          if (!tr.hasAttribute('data-ewu-click-attached')) {
+          var hasAngular = false;
+          try {
+            hasAngular = !!(window.angular && window.angular.element(tr).scope());
+          } catch (_) {}
+
+          if (!hasAngular && !tr.hasAttribute('data-ewu-click-attached')) {
             tr.setAttribute('data-ewu-click-attached', 'true');
             tr.style.cursor = 'pointer';
-            tr.title = 'Click row to add course to selected list';
+            tr.title = 'Click to select course';
             (function(c, s, cr, tm, rm) {
               tr.addEventListener('click', function (e) {
                 if (e.target.closest('button, input, a, svg, path')) return;
-                self._addSelectedCourse(c, s, cr, tm, rm);
+                self._fallbackAddSelectedCourse(c, s, cr, tm, rm);
               });
             })(rawCode, rawSec, credit, timing, room);
           }
@@ -3623,17 +3718,28 @@
     _applyFilters: function () {
       var searchInput = safeQuery('#ewu-adv-search-input');
       var q = searchInput ? searchInput.value.trim().toLowerCase() : '';
+      var queryTokens = q ? q.split(/\s+/).filter(Boolean) : [];
 
-      var rows = safeQueryAll('#div1 tr.ewu-oc-row, #div2 tr.ewu-oc-row, #div3 tr.ewu-oc-row, #div4 tr.ewu-oc-row');
+      var rows = safeQueryAll('#div1 tr.ewu-oc-row, #div2 tr.ewu-oc-row, #div3 tr.ewu-oc-row, #div4 tr.ewu-oc-row, .One tr.ewu-oc-row, .Two tr.ewu-oc-row, .Three tr.ewu-oc-row, .Four tr.ewu-oc-row');
       var visible = 0;
       for (var i = 0; i < rows.length; i++) {
-        var searchText = (rows[i].getAttribute('data-search') || '').toLowerCase();
-        var leftVal = rows[i].getAttribute('data-left');
-        var hasLeft = leftVal !== '0';
-        var matchSearch = !q || searchText.indexOf(q) !== -1;
-        var matchAvail = !this._showAvailable || hasLeft;
+        var tr = rows[i];
+        var searchText = tr.getAttribute('data-search') || '';
+        var leftVal = parseInt(tr.getAttribute('data-left') || '0', 10);
+        
+        var matchSearch = true;
+        if (queryTokens.length > 0) {
+          for (var ti = 0; ti < queryTokens.length; ti++) {
+            if (searchText.indexOf(queryTokens[ti]) === -1) {
+              matchSearch = false;
+              break;
+            }
+          }
+        }
+
+        var matchAvail = !this._showAvailable || leftVal > 0;
         var show = matchSearch && matchAvail;
-        rows[i].style.display = show ? '' : 'none';
+        tr.style.display = show ? '' : 'none';
         if (show) visible++;
       }
       this._updateCount(visible);
@@ -3641,13 +3747,13 @@
 
     _updateCount: function (count) {
       var el = safeQuery('#ewu-adv-stats');
-      if (el) el.textContent = 'Advising Sections: ' + count;
+      if (el) el.textContent = 'Sections: ' + count;
     },
 
     _exportAdvisingPDF: async function () {
       Toast.show('Generating Advising PDF...', 'info', 2000);
 
-      var rows = safeQueryAll('#div1 tr.ewu-oc-row, #div2 tr.ewu-oc-row, #div3 tr.ewu-oc-row, #div4 tr.ewu-oc-row, .ewu-oc-table tr.ewu-oc-row');
+      var rows = safeQueryAll('#div1 tr.ewu-oc-row, #div2 tr.ewu-oc-row, #div3 tr.ewu-oc-row, #div4 tr.ewu-oc-row, .One tr.ewu-oc-row, .Two tr.ewu-oc-row, .Three tr.ewu-oc-row, .Four tr.ewu-oc-row, .ewu-oc-table tr.ewu-oc-row');
       var visibleData = [];
 
       for (var i = 0; i < rows.length; i++) {
@@ -3787,22 +3893,9 @@
       }
     },
 
-    _addSelectedCourse: function (code, sec, cr, tm, rm) {
+    _fallbackAddSelectedCourse: function (code, sec, cr, tm, rm) {
       if (!code) return;
-      try {
-        var activeRow = document.querySelector('tr[data-search*="' + code.toLowerCase() + '"]');
-        if (window.angular && activeRow) {
-          var scope = window.angular.element(activeRow).scope();
-          if (scope && typeof scope.AddFlowChartSubject === 'function' && scope.sc && scope.sc.SectionId) {
-            scope.AddFlowChartSubject(scope.sc.SectionId, 0);
-            scope.$apply();
-            Toast.show('Added ' + code + ' to selected courses', 'success', 2000);
-            return;
-          }
-        }
-      } catch (_) {}
-
-      var selectedTable = safeQuery('.selected-courses-table tbody') || safeQuery('.selected-courses-panel tbody') || safeQuery('.col-md-5 table tbody') || safeQuery('.col-sm-6.col-lg-5 table tbody');
+      var selectedTable = safeQuery('.selected-courses-table tbody') || safeQuery('.col-sm-6.col-lg-5 table tbody');
       if (!selectedTable) return;
 
       var existingRows = selectedTable.querySelectorAll('tr');
@@ -3816,12 +3909,13 @@
 
       var self = this;
       var tr = document.createElement('tr');
-      tr.innerHTML = '<td><strong>' + escapeHTML(code) + '</strong></td>' +
+      tr.innerHTML = '<td>' + escapeHTML(code) + '</td>' +
                      '<td>' + escapeHTML(sec) + '</td>' +
                      '<td>' + escapeHTML(cr) + '</td>' +
                      '<td>' + escapeHTML(tm) + '</td>' +
+                     '<td>-</td>' +
                      '<td>' + escapeHTML(rm) + '</td>' +
-                     '<td><button type="button" class="btn btn-danger btn-xs ewu-remove-course-btn" title="Drop"><i class="fa fa-trash"></i></button></td>';
+                     '<td><a href="#delete" class="btn btn-danger btn-xs ewu-remove-course-btn" title="Drop"><i class="fa fa-trash-o"></i></a></td>';
 
       var lastRow = selectedTable.querySelector('tr:last-child');
       if (lastRow && (lastRow.textContent.indexOf('Credits taken') !== -1 || lastRow.textContent.indexOf('total') !== -1)) {
@@ -3833,6 +3927,7 @@
       var delBtn = tr.querySelector('.ewu-remove-course-btn');
       if (delBtn) {
         delBtn.addEventListener('click', function (e) {
+          e.preventDefault();
           e.stopPropagation();
           tr.remove();
           self._recalcTotalCredits();
@@ -3845,7 +3940,7 @@
     },
 
     _recalcTotalCredits: function () {
-      var selectedTable = safeQuery('.selected-courses-table tbody') || safeQuery('.selected-courses-panel tbody') || safeQuery('.col-md-5 table tbody') || safeQuery('.col-sm-6.col-lg-5 table tbody');
+      var selectedTable = safeQuery('.selected-courses-table tbody') || safeQuery('.col-sm-6.col-lg-5 table tbody');
       if (!selectedTable) return;
       var rows = selectedTable.querySelectorAll('tr');
       var total = 0;
@@ -3882,10 +3977,9 @@
       if (ctrl) ctrl.remove();
       var pdfBtn = safeQuery('#ewu-adv-export-pdf-btn');
       if (pdfBtn) pdfBtn.remove();
-      if (topPdfBtn) topPdfBtn.remove();
+      var topPdfBtn = safeQuery('#ewu-adv-top-pdf-btn');
     }
   };
-
 
   /* ===========================================================
      ADVISING OFFLINE ORCHESTRATOR MODULE
@@ -5743,7 +5837,8 @@
   async function initApp() {
     _settings = await loadSettings();
 
-    if (!location.href.startsWith(CONFIG.PORTAL_BASE)) return;
+    var isAllowedHost = location.href.startsWith(CONFIG.PORTAL_BASE);
+    if (!isAllowedHost) return;
 
     var pageInfo = detectPage();
     if (!pageInfo) {

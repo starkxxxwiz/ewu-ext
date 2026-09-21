@@ -48,7 +48,7 @@
       position: relative;
     }
 
-    /* Responsive Background Slideshow */
+    /* Responsive Cinematic Background Slideshow */
     .bg-slideshow {
       position: fixed;
       top: 0;
@@ -58,25 +58,42 @@
       z-index: 0;
       overflow: hidden;
       pointer-events: none;
+      background: #060b17;
     }
 
     .bg-slide {
       position: absolute;
-      top: -4%;
-      left: -4%;
-      width: 108%;
-      height: 108%;
+      top: -5%;
+      left: -5%;
+      width: 110%;
+      height: 110%;
       background-size: cover;
       background-position: center;
       opacity: 0;
-      filter: brightness(0.95) contrast(1.05);
-      transition: opacity 1.4s ease-in-out, transform 8s ease-out;
-      transform: scale(1);
+      filter: brightness(0.92) contrast(1.06) saturate(1.08);
+      transition: opacity 1.8s cubic-bezier(0.4, 0, 0.2, 1), transform 9s cubic-bezier(0.25, 1, 0.5, 1);
+      transform: scale(1.0);
+      will-change: transform, opacity;
     }
 
     .bg-slide.active {
       opacity: 1;
-      transform: scale(1.05);
+      transform: scale(1.06);
+    }
+
+    /* Direction variations for organic cinematic motion */
+    .bg-slide.motion-zoom-out {
+      transform: scale(1.07);
+    }
+    .bg-slide.motion-zoom-out.active {
+      transform: scale(1.0);
+    }
+
+    .bg-slide.motion-pan-right {
+      transform: scale(1.04) translate(-1.2%, 0);
+    }
+    .bg-slide.motion-pan-right.active {
+      transform: scale(1.04) translate(1.2%, 0);
     }
 
     /* Show landscape images on desktop / wide screens */
@@ -90,10 +107,10 @@
     /* Show portrait vertical images on mobile / portrait screens */
     @media (max-width: 768px), (orientation: portrait) {
       .bg-slide.landscape {
-        display: none;
+        display: none !important;
       }
       .bg-slide.portrait {
-        display: block;
+        display: block !important;
         background-position: center top;
       }
     }
@@ -282,15 +299,23 @@
     .brand-icon {
       width: 44px;
       height: 44px;
-      background: linear-gradient(135deg, rgba(217, 78, 52, 0.25), rgba(2, 132, 199, 0.25));
-      border: 1.2px solid rgba(217, 78, 52, 0.45);
       border-radius: 12px;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #fda4af;
       flex-shrink: 0;
-      box-shadow: 0 0 14px rgba(217, 78, 52, 0.25);
+      box-shadow: 0 0 16px rgba(59, 130, 246, 0.25), 0 2px 8px rgba(0, 0, 0, 0.4);
+      border: 1.2px solid rgba(255, 255, 255, 0.14);
+      background: #0b1120;
+    }
+
+    .brand-icon-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 11px;
     }
 
     .brand-title {
@@ -928,13 +953,18 @@
   <!-- Responsive Cinematic Background Slideshow -->
   <div class="bg-slideshow" id="bgSlideshow">
     <!-- Desktop / Landscape Slides -->
-    <div class="bg-slide landscape active" style="background-image: url('images/ewu_campus_plaza.jpg');"></div>
-    <div class="bg-slide landscape" style="background-image: url('images/ewu_campus_day.jpg');"></div>
-    <div class="bg-slide landscape" style="background-image: url('images/ewu_campus_aerial.jpg');"></div>
+    <div class="bg-slide landscape active" style="background-image: url('images/ewu_campus_day.jpg');"></div>
+    <div class="bg-slide landscape motion-zoom-out" style="background-image: url('images/ewu_campus_exhibition.jpg');"></div>
+    <div class="bg-slide landscape motion-pan-right" style="background-image: url('images/ewu_campus_plaza.jpg');"></div>
+    <div class="bg-slide landscape" style="background-image: url('images/ewu_campus_front.jpg');"></div>
+    <div class="bg-slide landscape motion-zoom-out" style="background-image: url('images/ewu_campus_aerial.jpg');"></div>
+
     <!-- Mobile / Portrait Slides -->
     <div class="bg-slide portrait active" style="background-image: url('images/ewu_campus_sunset.jpg');"></div>
-    <div class="bg-slide portrait" style="background-image: url('images/ewu_campus_facade.jpg');"></div>
-    <div class="bg-slide portrait" style="background-image: url('images/ewu_campus_plaza.jpg');"></div>
+    <div class="bg-slide portrait motion-zoom-out" style="background-image: url('images/ewu_campus_facade.jpg');"></div>
+    <div class="bg-slide portrait motion-pan-right" style="background-image: url('images/ewu_campus_entrance_portrait.jpg');"></div>
+    <div class="bg-slide portrait" style="background-image: url('images/ewu_campus_day_portrait.jpg');"></div>
+    <div class="bg-slide portrait motion-zoom-out" style="background-image: url('images/ewu_campus_exhibition_portrait.jpg');"></div>
   </div>
   <div class="bg-overlay"></div>
 
@@ -962,9 +992,7 @@
     <div class="onboard-card">
       <div class="brand-header">
         <div class="brand-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-          </svg>
+          <img src="../icons/icon128.png" alt="EWU Buddy Icon" class="brand-icon-img" />
         </div>
         <div>
           <h1 class="brand-title">

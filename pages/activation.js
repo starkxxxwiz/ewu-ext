@@ -390,19 +390,27 @@
     statusBox.className = 'status-box';
   }
 
-  // Responsive Ambient Background Slideshow Controller
+  // Responsive Ambient Background Slideshow Controller with Lifecycle Management
   (function initBackgroundSlideshow() {
+    var mediaQuery = window.matchMedia('(max-width: 768px), (orientation: portrait)');
     function isPortrait() {
-      return window.matchMedia('(max-width: 768px), (orientation: portrait)').matches;
+      return mediaQuery.matches;
     }
 
     var landscapeIndex = 0;
     var portraitIndex = 0;
+    var timerId = null;
 
-    function rotateSlides() {
+    function getActiveSlides() {
       var portraitMode = isPortrait();
       var selector = portraitMode ? '.bg-slide.portrait' : '.bg-slide.landscape';
-      var slides = document.querySelectorAll(selector);
+      return document.querySelectorAll(selector);
+    }
+
+    function rotateSlides() {
+      if (document.hidden) return; // Pause while tab is hidden
+      var portraitMode = isPortrait();
+      var slides = getActiveSlides();
       if (!slides.length) return;
 
       if (portraitMode) {
@@ -418,7 +426,42 @@
       }
     }
 
-    setInterval(rotateSlides, 7000);
+    function startTimer() {
+      if (timerId) clearInterval(timerId);
+      timerId = setInterval(rotateSlides, 7500);
+    }
+
+    function stopTimer() {
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+    }
+
+    function handleOrientationChange() {
+      var portraitMode = isPortrait();
+      var slides = getActiveSlides();
+      var activeIdx = portraitMode ? portraitIndex : landscapeIndex;
+      slides.forEach(function (s, i) {
+        s.classList.toggle('active', i === (activeIdx % (slides.length || 1)));
+      });
+    }
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleOrientationChange);
+    } else if (mediaQuery.addListener) {
+      mediaQuery.addListener(handleOrientationChange);
+    }
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        stopTimer();
+      } else {
+        startTimer();
+      }
+    });
+
+    startTimer();
   })();
 
   // Initialize
