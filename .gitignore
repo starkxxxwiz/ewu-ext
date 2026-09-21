@@ -22,7 +22,10 @@ Thumbs.db
 
 # Source, Build, and Server Artifacts
 src/
+src_backups/
 build.js
+obfuscate.js
+deobfuscate.js
 backend/
 SETUP.md
 Bot_Setup.md
