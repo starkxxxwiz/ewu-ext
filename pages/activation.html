@@ -63,36 +63,21 @@
 
     .bg-slide {
       position: absolute;
-      top: -5%;
-      left: -5%;
-      width: 110%;
-      height: 110%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       background-size: cover;
       background-position: center;
       opacity: 0;
-      filter: brightness(0.92) contrast(1.06) saturate(1.08);
-      transition: opacity 1.8s cubic-bezier(0.4, 0, 0.2, 1), transform 9s cubic-bezier(0.25, 1, 0.5, 1);
-      transform: scale(1.0);
-      will-change: transform, opacity;
+      filter: brightness(0.92) contrast(1.05);
+      transition: opacity 1.2s ease-in-out;
+      transform: translateZ(0);
+      will-change: opacity;
     }
 
     .bg-slide.active {
       opacity: 1;
-      transform: scale(1.06);
-    }
-
-    .bg-slide.motion-zoom-out {
-      transform: scale(1.07);
-    }
-    .bg-slide.motion-zoom-out.active {
-      transform: scale(1.0);
-    }
-
-    .bg-slide.motion-pan-right {
-      transform: scale(1.04) translate(-1.2%, 0);
-    }
-    .bg-slide.motion-pan-right.active {
-      transform: scale(1.04) translate(1.2%, 0);
     }
 
     .bg-slide.landscape {
@@ -120,44 +105,38 @@
       height: 100vh;
       z-index: 1;
       background: 
-        radial-gradient(ellipse at 50% 8%, rgba(217, 78, 52, 0.18) 0%, rgba(8, 14, 28, 0.45) 50%, rgba(5, 9, 18, 0.84) 100%),
-        linear-gradient(180deg, rgba(6, 11, 23, 0.3) 0%, rgba(7, 13, 26, 0.8) 100%);
+        radial-gradient(ellipse at 50% 8%, rgba(217, 78, 52, 0.16) 0%, rgba(8, 14, 28, 0.5) 50%, rgba(5, 9, 18, 0.88) 100%),
+        linear-gradient(180deg, rgba(6, 11, 23, 0.3) 0%, rgba(7, 13, 26, 0.85) 100%);
       pointer-events: none;
     }
 
-    /* Ambient Glow Spots */
+    /* Ambient Glow Spots - Hardware Accelerated Without Heavy Runtime Blurs */
     .glow-orb-1 {
       position: fixed;
-      top: 10%;
-      right: 12%;
-      width: 380px;
-      height: 380px;
+      top: 5%;
+      right: 8%;
+      width: 420px;
+      height: 420px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(217, 78, 52, 0.18) 0%, transparent 70%);
-      filter: blur(60px);
+      background: radial-gradient(circle, rgba(217, 78, 52, 0.14) 0%, transparent 68%);
       z-index: 1;
       pointer-events: none;
-      animation: floatOrb 12s ease-in-out infinite alternate;
+      transform: translateZ(0);
+      contain: strict;
     }
 
     .glow-orb-2 {
       position: fixed;
-      bottom: 10%;
-      left: 12%;
-      width: 420px;
-      height: 420px;
+      bottom: 5%;
+      left: 8%;
+      width: 460px;
+      height: 460px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(2, 132, 199, 0.18) 0%, transparent 70%);
-      filter: blur(70px);
+      background: radial-gradient(circle, rgba(2, 132, 199, 0.14) 0%, transparent 68%);
       z-index: 1;
       pointer-events: none;
-      animation: floatOrb 15s ease-in-out infinite alternate-reverse;
-    }
-
-    @keyframes floatOrb {
-      0% { transform: translate(0, 0) scale(1); }
-      50% { transform: translate(-25px, 20px) scale(1.08); }
-      100% { transform: translate(20px, -25px) scale(0.95); }
+      transform: translateZ(0);
+      contain: strict;
     }
 
     /* Page Wrapper */
@@ -261,22 +240,23 @@
 
     /* Main Container Card (Adaptive Width) */
     .onboard-card {
-      background: var(--card-bg);
+      background: rgba(11, 17, 32, 0.88);
       border: 1px solid var(--border);
       border-radius: 20px;
       box-shadow: 
-        0 24px 50px -10px rgba(0, 0, 0, 0.85),
-        0 0 30px rgba(217, 78, 52, 0.12),
-        inset 0 1px 0 rgba(255, 255, 255, 0.14);
-      backdrop-filter: blur(28px) saturate(180%);
-      -webkit-backdrop-filter: blur(28px) saturate(180%);
+        0 20px 45px -10px rgba(0, 0, 0, 0.8),
+        0 0 25px rgba(217, 78, 52, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       max-width: 580px;
       width: 100%;
       padding: 32px 28px;
       position: relative;
       z-index: 1;
       overflow: hidden;
-      transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s ease, border-color 0.2s ease;
+      transition: max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1), padding 0.25s ease;
+      transform: translateZ(0);
     }
 
     .onboard-card.wide-features-mode {
@@ -551,9 +531,11 @@
       display: flex;
       flex-direction: column;
       gap: 11px;
-      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
       position: relative;
       overflow: hidden;
+      contain: content;
+      transform: translateZ(0);
     }
 
     .feature-card:hover {
@@ -1037,19 +1019,77 @@
       color: #6ee7b7;
     }
 
-    /* Subscribed View (Step 4) */
-    .success-badge-wrap {
-      width: 64px;
-      height: 64px;
+    /* ==========================================================================
+       MODERN ANIMATED SUCCESS CHECKMARK (Step 4)
+       ========================================================================== */
+    .success-checkmark-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 18px auto;
+    }
+
+    .success-checkmark-badge {
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
-      background: rgba(16, 185, 129, 0.15);
-      border: 2px solid rgba(16, 185, 129, 0.4);
-      color: #34d399;
+      background: radial-gradient(circle at 50% 40%, rgba(16, 185, 129, 0.24) 0%, rgba(6, 78, 59, 0.15) 75%, rgba(15, 23, 42, 0.85) 100%);
+      border: 1.5px solid rgba(16, 185, 129, 0.45);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 16px auto;
-      box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+      box-shadow: 0 0 30px rgba(16, 185, 129, 0.3), inset 0 0 16px rgba(16, 185, 129, 0.18);
+      transform: scale(0.7);
+      opacity: 0;
+      animation: checkBadgePop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1.2) forwards, checkGlowPulse 2.8s ease-in-out 0.9s infinite alternate;
+    }
+
+    .success-checkmark-svg {
+      display: block;
+      overflow: visible;
+    }
+
+    .checkmark-track {
+      stroke: rgba(16, 185, 129, 0.2);
+    }
+
+    .checkmark-circle-animated {
+      stroke-dasharray: 214;
+      stroke-dashoffset: 214;
+      transform-origin: 50% 50%;
+      transform: rotate(-90deg);
+      animation: drawCheckCircle 0.6s cubic-bezier(0.65, 0, 0.45, 1) 0.15s forwards;
+    }
+
+    .checkmark-check-animated {
+      stroke-dasharray: 52;
+      stroke-dashoffset: 52;
+      animation: drawCheckMark 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.65s forwards;
+    }
+
+    @keyframes checkBadgePop {
+      0% { transform: scale(0.6); opacity: 0; }
+      75% { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes drawCheckCircle {
+      100% { stroke-dashoffset: 0; }
+    }
+
+    @keyframes drawCheckMark {
+      100% { stroke-dashoffset: 0; }
+    }
+
+    @keyframes checkGlowPulse {
+      0% {
+        box-shadow: 0 0 25px rgba(16, 185, 129, 0.25), inset 0 0 12px rgba(16, 185, 129, 0.12);
+        border-color: rgba(16, 185, 129, 0.4);
+      }
+      100% {
+        box-shadow: 0 0 42px rgba(16, 185, 129, 0.48), 0 0 18px rgba(52, 211, 153, 0.32), inset 0 0 22px rgba(16, 185, 129, 0.24);
+        border-color: rgba(52, 211, 153, 0.7);
+      }
     }
 
     .sub-meta-box {
@@ -1225,7 +1265,7 @@
               </div>
               
               <div class="feature-img-frame" data-lightbox-src="images/features/OnlineAdvising.png" data-lightbox-title="10-Column Live Advising Suite">
-                <img src="images/features/OnlineAdvising.png" alt="10-Column Advising Suite" class="feature-img" loading="lazy" />
+                <img src="images/features/OnlineAdvising.png" alt="10-Column Advising Suite" class="feature-img" loading="lazy" decoding="async" width="460" height="165" />
                 <div class="feature-img-overlay">
                   <span class="feature-img-tag">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1265,7 +1305,7 @@
               </div>
               
               <div class="feature-img-frame" data-lightbox-src="images/features/ClassSchedule.png" data-lightbox-title="Weekly Routine &amp; Calendar Export">
-                <img src="images/features/ClassSchedule.png" alt="Weekly Routine Generator" class="feature-img" loading="lazy" />
+                <img src="images/features/ClassSchedule.png" alt="Weekly Routine Generator" class="feature-img" loading="lazy" decoding="async" width="460" height="165" />
                 <div class="feature-img-overlay">
                   <span class="feature-img-tag">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
@@ -1305,7 +1345,7 @@
               </div>
               
               <div class="feature-img-frame" data-lightbox-src="images/features/CoursePlanner.png" data-lightbox-title="Offline Course Planner &amp; Clash Simulator">
-                <img src="images/features/CoursePlanner.png" alt="Offline Course Planner" class="feature-img" loading="lazy" />
+                <img src="images/features/CoursePlanner.png" alt="Offline Course Planner" class="feature-img" loading="lazy" decoding="async" width="460" height="165" />
                 <div class="feature-img-overlay">
                   <span class="feature-img-tag">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
@@ -1345,7 +1385,7 @@
               </div>
               
               <div class="feature-img-frame" data-lightbox-src="images/features/OfferedCourse.png" data-lightbox-title="Offered Courses Catalog &amp; Sticky Headers">
-                <img src="images/features/OfferedCourse.png" alt="Offered Courses Catalog" class="feature-img" loading="lazy" />
+                <img src="images/features/OfferedCourse.png" alt="Offered Courses Catalog" class="feature-img" loading="lazy" decoding="async" width="460" height="165" />
                 <div class="feature-img-overlay">
                   <span class="feature-img-tag">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
@@ -1385,7 +1425,7 @@
               </div>
               
               <div class="feature-img-frame" data-lightbox-src="images/features/RecommendedCourse.png" data-lightbox-title="Recommended Courses &amp; Prerequisite Insights">
-                <img src="images/features/RecommendedCourse.png" alt="Recommended Courses &amp; Degree Flow" class="feature-img" loading="lazy" />
+                <img src="images/features/RecommendedCourse.png" alt="Recommended Courses &amp; Degree Flow" class="feature-img" loading="lazy" decoding="async" width="460" height="165" />
                 <div class="feature-img-overlay">
                   <span class="feature-img-tag">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
@@ -1519,8 +1559,14 @@
 
       <!-- ==================== STEP 4: EXTENSION READY (SUBSCRIBED VIEW) ==================== -->
       <div class="step-view" id="viewStep4Ready" style="text-align:center;">
-        <div class="success-badge-wrap">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+        <div class="success-checkmark-wrapper" id="successCheckmark">
+          <div class="success-checkmark-badge">
+            <svg class="success-checkmark-svg" viewBox="0 0 80 80" width="80" height="80">
+              <circle class="checkmark-track" cx="40" cy="40" r="34" fill="none" stroke-width="4"></circle>
+              <circle class="checkmark-circle-animated" cx="40" cy="40" r="34" fill="none" stroke="#10b981" stroke-width="4.5" stroke-linecap="round"></circle>
+              <polyline class="checkmark-check-animated" points="25 41.5 35.5 52 56 31" fill="none" stroke="#34d399" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            </svg>
+          </div>
         </div>
         
         <h2 style="font-size:19px; font-weight:700; color:#ffffff; margin-bottom:5px;">

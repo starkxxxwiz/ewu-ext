@@ -211,6 +211,30 @@
     } else if (step === 4) {
       if (viewStep4) viewStep4.classList.add('active');
       if (stepIndicator) stepIndicator.style.display = 'none';
+      triggerCheckmarkAnimation();
+    }
+  }
+
+  function triggerCheckmarkAnimation() {
+    var checkmarkWrapper = document.getElementById('successCheckmark');
+    if (!checkmarkWrapper) return;
+    var badge = checkmarkWrapper.querySelector('.success-checkmark-badge');
+    if (badge) {
+      badge.style.animation = 'none';
+      void badge.offsetHeight;
+      badge.style.animation = '';
+    }
+    var circle = checkmarkWrapper.querySelector('.checkmark-circle-animated');
+    if (circle) {
+      circle.style.animation = 'none';
+      void circle.offsetHeight;
+      circle.style.animation = '';
+    }
+    var check = checkmarkWrapper.querySelector('.checkmark-check-animated');
+    if (check) {
+      check.style.animation = 'none';
+      void check.offsetHeight;
+      check.style.animation = '';
     }
   }
 
