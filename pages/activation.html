@@ -10,8 +10,8 @@
   <style>
     :root {
       --bg-dark: #070c18;
-      --card-bg: rgba(13, 20, 36, 0.65);
-      --card-surface: rgba(20, 30, 54, 0.55);
+      --card-bg: rgba(13, 20, 36, 0.72);
+      --card-surface: rgba(20, 30, 54, 0.6);
       --border: rgba(255, 255, 255, 0.14);
       --border-focus: #38bdf8;
       --ewu-brick: #d94e34;
@@ -81,7 +81,6 @@
       transform: scale(1.06);
     }
 
-    /* Direction variations for organic cinematic motion */
     .bg-slide.motion-zoom-out {
       transform: scale(1.07);
     }
@@ -96,7 +95,6 @@
       transform: scale(1.04) translate(1.2%, 0);
     }
 
-    /* Show landscape images on desktop / wide screens */
     .bg-slide.landscape {
       display: block;
     }
@@ -104,7 +102,6 @@
       display: none;
     }
 
-    /* Show portrait vertical images on mobile / portrait screens */
     @media (max-width: 768px), (orientation: portrait) {
       .bg-slide.landscape {
         display: none !important;
@@ -123,8 +120,8 @@
       height: 100vh;
       z-index: 1;
       background: 
-        radial-gradient(ellipse at 50% 8%, rgba(217, 78, 52, 0.18) 0%, rgba(8, 14, 28, 0.45) 50%, rgba(5, 9, 18, 0.82) 100%),
-        linear-gradient(180deg, rgba(6, 11, 23, 0.3) 0%, rgba(7, 13, 26, 0.78) 100%);
+        radial-gradient(ellipse at 50% 8%, rgba(217, 78, 52, 0.18) 0%, rgba(8, 14, 28, 0.45) 50%, rgba(5, 9, 18, 0.84) 100%),
+        linear-gradient(180deg, rgba(6, 11, 23, 0.3) 0%, rgba(7, 13, 26, 0.8) 100%);
       pointer-events: none;
     }
 
@@ -185,7 +182,7 @@
       gap: 10px;
       margin-bottom: 20px;
       width: 100%;
-      max-width: 540px;
+      max-width: 560px;
     }
 
     .step-node {
@@ -196,11 +193,17 @@
       font-weight: 700;
       color: var(--text-dim);
       transition: all 0.2s ease;
-      background: rgba(15, 23, 42, 0.7);
+      background: rgba(15, 23, 42, 0.75);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 4px 12px 4px 5px;
+      padding: 4px 14px 4px 6px;
       border-radius: 20px;
       backdrop-filter: blur(10px);
+      cursor: pointer;
+    }
+
+    .step-node:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #e2e8f0;
     }
 
     .step-dot {
@@ -221,8 +224,8 @@
     .step-node.active {
       color: #ffffff;
       border-color: rgba(217, 78, 52, 0.5);
-      background: rgba(217, 78, 52, 0.18);
-      box-shadow: 0 0 16px rgba(217, 78, 52, 0.25);
+      background: rgba(217, 78, 52, 0.2);
+      box-shadow: 0 0 16px rgba(217, 78, 52, 0.28);
     }
 
     .step-node.active .step-dot {
@@ -256,24 +259,29 @@
       background: linear-gradient(90deg, var(--ewu-brick), #0284c7);
     }
 
-    /* Main Container Card */
+    /* Main Container Card (Adaptive Width) */
     .onboard-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 18px;
+      border-radius: 20px;
       box-shadow: 
-        0 24px 50px -10px rgba(0, 0, 0, 0.8),
+        0 24px 50px -10px rgba(0, 0, 0, 0.85),
         0 0 30px rgba(217, 78, 52, 0.12),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
       max-width: 580px;
       width: 100%;
       padding: 32px 28px;
       position: relative;
       z-index: 1;
       overflow: hidden;
-      transition: all 0.25s ease;
+      transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s ease, border-color 0.2s ease;
+    }
+
+    .onboard-card.wide-features-mode {
+      max-width: 1060px;
+      padding: 34px 34px 28px 34px;
     }
 
     .onboard-card::before {
@@ -282,17 +290,18 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 2.5px;
-      background: linear-gradient(90deg, transparent, #d94e34, #0284c7, transparent);
+      height: 3px;
+      background: linear-gradient(90deg, #d94e34 0%, #0284c7 50%, #10b981 100%);
+      border-radius: 20px 20px 0 0;
     }
 
     /* Brand Header */
     .brand-header {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
+      gap: 14px;
+      margin-bottom: 24px;
+      padding-bottom: 18px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
 
@@ -341,7 +350,7 @@
     }
 
     .brand-sub {
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 600;
       color: #94a3b8;
       margin-top: 2px;
@@ -350,7 +359,7 @@
     /* Step Container Views */
     .step-view {
       display: none;
-      animation: fadeInStep 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: fadeInStep 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     .step-view.active {
@@ -360,7 +369,7 @@
     @keyframes fadeInStep {
       from {
         opacity: 0;
-        transform: translateY(8px);
+        transform: translateY(10px);
       }
       to {
         opacity: 1;
@@ -370,8 +379,8 @@
 
     /* Section Titles */
     .section-title {
-      font-size: 17.5px;
-      font-weight: 700;
+      font-size: 18px;
+      font-weight: 800;
       color: #ffffff;
       margin-bottom: 5px;
       letter-spacing: -0.2px;
@@ -449,54 +458,43 @@
       font-weight: 700;
       color: #fda4af;
       margin-top: 10px;
-      margin-bottom: 3px;
+      margin-bottom: 4px;
     }
-
-    .full-terms-box h4:first-child {
-      margin-top: 0;
-    }
+    .full-terms-box h4:first-child { margin-top: 0; }
 
     .btn-expand-terms {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px dashed rgba(255, 255, 255, 0.18);
-      border-radius: 8px;
-      color: #cbd5e1;
-      font-size: 11.5px;
+      background: transparent;
+      border: none;
+      color: #38bdf8;
+      font-size: 12px;
       font-weight: 600;
-      padding: 7px 10px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
       gap: 5px;
-      width: 100%;
       margin-bottom: 16px;
-      transition: all 0.15s ease;
+      transition: color 0.15s ease;
     }
-
     .btn-expand-terms:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.3);
-      color: #ffffff;
+      color: #7dd3fc;
+      text-decoration: underline;
     }
 
-    /* Acceptance Checkbox */
     .acceptance-row {
       display: flex;
       align-items: center;
       gap: 10px;
-      background: rgba(217, 78, 52, 0.1);
-      border: 1px solid rgba(217, 78, 52, 0.28);
+      background: rgba(217, 78, 52, 0.12);
+      border: 1px solid rgba(217, 78, 52, 0.3);
+      padding: 12px 14px;
       border-radius: 10px;
-      padding: 11px 13px;
-      margin-bottom: 18px;
+      margin-bottom: 20px;
       cursor: pointer;
-      user-select: none;
       transition: all 0.15s ease;
     }
 
     .acceptance-row:hover {
-      background: rgba(217, 78, 52, 0.16);
+      background: rgba(217, 78, 52, 0.18);
       border-color: rgba(217, 78, 52, 0.45);
     }
 
@@ -515,48 +513,65 @@
       cursor: pointer;
     }
 
-    /* Feature Cards List */
-    .features-container {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 20px;
-      max-height: 440px;
+    /* ==========================================================================
+       OVERHAULED RESPONSIVE FEATURES GRID (Step 2)
+       ========================================================================== */
+    .features-grid-container {
+      max-height: 520px;
       overflow-y: auto;
-      padding-right: 4px;
+      padding-right: 6px;
+      margin: 18px 0 24px 0;
     }
 
-    .features-container::-webkit-scrollbar { width: 4px; }
-    .features-container::-webkit-scrollbar-track { background: transparent; }
-    .features-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 4px; }
+    .features-grid-container::-webkit-scrollbar { width: 5px; }
+    .features-grid-container::-webkit-scrollbar-track { background: transparent; }
+    .features-grid-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 4px; }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+
+    @media (max-width: 880px) {
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+      .onboard-card.wide-features-mode {
+        padding: 24px 20px;
+      }
+    }
 
     .feature-card {
-      background: rgba(16, 26, 46, 0.65);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      padding: 14px;
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 14px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      transition: all 0.15s ease;
+      gap: 11px;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
     }
 
     .feature-card:hover {
-      border-color: rgba(217, 78, 52, 0.35);
-      background: rgba(20, 32, 58, 0.8);
-      transform: translateY(-1px);
+      border-color: rgba(217, 78, 52, 0.45);
+      background: rgba(20, 32, 58, 0.85);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 18px rgba(217, 78, 52, 0.15);
     }
 
     .feature-card-header {
       display: flex;
       align-items: center;
-      gap: 9px;
+      gap: 10px;
     }
 
     .feature-card-icon {
-      width: 30px;
-      height: 30px;
-      border-radius: 8px;
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
       background: rgba(217, 78, 52, 0.18);
       border: 1px solid rgba(217, 78, 52, 0.35);
       color: #fda4af;
@@ -566,21 +581,83 @@
       flex-shrink: 0;
     }
 
+    .feature-card-title-group {
+      flex: 1;
+      min-width: 0;
+    }
+
     .feature-card-title {
-      font-size: 13.5px;
+      font-size: 13.8px;
       font-weight: 700;
       color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .feature-card-badge {
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 700;
       color: #38bdf8;
       background: rgba(56, 189, 248, 0.12);
       border: 1px solid rgba(56, 189, 248, 0.25);
       padding: 2px 7px;
       border-radius: 5px;
-      margin-left: auto;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    /* Enhanced Feature Image Frame */
+    .feature-img-frame {
+      width: 100%;
+      height: 165px;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      background: #090e1a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: zoom-in;
+    }
+
+    .feature-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+    }
+
+    .feature-card:hover .feature-img {
+      transform: scale(1.04);
+      filter: brightness(1.05);
+    }
+
+    .feature-img-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 6px 10px;
+      background: linear-gradient(180deg, transparent 0%, rgba(5, 9, 18, 0.85) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      opacity: 0.9;
+      transition: opacity 0.2s ease;
+    }
+
+    .feature-img-tag {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #e2e8f0;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .feature-img-tag svg {
+      color: #38bdf8;
     }
 
     .feature-card-desc {
@@ -589,36 +666,180 @@
       color: var(--text-muted);
     }
 
-    /* Styled Wireframe / Feature Preview Box */
-    .screenshot-placeholder {
-      background: rgba(8, 14, 26, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 8px;
-      padding: 10px 12px;
+    .feature-tags-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .feature-chip {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #94a3b8;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 2px 8px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .feature-chip::before {
+      content: '•';
+      color: #d94e34;
+      font-size: 12px;
+    }
+
+    /* Interactive Math Captcha Showcase Card */
+    .captcha-showcase {
+      width: 100%;
+      height: 165px;
+      border-radius: 10px;
+      background: radial-gradient(circle at 50% 35%, rgba(217, 78, 52, 0.15) 0%, rgba(8, 14, 26, 0.95) 75%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      text-align: center;
-      gap: 2px;
-      color: var(--text-dim);
+      gap: 12px;
+      padding: 16px;
+      position: relative;
     }
 
-    .screenshot-placeholder svg {
-      color: #38bdf8;
-      opacity: 0.85;
-      margin-bottom: 2px;
+    .captcha-demo-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1.5px solid rgba(56, 189, 248, 0.4);
+      padding: 8px 16px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), 0 0 15px rgba(56, 189, 248, 0.2);
     }
 
-    .placeholder-title {
-      font-size: 11.5px;
+    .captcha-math-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
       font-weight: 700;
-      color: #e2e8f0;
+      color: #38bdf8;
+      letter-spacing: 1px;
     }
 
-    .placeholder-sub {
-      font-size: 10px;
+    .captcha-arrow {
       color: #94a3b8;
+      font-size: 13px;
+    }
+
+    .captcha-solution {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 800;
+      color: #34d399;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .captcha-status-pill {
+      font-size: 11px;
+      font-weight: 600;
+      color: #34d399;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .features-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    /* Lightbox Modal */
+    .img-lightbox {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(3, 7, 18, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 999999;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .img-lightbox.open {
+      display: flex;
+      opacity: 1;
+    }
+
+    .img-lightbox-card {
+      max-width: 95vw;
+      max-height: 90vh;
+      background: #090e1a;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+      animation: zoomInLight 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes zoomInLight {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .lightbox-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      background: rgba(15, 23, 42, 0.9);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .lightbox-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .lightbox-close {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .lightbox-close:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .lightbox-img {
+      max-width: 90vw;
+      max-height: calc(85vh - 50px);
+      object-fit: contain;
+      display: block;
+      background: #000000;
     }
 
     /* License Input Form */
@@ -670,7 +891,7 @@
       font-weight: 500;
     }
 
-    /* Sleek, Modern, Minimal Buttons */
+    /* Buttons */
     .btn-primary {
       width: 100%;
       padding: 12px 20px;
@@ -749,228 +970,113 @@
       align-items: center;
       gap: 6px;
       transition: all 0.15s ease;
-      text-decoration: none;
     }
-
     .btn-support:hover {
       background: rgba(217, 78, 52, 0.24);
-      border-color: #f97316;
       color: #ffffff;
-      transform: translateY(-1px);
+      border-color: rgba(217, 78, 52, 0.5);
     }
 
-    .status-box {
-      margin-top: 14px;
-      padding: 11px 14px;
-      border-radius: 10px;
-      font-size: 12.5px;
-      display: none;
-      line-height: 1.45;
-      text-align: center;
-      font-weight: 600;
-      animation: fadeInStatus 0.15s ease;
-    }
-
-    @keyframes fadeInStatus {
-      from { opacity: 0; transform: translateY(3px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .status-box.success {
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      color: #34d399;
-    }
-
-    .status-box.error {
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      color: #f87171;
-    }
-
+    /* Spinner */
     .spinner {
       width: 16px;
       height: 16px;
       border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
       border-top-color: #ffffff;
-      animation: spin 0.8s linear infinite;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    /* Subscribed View Details */
+    /* Status Messages */
+    .status-box {
+      display: none;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 12.8px;
+      line-height: 1.5;
+      margin-top: 14px;
+      text-align: center;
+      animation: fadeInStep 0.2s ease forwards;
+    }
+
+    .status-box.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+    }
+
+    .status-box.success {
+      display: block;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #6ee7b7;
+    }
+
+    /* Subscribed View (Step 4) */
     .success-badge-wrap {
-      width: 60px;
-      height: 60px;
-      border-radius: 16px;
-      margin: 0 auto 16px;
-      background: rgba(16, 185, 129, 0.16);
-      border: 1.2px solid rgba(16, 185, 129, 0.4);
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.15);
+      border: 2px solid rgba(16, 185, 129, 0.4);
+      color: #34d399;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #34d399;
-      box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
+      margin: 0 auto 16px auto;
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
     }
 
     .sub-meta-box {
-      background: rgba(8, 14, 26, 0.85);
+      background: rgba(15, 23, 42, 0.7);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 12px;
-      padding: 16px;
-      text-align: left;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
       font-size: 12.5px;
-      margin-bottom: 18px;
-      line-height: 1.75;
+      text-align: left;
     }
 
     .sub-meta-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
-    }
-
-    .sub-meta-row:last-child {
-      margin-bottom: 0;
-    }
-
-    /* Mobile Responsive Optimizations */
-    @media (max-width: 600px) {
-      .page-wrapper {
-        padding: 20px 14px;
-        min-height: 100vh;
-        min-height: 100dvh;
-        justify-content: center;
-      }
-
-      .bg-overlay {
-        background: 
-          radial-gradient(ellipse at 50% 12%, rgba(217, 78, 52, 0.2) 0%, rgba(8, 14, 28, 0.38) 45%, rgba(5, 9, 18, 0.72) 100%),
-          linear-gradient(180deg, rgba(6, 11, 23, 0.22) 0%, rgba(7, 13, 26, 0.65) 100%);
-      }
-
-      .step-indicator {
-        margin-bottom: 16px;
-        gap: 8px;
-      }
-
-      .step-node {
-        font-size: 11px;
-        padding: 3px 9px 3px 4px;
-        gap: 5px;
-      }
-
-      .step-dot {
-        width: 19px;
-        height: 19px;
-        font-size: 9.5px;
-      }
-
-      .onboard-card {
-        padding: 24px 18px;
-        border-radius: 18px;
-        max-width: 440px;
-        background: rgba(11, 18, 32, 0.68);
-        backdrop-filter: blur(20px) saturate(200%);
-        -webkit-backdrop-filter: blur(20px) saturate(200%);
-        border: 1px solid rgba(255, 255, 255, 0.16);
-        box-shadow: 
-          0 18px 40px -8px rgba(0, 0, 0, 0.7),
-          0 0 30px rgba(217, 78, 52, 0.16),
-          inset 0 1px 0 rgba(255, 255, 255, 0.18);
-      }
-
-      .brand-header {
-        margin-bottom: 16px;
-        padding-bottom: 14px;
-        gap: 10px;
-      }
-
-      .brand-icon {
-        width: 38px;
-        height: 38px;
-      }
-
-      .brand-title {
-        font-size: 16.5px;
-      }
-
-      .brand-sub {
-        font-size: 10.5px;
-      }
-
-      .section-title {
-        font-size: 16px;
-      }
-
-      .section-desc {
-        font-size: 12px;
-        margin-bottom: 14px;
-      }
-
-      .features-container {
-        max-height: 340px;
-        gap: 10px;
-      }
-
-      .feature-card {
-        padding: 12px;
-      }
-
-      .feature-card-title {
-        font-size: 12.5px;
-      }
-
-      .feature-card-desc {
-        font-size: 11.5px;
-      }
-
-      .license-input {
-        font-size: 15px !important;
-        padding: 11px 10px;
-        letter-spacing: 1.5px;
-      }
-
-      .btn-primary {
-        padding: 11px 16px;
-        font-size: 13px;
-        border-radius: 10px;
-      }
-
-      .btn-secondary {
-        padding: 10px 14px;
-        font-size: 12.5px;
-        border-radius: 10px;
-      }
     }
   </style>
 </head>
 <body>
-  <!-- Responsive Cinematic Background Slideshow -->
+
+  <!-- Cinematic Background Slideshow -->
   <div class="bg-slideshow" id="bgSlideshow">
-    <!-- Desktop / Landscape Slides -->
-    <div class="bg-slide landscape active" style="background-image: url('images/ewu_campus_day.jpg');"></div>
-    <div class="bg-slide landscape motion-zoom-out" style="background-image: url('images/ewu_campus_exhibition.jpg');"></div>
-    <div class="bg-slide landscape motion-pan-right" style="background-image: url('images/ewu_campus_plaza.jpg');"></div>
-    <div class="bg-slide landscape" style="background-image: url('images/ewu_campus_front.jpg');"></div>
+    <div class="bg-slide landscape active" style="background-image: url('images/ewu_campus_front.jpg');"></div>
     <div class="bg-slide landscape motion-zoom-out" style="background-image: url('images/ewu_campus_aerial.jpg');"></div>
+    <div class="bg-slide landscape motion-pan-right" style="background-image: url('images/ewu_campus_day.jpg');"></div>
+    <div class="bg-slide landscape" style="background-image: url('images/ewu_campus_plaza.jpg');"></div>
+    <div class="bg-slide landscape motion-zoom-out" style="background-image: url('images/ewu_campus_facade.jpg');"></div>
+    <div class="bg-slide landscape motion-pan-right" style="background-image: url('images/ewu_campus_sunset.jpg');"></div>
+    <div class="bg-slide landscape" style="background-image: url('images/ewu_campus_exhibition.jpg');"></div>
 
-    <!-- Mobile / Portrait Slides -->
-    <div class="bg-slide portrait active" style="background-image: url('images/ewu_campus_sunset.jpg');"></div>
-    <div class="bg-slide portrait motion-zoom-out" style="background-image: url('images/ewu_campus_facade.jpg');"></div>
-    <div class="bg-slide portrait motion-pan-right" style="background-image: url('images/ewu_campus_entrance_portrait.jpg');"></div>
-    <div class="bg-slide portrait" style="background-image: url('images/ewu_campus_day_portrait.jpg');"></div>
-    <div class="bg-slide portrait motion-zoom-out" style="background-image: url('images/ewu_campus_exhibition_portrait.jpg');"></div>
+    <div class="bg-slide portrait active" style="background-image: url('images/ewu_campus_entrance_portrait.jpg');"></div>
+    <div class="bg-slide portrait motion-zoom-out" style="background-image: url('images/ewu_campus_day_portrait.jpg');"></div>
+    <div class="bg-slide portrait motion-pan-right" style="background-image: url('images/ewu_campus_exhibition_portrait.jpg');"></div>
   </div>
+
   <div class="bg-overlay"></div>
+  <div class="glow-orb-1"></div>
+  <div class="glow-orb-2"></div>
 
+  <!-- Page Main Content -->
   <div class="page-wrapper">
-
-    <!-- Progress Indicator -->
+    
+    <!-- Step Progress Indicator -->
     <div class="step-indicator" id="stepIndicator">
       <div class="step-node active" id="nodeStep1">
         <span class="step-dot">1</span>
@@ -989,7 +1095,7 @@
     </div>
 
     <!-- Main Card -->
-    <div class="onboard-card">
+    <div class="onboard-card" id="onboardCard">
       <div class="brand-header">
         <div class="brand-icon">
           <img src="../icons/icon128.png" alt="EWU Buddy Icon" class="brand-icon-img" />
@@ -997,7 +1103,7 @@
         <div>
           <h1 class="brand-title">
             EWU Buddy
-            <span class="brand-badge">v1.1.0</span>
+            <span class="brand-badge">v1.2</span>
           </h1>
           <div class="brand-sub">East West University &bull; Student Assistant</div>
         </div>
@@ -1007,7 +1113,7 @@
       <div class="step-view active" id="viewStep1Terms">
         <h2 class="section-title">Terms &amp; Conditions</h2>
         <p class="section-desc">
-          Please review the terms and usage responsibilities before using EWU Portal Helper.
+          Please review the terms and usage responsibilities before using EWU Buddy.
         </p>
 
         <div class="terms-summary-grid">
@@ -1015,7 +1121,7 @@
             <div class="terms-icon">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
             </div>
-            <div><strong>Educational Productivity Tool:</strong> Built independently by students to streamline portal workflow, advising routines, and schedule planning.</div>
+            <div><strong>Educational Productivity Tool:</strong> Built independently to streamline portal workflow, advising routines, and schedule planning.</div>
           </div>
           <div class="terms-card-item">
             <div class="terms-icon">
@@ -1027,19 +1133,19 @@
             <div class="terms-icon">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
-            <div><strong>Privacy Respect:</strong> Zero student credentials, personal information, or private portal passwords are harvested or transmitted.</div>
+            <div><strong>Privacy First:</strong> Zero student credentials, personal information, or private portal passwords are harvested or transmitted.</div>
           </div>
           <div class="terms-card-item">
             <div class="terms-icon">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             </div>
-            <div><strong>University Compliance:</strong> Users must abide by East West University codes, academic integrity, and portal policies.</div>
+            <div><strong>University Compliance:</strong> Users must abide by East West University codes, academic integrity, and portal guidelines.</div>
           </div>
           <div class="terms-card-item">
             <div class="terms-icon">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </div>
-            <div><strong>Portal Updates:</strong> Compatibility is maintained actively; future university portal redesigns may require extension updates.</div>
+            <div><strong>Portal Updates:</strong> Active compatibility is maintained. If university portals undergo major changes, extension updates are published.</div>
           </div>
         </div>
 
@@ -1050,7 +1156,7 @@
 
         <div class="full-terms-box" id="fullTermsBox">
           <h4>1. Educational Purpose &amp; Scope</h4>
-          <p>EWU Portal Helper is an independent productivity utility crafted to provide schedule visualization, course advising layout enhancements, and number captcha auto-calculation on the East West University student portal.</p>
+          <p>EWU Buddy is an independent productivity utility crafted to provide timetable visualization, advising enhancements, and number captcha calculation on the East West University student portal.</p>
           
           <h4>2. Limitation of Liability</h4>
           <p>The developers assume no liability for missed advising slots, network failures, portal downtime, or improper usage of this software. The tool is provided "AS-IS" without express warranties.</p>
@@ -1059,7 +1165,7 @@
           <p>Students must adhere strictly to university guidelines and academic integrity rules. Any abusive usage or attempting to disrupt university infrastructure is strictly prohibited.</p>
           
           <h4>4. Local Storage &amp; Privacy</h4>
-          <p>All core settings and advising plans are saved locally in your browser. No private student portal credentials or academic records are collected.</p>
+          <p>All core settings and advising plans are saved locally in your browser. No private student portal credentials or academic records are collected or stored remotely.</p>
           
           <h4>5. University Interface Changes</h4>
           <p>The official portal is managed exclusively by East West University. If university updates modify underlying HTML tables, corresponding extension updates will be released.</p>
@@ -1076,124 +1182,233 @@
         </button>
       </div>
 
-      <!-- ==================== STEP 2: FEATURES & BASIC KNOWLEDGE ==================== -->
+      <!-- ==================== STEP 2: OVERHAULED RESPONSIVE FEATURES & GRID ==================== -->
       <div class="step-view" id="viewStep2Features">
         <h2 class="section-title">Features &amp; Capabilities</h2>
         <p class="section-desc">
-          Key capabilities designed to streamline your daily student portal experience.
+          Explore the smart suite of tools designed to elevate your daily East West University student portal experience.
         </p>
 
-        <div class="features-container">
-          <!-- Feature 1 -->
-          <div class="feature-card">
-            <div class="feature-card-header">
-              <div class="feature-card-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <div class="features-grid-container">
+          <div class="features-grid">
+            
+            <!-- Feature 1: 10-Column Advising Suite -->
+            <div class="feature-card">
+              <div class="feature-card-header">
+                <div class="feature-card-icon">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h4M6 12h4M6 16h4M14 8h4M14 12h4M14 16h4"/></svg>
+                </div>
+                <div class="feature-card-title-group">
+                  <div class="feature-card-title">10-Column Advising Suite</div>
+                </div>
+                <span class="feature-card-badge">Advising</span>
               </div>
-              <div>
-                <div class="feature-card-title">1. Automated Captcha Solver</div>
+              
+              <div class="feature-img-frame" data-lightbox-src="images/features/OnlineAdvising.png" data-lightbox-title="10-Column Live Advising Suite">
+                <img src="images/features/OnlineAdvising.png" alt="10-Column Advising Suite" class="feature-img" loading="lazy" />
+                <div class="feature-img-overlay">
+                  <span class="feature-img-tag">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    Live Portal View
+                  </span>
+                  <span style="font-size:10px; color:#38bdf8; font-weight:700;">Click to Zoom</span>
+                </div>
               </div>
-              <span class="feature-card-badge">Login Helper</span>
-            </div>
-            <p class="feature-card-desc">
-              Instantly detects and solves the math security challenge on the EWU portal login page for seamless 1-click access.
-            </p>
-            <div class="screenshot-placeholder">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
-              <span class="placeholder-title">Auto Captcha Detection &amp; Instant Solver</span>
-              <span class="placeholder-sub">Calculates mathematical challenges automatically</span>
-            </div>
-          </div>
 
-          <!-- Feature 2 -->
-          <div class="feature-card">
-            <div class="feature-card-header">
-              <div class="feature-card-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              </div>
-              <div>
-                <div class="feature-card-title">2. Class Routine &amp; Calendar Export</div>
-              </div>
-              <span class="feature-card-badge">Routine &amp; ICS</span>
-            </div>
-            <p class="feature-card-desc">
-              Converts enrolled course schedules into a color-coded timetable grid with PDF, PNG, and official Academic Calendar (.ics) export.
-            </p>
-            <div class="screenshot-placeholder">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-              <span class="placeholder-title">Ultra-HD Weekly Timetable &amp; Calendar Sync</span>
-              <span class="placeholder-sub">Automatic holiday skips &amp; Google/Apple Calendar support</span>
-            </div>
-          </div>
+              <p class="feature-card-desc">
+                Transforms advising with structured 10-column tables, color heatmaps for remaining seats, instant search filtering, and one-click PDF course export.
+              </p>
 
-          <!-- Feature 3 -->
-          <div class="feature-card">
-            <div class="feature-card-header">
-              <div class="feature-card-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              <div class="feature-tags-wrap">
+                <span class="feature-chip">Seat Heatmaps</span>
+                <span class="feature-chip">Total Courses Counter</span>
+                <span class="feature-chip">PDF Export</span>
               </div>
-              <div>
-                <div class="feature-card-title">3. 10-Column Advising Suite</div>
-              </div>
-              <span class="feature-card-badge">Advising</span>
             </div>
-            <p class="feature-card-desc">
-              Displays section details, faculty initials, room numbers, seat capacities, live availability, and color heatmaps with Ctrl+K search.
-            </p>
-            <div class="screenshot-placeholder">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h4M6 12h4M6 16h4M14 8h4M14 12h4M14 16h4"/></svg>
-              <span class="placeholder-title">10-Column Table Layout &amp; Seat Heatmap</span>
-              <span class="placeholder-sub">Real-time seat occupancy with instant search filter</span>
-            </div>
-          </div>
 
-          <!-- Feature 4 -->
-          <div class="feature-card">
-            <div class="feature-card-header">
-              <div class="feature-card-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <!-- Feature 2: Routine Generator & Calendar Sync -->
+            <div class="feature-card">
+              <div class="feature-card-header">
+                <div class="feature-card-icon">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
+                <div class="feature-card-title-group">
+                  <div class="feature-card-title">Routine Generator &amp; Calendar</div>
+                </div>
+                <span class="feature-card-badge">Schedule</span>
               </div>
-              <div>
-                <div class="feature-card-title">4. Offline Advising Course Planner</div>
+              
+              <div class="feature-img-frame" data-lightbox-src="images/features/ClassSchedule.png" data-lightbox-title="Weekly Routine &amp; Calendar Export">
+                <img src="images/features/ClassSchedule.png" alt="Weekly Routine Generator" class="feature-img" loading="lazy" />
+                <div class="feature-img-overlay">
+                  <span class="feature-img-tag">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                    Routine Grid
+                  </span>
+                  <span style="font-size:10px; color:#38bdf8; font-weight:700;">Click to Zoom</span>
+                </div>
               </div>
-              <span class="feature-card-badge">Planner</span>
-            </div>
-            <p class="feature-card-desc">
-              Build and test combination plans with PC drag-and-drop course selection, time conflict detection, and live routine previews.
-            </p>
-            <div class="screenshot-placeholder">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
-              <span class="placeholder-title">Drag &amp; Drop Course Combination Simulator</span>
-              <span class="placeholder-sub">Test combinations and prevent schedule clashes before advising opens</span>
-            </div>
-          </div>
 
-          <!-- Feature 5 -->
-          <div class="feature-card">
-            <div class="feature-card-header">
-              <div class="feature-card-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <p class="feature-card-desc">
+                Converts enrolled courses into an ultra-HD weekly timetable grid with PDF/PNG downloads and automatic Academic Calendar (.ics) sync for Google/Apple Calendar.
+              </p>
+
+              <div class="feature-tags-wrap">
+                <span class="feature-chip">Timetable Grid</span>
+                <span class="feature-chip">Apple/Google Calendar (.ics)</span>
+                <span class="feature-chip">HD PNG/PDF</span>
               </div>
-              <div>
-                <div class="feature-card-title">5. Offered Courses &amp; Sticky Headers</div>
+            </div>
+
+            <!-- Feature 3: Offline Advising & Course Planner -->
+            <div class="feature-card">
+              <div class="feature-card-header">
+                <div class="feature-card-icon">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                </div>
+                <div class="feature-card-title-group">
+                  <div class="feature-card-title">Offline Advising Course Planner</div>
+                </div>
+                <span class="feature-card-badge">Planner</span>
               </div>
-              <span class="feature-card-badge">Catalog</span>
+              
+              <div class="feature-img-frame" data-lightbox-src="images/features/CoursePlanner.png" data-lightbox-title="Offline Course Planner &amp; Clash Simulator">
+                <img src="images/features/CoursePlanner.png" alt="Offline Course Planner" class="feature-img" loading="lazy" />
+                <div class="feature-img-overlay">
+                  <span class="feature-img-tag">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+                    Clash Simulator
+                  </span>
+                  <span style="font-size:10px; color:#38bdf8; font-weight:700;">Click to Zoom</span>
+                </div>
+              </div>
+
+              <p class="feature-card-desc">
+                Simulate multiple schedule combinations offline before advising opens. Features drag-and-drop course picking, time conflict detection, and credit limit tracking.
+              </p>
+
+              <div class="feature-tags-wrap">
+                <span class="feature-chip">Clash Prevention</span>
+                <span class="feature-chip">Credit Limit Monitor</span>
+                <span class="feature-chip">Live Schedule Preview</span>
+              </div>
             </div>
-            <p class="feature-card-desc">
-              Browse hundreds of offered courses with pinned sticky headers, department search filters, and fast PDF exports.
-            </p>
-            <div class="screenshot-placeholder">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-              <span class="placeholder-title">Offered Courses Catalog &amp; Sticky Navigation</span>
-              <span class="placeholder-sub">Instant filtering by course code, department, or faculty</span>
+
+            <!-- Feature 4: Offered Courses Catalog -->
+            <div class="feature-card">
+              <div class="feature-card-header">
+                <div class="feature-card-icon">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                </div>
+                <div class="feature-card-title-group">
+                  <div class="feature-card-title">Offered Courses Catalog</div>
+                </div>
+                <span class="feature-card-badge">Catalog</span>
+              </div>
+              
+              <div class="feature-img-frame" data-lightbox-src="images/features/OfferedCourse.png" data-lightbox-title="Offered Courses Catalog &amp; Sticky Headers">
+                <img src="images/features/OfferedCourse.png" alt="Offered Courses Catalog" class="feature-img" loading="lazy" />
+                <div class="feature-img-overlay">
+                  <span class="feature-img-tag">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+                    Sticky Catalog
+                  </span>
+                  <span style="font-size:10px; color:#38bdf8; font-weight:700;">Click to Zoom</span>
+                </div>
+              </div>
+
+              <p class="feature-card-desc">
+                Browse hundreds of semester offerings effortlessly with pinned sticky table headers, instant faculty/department filtering, and lag-free scrolling.
+              </p>
+
+              <div class="feature-tags-wrap">
+                <span class="feature-chip">Sticky Navigation</span>
+                <span class="feature-chip">Department Filtering</span>
+                <span class="feature-chip">Instant PDF Print</span>
+              </div>
             </div>
+
+            <!-- Feature 5: Recommended Courses & Degree Flow -->
+            <div class="feature-card">
+              <div class="feature-card-header">
+                <div class="feature-card-icon">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                </div>
+                <div class="feature-card-title-group">
+                  <div class="feature-card-title">Recommended &amp; Retake Track</div>
+                </div>
+                <span class="feature-card-badge">Degree Track</span>
+              </div>
+              
+              <div class="feature-img-frame" data-lightbox-src="images/features/RecommendedCourse.png" data-lightbox-title="Recommended Courses &amp; Prerequisite Insights">
+                <img src="images/features/RecommendedCourse.png" alt="Recommended Courses &amp; Degree Flow" class="feature-img" loading="lazy" />
+                <div class="feature-img-overlay">
+                  <span class="feature-img-tag">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                    Flowchart
+                  </span>
+                  <span style="font-size:10px; color:#38bdf8; font-weight:700;">Click to Zoom</span>
+                </div>
+              </div>
+
+              <p class="feature-card-desc">
+                Access flowchart recommendations, retake opportunities, and prerequisite roadmaps cleanly organized in tabbed advising views.
+              </p>
+
+              <div class="feature-tags-wrap">
+                <span class="feature-chip">Prerequisite Guide</span>
+                <span class="feature-chip">Retake / D+ Tracking</span>
+                <span class="feature-chip">Degree Progress</span>
+              </div>
+            </div>
+
+            <!-- Feature 6: Automated Login Captcha Solver -->
+            <div class="feature-card">
+              <div class="feature-card-header">
+                <div class="feature-card-icon">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div class="feature-card-title-group">
+                  <div class="feature-card-title">Automated Captcha Solver</div>
+                </div>
+                <span class="feature-card-badge">Login Speed</span>
+              </div>
+              
+              <div class="captcha-showcase">
+                <div class="captcha-demo-pill">
+                  <span class="captcha-math-text">7 + 12 = ?</span>
+                  <span class="captcha-arrow">&rarr;</span>
+                  <span class="captcha-solution">19</span>
+                </div>
+                <div class="captcha-status-pill">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                  Instant 1-Click Verification
+                </div>
+              </div>
+
+              <p class="feature-card-desc">
+                Automatically detects and calculates math security challenges on the student portal login page with configurable timing for instant access.
+              </p>
+
+              <div class="feature-tags-wrap">
+                <span class="feature-chip">Instant Math Solver</span>
+                <span class="feature-chip">Configurable Delay</span>
+                <span class="feature-chip">Safe &amp; Secure</span>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        <button type="button" id="btnNextToActivation" class="btn-primary">
-          <span>Next: Licence Activation</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </button>
+        <div class="features-nav-bar">
+          <button type="button" id="btnBackToTerms" class="btn-secondary" style="width:auto; padding:12px 20px;">
+            &larr; Back to Terms
+          </button>
+          <button type="button" id="btnNextToActivation" class="btn-primary" style="flex:1;">
+            <span>Next: Licence Activation</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
       </div>
 
       <!-- ==================== STEP 3: LICENCE ACTIVATION ==================== -->
@@ -1243,7 +1458,7 @@
           Extension Ready &amp; Active
         </h2>
         <p style="color:var(--text-muted); font-size:12.8px; line-height:1.55; margin-bottom:18px;">
-          Your licence key is authorized and all EWU Portal Helper tools are active.
+          Your licence key is authorized and all EWU Buddy tools are active.
         </p>
 
         <div class="sub-meta-box">
@@ -1282,6 +1497,17 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- Image Lightbox Modal -->
+  <div class="img-lightbox" id="imgLightbox">
+    <div class="img-lightbox-card">
+      <div class="lightbox-header">
+        <span class="lightbox-title" id="lightboxTitle">Feature Preview</span>
+        <button type="button" class="lightbox-close" id="lightboxClose">&times;</button>
+      </div>
+      <img src="" alt="Feature Preview" class="lightbox-img" id="lightboxImg" />
     </div>
   </div>
 

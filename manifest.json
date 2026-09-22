@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "EWU Buddy — Portal Helper",
-  "version": "1.1.0",
-  "description": "Professional helper extension for East West University Student Portal. Auto-solves login captcha, generates class routines, and enhances advising and offered courses tables.",
+  "name": "EWU Buddy",
+  "version": "1.2.0",
+  "description": "Smart student assistant for East West University portal. Auto-calculates login captcha, generates class routine timetables, and enhances online advising and course planning.",
 
   "permissions": [
     "storage",
@@ -13,7 +13,9 @@
   "host_permissions": [
     "https://portal.ewubd.edu/*",
     "https://www.ewubd.edu/*",
-    "https://*.workers.dev/*"
+    "https://*.workers.dev/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
   ],
 
   "background": {
@@ -38,7 +40,9 @@
   "content_scripts": [
     {
       "matches": [
-        "https://portal.ewubd.edu/*"
+        "https://portal.ewubd.edu/*",
+        "http://localhost/*",
+        "http://127.0.0.1/*"
       ],
       "js": [
         "lib/html2canvas.min.js",
@@ -63,10 +67,13 @@
         "pages/activation.html",
         "pages/update.html",
         "pages/images/*",
+        "pages/images/features/*",
         "icons/*"
       ],
       "matches": [
-        "https://portal.ewubd.edu/*"
+        "https://portal.ewubd.edu/*",
+        "http://localhost/*",
+        "http://127.0.0.1/*"
       ]
     }
   ]
