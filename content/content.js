@@ -45,7 +45,7 @@
       offeredCoursesStickyHeader: true,
       offeredCoursesSearchBox: true,
       offeredCoursesSearchPlaceholder: 'Search by course or faculty...',
-      advisingTableEnhancer: true,
+      advisingTableEnhancer: false,
       advisingColorLeft: true,
       advisingSearchBox: true,
       advisingOffline: true,
@@ -53,6 +53,7 @@
       advisingOfflinePlanner: true,
       plannerCreditLimit: 15.0,
     },
+    advisingBetaConfirmed: false,
   };
 
   /* -----------------------------------------------------------
@@ -5642,14 +5643,25 @@
 
 
   /* ===========================================================
-     SETTINGS LISTENER (from popup)
+     SETTINGS LISTENER (from popup & storage)
      =========================================================== */
 
-  if (typeof chrome !== 'undefined' && chrome.runtime) {
+  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
     chrome.runtime.onMessage.addListener(function (msg, _s, respond) {
       if (msg && msg.type === 'EWU_SETTINGS_UPDATED') {
         handleSettingsUpdate(msg.settings);
-        respond({ ok: true });
+        respond && respond({ ok: true });
+      }
+    });
+  }
+
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
+    chrome.storage.onChanged.addListener(function (changes, areaName) {
+      if (areaName === 'local' && changes[CONFIG.STORAGE_KEY]) {
+        var newSettings = changes[CONFIG.STORAGE_KEY].newValue;
+        if (newSettings) {
+          handleSettingsUpdate(deepMerge(structuredClone(DEFAULT_SETTINGS), newSettings));
+        }
       }
     });
   }

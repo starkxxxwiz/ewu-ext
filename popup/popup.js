@@ -34,14 +34,15 @@
       offeredCoursesStickyHeader: true,
       offeredCoursesSearchBox: true,
       offeredCoursesSearchPlaceholder: 'Search by course or faculty...',
-      advisingTableEnhancer: true,
+      advisingTableEnhancer: false,
       advisingColorLeft: true,
       advisingSearchBox: true,
       advisingOffline: true,
       advisingOfflineRecommended: true,
       advisingOfflinePlanner: true,
       plannerCreditLimit: 15.0
-    }
+    },
+    advisingBetaConfirmed: false
   };
 
   /* -----------------------------------------------------------
@@ -127,6 +128,11 @@
     btnRefreshLicense: document.getElementById('btnRefreshLicense'),
     btnContactSupport: document.getElementById('btnContactSupport'),
 
+    // Beta Confirmation Modal
+    betaModal: document.getElementById('betaModal'),
+    btnBetaCancel: document.getElementById('btnBetaCancel'),
+    btnBetaConfirm: document.getElementById('btnBetaConfirm'),
+
     // Toast
     toast: document.getElementById('toast'),
   };
@@ -205,13 +211,15 @@
 
   function broadcastSettings(settings) {
     if (typeof chrome === 'undefined' || !chrome.tabs) return;
-    chrome.tabs.query({ url: 'https://portal.ewubd.edu/*' }, (tabs) => {
+    chrome.tabs.query({}, (tabs) => {
       if (!tabs) return;
       for (const tab of tabs) {
-        chrome.tabs.sendMessage(tab.id, {
-          type: 'EWU_SETTINGS_UPDATED',
-          settings: settings,
-        }).catch(() => {});
+        if (tab.url && (tab.url.startsWith('https://portal.ewubd.edu') || tab.url.startsWith('http://localhost') || tab.url.startsWith('http://127.0.0.1'))) {
+          chrome.tabs.sendMessage(tab.id, {
+            type: 'EWU_SETTINGS_UPDATED',
+            settings: settings,
+          }).catch(() => {});
+        }
       }
     });
   }
@@ -235,10 +243,10 @@
     updateSubVisibility(els.subAdvisingOffline, mods.advisingOffline !== false);
 
     // Online Advising
-    if (els.toggleAdvisingEnhancer) els.toggleAdvisingEnhancer.checked = mods.advisingTableEnhancer !== false;
+    if (els.toggleAdvisingEnhancer) els.toggleAdvisingEnhancer.checked = mods.advisingTableEnhancer === true;
     if (els.toggleAdvColorLeft) els.toggleAdvColorLeft.checked = mods.advisingColorLeft !== false;
     if (els.toggleAdvSearchBox) els.toggleAdvSearchBox.checked = mods.advisingSearchBox !== false;
-    updateSubVisibility(els.subAdvisingOnline, mods.advisingTableEnhancer !== false);
+    updateSubVisibility(els.subAdvisingOnline, mods.advisingTableEnhancer === true);
 
     // Offered Courses
     if (els.toggleOfferedCourses) els.toggleOfferedCourses.checked = mods.offeredCoursesEnhancer !== false;
@@ -429,14 +437,46 @@
       });
     }
 
-    // Online Advising
+    // Online Advising (BETA Feature with Modal Confirmation)
     if (els.toggleAdvisingEnhancer) {
-      els.toggleAdvisingEnhancer.addEventListener('change', () => {
-        const checked = els.toggleAdvisingEnhancer.checked;
-        updateSubVisibility(els.subAdvisingOnline, checked);
-        updateSetting(s => { s.modules.advisingTableEnhancer = checked; }, 'Advising Enhancer updated');
+      els.toggleAdvisingEnhancer.addEventListener('change', async () => {
+        const isEnabling = els.toggleAdvisingEnhancer.checked;
+        const currentSettings = await loadSettings();
+
+        if (isEnabling && !currentSettings.advisingBetaConfirmed) {
+          // Keep toggle unchecked until user explicitly confirms in modal
+          els.toggleAdvisingEnhancer.checked = false;
+          if (els.betaModal) els.betaModal.style.display = 'flex';
+          return;
+        }
+
+        updateSubVisibility(els.subAdvisingOnline, isEnabling);
+        updateSetting(s => {
+          s.modules.advisingTableEnhancer = isEnabling;
+        }, isEnabling ? 'Advising Enhancer (Beta) Enabled' : 'Advising Enhancer Disabled');
       });
     }
+
+    if (els.btnBetaCancel) {
+      els.btnBetaCancel.addEventListener('click', () => {
+        if (els.betaModal) els.betaModal.style.display = 'none';
+        if (els.toggleAdvisingEnhancer) els.toggleAdvisingEnhancer.checked = false;
+        updateSubVisibility(els.subAdvisingOnline, false);
+      });
+    }
+
+    if (els.btnBetaConfirm) {
+      els.btnBetaConfirm.addEventListener('click', () => {
+        if (els.betaModal) els.betaModal.style.display = 'none';
+        if (els.toggleAdvisingEnhancer) els.toggleAdvisingEnhancer.checked = true;
+        updateSubVisibility(els.subAdvisingOnline, true);
+        updateSetting(s => {
+          s.modules.advisingTableEnhancer = true;
+          s.advisingBetaConfirmed = true;
+        }, 'Advising Enhancer (Beta) Enabled');
+      });
+    }
+
     if (els.toggleAdvColorLeft) {
       els.toggleAdvColorLeft.addEventListener('change', () => {
         updateSetting(s => { s.modules.advisingColorLeft = els.toggleAdvColorLeft.checked; }, 'Seat indicators updated');
