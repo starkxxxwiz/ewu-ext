@@ -10,9 +10,9 @@
   <style>
     :root {
       --bg-dark: #070c18;
-      --card-bg: rgba(13, 20, 36, 0.65);
-      --card-surface: rgba(20, 30, 54, 0.55);
-      --border: rgba(255, 255, 255, 0.14);
+      --card-bg: rgba(11, 17, 32, 0.62);
+      --card-surface: rgba(18, 28, 48, 0.48);
+      --border: rgba(255, 255, 255, 0.13);
       --border-focus: #38bdf8;
       --ewu-brick: #d94e34;
       --ewu-brick-dark: #b91c1c;
@@ -70,7 +70,7 @@
       background-size: cover;
       background-position: center;
       opacity: 0;
-      filter: brightness(0.92) contrast(1.06) saturate(1.08);
+      filter: brightness(0.95) contrast(1.06) saturate(1.1);
       transition: opacity 1.8s cubic-bezier(0.4, 0, 0.2, 1), transform 9s cubic-bezier(0.25, 1, 0.5, 1);
       transform: scale(1.0);
       will-change: transform, opacity;
@@ -123,8 +123,8 @@
       height: 100vh;
       z-index: 1;
       background: 
-        radial-gradient(ellipse at 50% 8%, rgba(217, 78, 52, 0.18) 0%, rgba(8, 14, 28, 0.45) 50%, rgba(5, 9, 18, 0.82) 100%),
-        linear-gradient(180deg, rgba(6, 11, 23, 0.3) 0%, rgba(7, 13, 26, 0.78) 100%);
+        radial-gradient(ellipse at 50% 8%, rgba(217, 78, 52, 0.16) 0%, rgba(8, 14, 28, 0.38) 50%, rgba(5, 9, 18, 0.76) 100%),
+        linear-gradient(180deg, rgba(6, 11, 23, 0.24) 0%, rgba(7, 13, 26, 0.74) 100%);
       pointer-events: none;
     }
 
@@ -181,11 +181,12 @@
       border: 1px solid var(--border);
       border-radius: 22px;
       box-shadow: 
-        0 24px 50px -10px rgba(0, 0, 0, 0.75),
-        0 0 35px rgba(217, 78, 52, 0.14),
-        inset 0 1px 0 rgba(255, 255, 255, 0.16);
-      backdrop-filter: blur(24px) saturate(190%);
-      -webkit-backdrop-filter: blur(24px) saturate(190%);
+        0 24px 50px -10px rgba(0, 0, 0, 0.7),
+        0 0 35px rgba(217, 78, 52, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        inset 0 0 24px rgba(255, 255, 255, 0.02);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
       max-width: 500px;
       width: 100%;
       padding: 32px 28px;
@@ -330,12 +331,13 @@
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      background: rgba(8, 14, 26, 0.7);
+      background: rgba(8, 14, 26, 0.52);
       border: 1px solid rgba(255, 255, 255, 0.12);
       padding: 6px 14px;
       border-radius: 12px;
       margin-bottom: 15px;
       backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
 
     .ver-pill {
@@ -373,7 +375,7 @@
 
     /* Changelog Card */
     .changelog-box {
-      background: rgba(8, 14, 26, 0.65);
+      background: rgba(8, 14, 26, 0.52);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
       padding: 14px 16px;
@@ -381,7 +383,8 @@
       margin-bottom: 18px;
       max-height: 160px;
       overflow-y: auto;
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
 
     .changelog-box::-webkit-scrollbar { width: 4px; }
