@@ -26,6 +26,10 @@
   // Step 2 Elements
   var btnBackToTerms = document.getElementById('btnBackToTerms');
   var btnNextToActivation = document.getElementById('btnNextToActivation');
+  var featuresOnboardingNav = document.getElementById('featuresOnboardingNav');
+  var featuresStandaloneNav = document.getElementById('featuresStandaloneNav');
+  var btnStandalonePortal = document.getElementById('btnStandalonePortal');
+  var btnStandaloneLicense = document.getElementById('btnStandaloneLicense');
 
   // Lightbox Elements
   var imgLightbox = document.getElementById('imgLightbox');
@@ -47,11 +51,18 @@
   // Step 4 Elements
   var btnVisitPortal = document.getElementById('btnVisitPortal');
   var btnChangeLicense = document.getElementById('btnChangeLicense');
+  var btnViewFeaturesGuide = document.getElementById('btnViewFeaturesGuide');
   var subKeyPrefix = document.getElementById('subKeyPrefix');
   var subExpiryText = document.getElementById('subExpiryText');
 
   var currentLicenseState = null;
   var currentStep = 1;
+
+  // URL Parameters for Direct Navigation Modes
+  var urlParams = new URLSearchParams(window.location.search);
+  var modeParam = (urlParams.get('mode') || urlParams.get('tab') || '').toLowerCase();
+  var actionParam = (urlParams.get('action') || '').toLowerCase();
+  var isStandaloneMode = modeParam === 'features' || modeParam === 'license' || modeParam === 'licence';
 
   // Format Licence Key as XXXX-XXXX-XXXX-XXXX
   if (keyInput) {
@@ -104,6 +115,43 @@
     return true;
   }
 
+  function showFeaturesStandalone() {
+    isStandaloneMode = true;
+    currentStep = 2;
+    var views = [viewStep1, viewStep2, viewStep3, viewStep4];
+    views.forEach(function (v) { if (v) v.classList.remove('active'); });
+    if (viewStep2) viewStep2.classList.add('active');
+    if (stepIndicator) stepIndicator.style.display = 'none';
+    if (onboardCard) onboardCard.classList.add('wide-features-mode');
+    if (featuresOnboardingNav) featuresOnboardingNav.style.display = 'none';
+    if (featuresStandaloneNav) featuresStandaloneNav.style.display = 'flex';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function showLicenseStandalone(action) {
+    isStandaloneMode = true;
+    if (stepIndicator) stepIndicator.style.display = 'none';
+    if (onboardCard) onboardCard.classList.remove('wide-features-mode');
+    if (featuresStandaloneNav) featuresStandaloneNav.style.display = 'none';
+
+    if (action === 'change' || !currentLicenseState) {
+      var views = [viewStep1, viewStep2, viewStep3, viewStep4];
+      views.forEach(function (v) { if (v) v.classList.remove('active'); });
+      if (viewStep3) viewStep3.classList.add('active');
+      if (cancelChangeWrap) {
+        cancelChangeWrap.style.display = currentLicenseState ? 'block' : 'none';
+      }
+      hideStatus();
+      if (keyInput) {
+        keyInput.value = '';
+        keyInput.focus();
+      }
+    } else {
+      renderSubscribedView(currentLicenseState.prefix, currentLicenseState.expiresAt);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   function setStep(step) {
     currentStep = step;
     var views = [viewStep1, viewStep2, viewStep3, viewStep4];
@@ -118,6 +166,23 @@
         onboardCard.classList.remove('wide-features-mode');
       }
     }
+
+    if (isStandaloneMode) {
+      if (stepIndicator) stepIndicator.style.display = 'none';
+      if (step === 2) {
+        if (viewStep2) viewStep2.classList.add('active');
+        if (featuresOnboardingNav) featuresOnboardingNav.style.display = 'none';
+        if (featuresStandaloneNav) featuresStandaloneNav.style.display = 'flex';
+      } else if (step === 3) {
+        if (viewStep3) viewStep3.classList.add('active');
+      } else if (step === 4) {
+        if (viewStep4) viewStep4.classList.add('active');
+      }
+      return;
+    }
+
+    if (featuresOnboardingNav) featuresOnboardingNav.style.display = 'flex';
+    if (featuresStandaloneNav) featuresStandaloneNav.style.display = 'none';
 
     if (step === 1) {
       if (viewStep1) viewStep1.classList.add('active');
@@ -175,6 +240,18 @@
           prefix: localStorage.getItem('ewu_license_prefix') || 'XXXX-...',
           expiresAt: localExp ? Number(localExp) : null
         };
+      }
+
+      if (isStandaloneMode) {
+        if (modeParam === 'features') {
+          showFeaturesStandalone();
+        } else {
+          showLicenseStandalone(actionParam);
+        }
+        return;
+      }
+
+      if (currentLicenseState) {
         renderSubscribedView(currentLicenseState.prefix, currentLicenseState.expiresAt);
         return;
       }
@@ -209,6 +286,18 @@
           prefix: res.ewu_license_prefix || 'XXXX-...',
           expiresAt: expiry || null
         };
+      }
+
+      if (isStandaloneMode) {
+        if (modeParam === 'features') {
+          showFeaturesStandalone();
+        } else {
+          showLicenseStandalone(actionParam);
+        }
+        return;
+      }
+
+      if (currentLicenseState) {
         renderSubscribedView(currentLicenseState.prefix, currentLicenseState.expiresAt);
         return;
       }
@@ -321,6 +410,23 @@
     }
   });
 
+  // Step 2 Standalone Actions
+  if (btnStandalonePortal) {
+    btnStandalonePortal.addEventListener('click', function () {
+      if (typeof chrome !== 'undefined' && chrome.tabs) {
+        chrome.tabs.create({ url: 'https://portal.ewubd.edu' });
+      } else {
+        window.open('https://portal.ewubd.edu', '_blank');
+      }
+    });
+  }
+
+  if (btnStandaloneLicense) {
+    btnStandaloneLicense.addEventListener('click', function () {
+      showLicenseStandalone();
+    });
+  }
+
   // Step 3 & 4 Navigation
   if (btnVisitPortal) {
     btnVisitPortal.addEventListener('click', function () {
@@ -329,6 +435,12 @@
       } else {
         window.open('https://portal.ewubd.edu', '_blank');
       }
+    });
+  }
+
+  if (btnViewFeaturesGuide) {
+    btnViewFeaturesGuide.addEventListener('click', function () {
+      showFeaturesStandalone();
     });
   }
 

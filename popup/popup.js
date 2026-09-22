@@ -108,6 +108,9 @@
     btnReset: document.getElementById('btnReset'),
     fileImport: document.getElementById('fileImport'),
 
+    // General Actions
+    btnViewFeatures: document.getElementById('btnViewFeatures'),
+
     // License Badge & Button
     licBadgeDot: document.getElementById('licBadgeDot'),
     licStatusText: document.getElementById('licStatusText'),
@@ -119,6 +122,7 @@
     tabLicTypeBadge: document.getElementById('tabLicTypeBadge'),
     tabLicPrefix: document.getElementById('tabLicPrefix'),
     tabLicExpiry: document.getElementById('tabLicExpiry'),
+    btnManageLicPage: document.getElementById('btnManageLicPage'),
     btnChangeLicenseKey: document.getElementById('btnChangeLicenseKey'),
     btnRefreshLicense: document.getElementById('btnRefreshLicense'),
     btnContactSupport: document.getElementById('btnContactSupport'),
@@ -598,6 +602,66 @@
           broadcastSettings(defaults);
           renderUI(defaults);
           showToast('Settings reset to default!');
+        }
+      });
+    }
+
+    // View Features Guide
+    if (els.btnViewFeatures) {
+      els.btnViewFeatures.addEventListener('click', () => {
+        const url = (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL)
+          ? chrome.runtime.getURL('pages/activation.html?mode=features')
+          : 'pages/activation.html?mode=features';
+        if (typeof chrome !== 'undefined' && chrome.tabs) {
+          chrome.tabs.create({ url });
+        } else {
+          window.open(url, '_blank');
+        }
+      });
+    }
+
+    // License Management Actions
+    function openLicensePage(action) {
+      const query = action ? `?mode=license&action=${action}` : '?mode=license';
+      const url = (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL)
+        ? chrome.runtime.getURL(`pages/activation.html${query}`)
+        : `pages/activation.html${query}`;
+      if (typeof chrome !== 'undefined' && chrome.tabs) {
+        chrome.tabs.create({ url });
+      } else {
+        window.open(url, '_blank');
+      }
+    }
+
+    if (els.btnManageLicense) {
+      els.btnManageLicense.addEventListener('click', () => openLicensePage());
+    }
+    if (els.btnManageLicPage) {
+      els.btnManageLicPage.addEventListener('click', () => openLicensePage());
+    }
+    if (els.btnChangeLicenseKey) {
+      els.btnChangeLicenseKey.addEventListener('click', () => openLicensePage('change'));
+    }
+    if (els.btnRefreshLicense) {
+      els.btnRefreshLicense.addEventListener('click', () => {
+        showToast('Syncing licence status...');
+        if (typeof chrome !== 'undefined' && chrome.runtime) {
+          chrome.runtime.sendMessage({ type: 'CHECK_REMOTE_STATUS' }).then(() => {
+            setTimeout(updateLicenseStatusUI, 600);
+          }).catch(() => {
+            updateLicenseStatusUI();
+          });
+        } else {
+          updateLicenseStatusUI();
+        }
+      });
+    }
+    if (els.btnContactSupport) {
+      els.btnContactSupport.addEventListener('click', () => {
+        if (typeof chrome !== 'undefined' && chrome.tabs) {
+          chrome.tabs.create({ url: 'https://t.me/AftabKabir' });
+        } else {
+          window.open('https://t.me/AftabKabir', '_blank');
         }
       });
     }

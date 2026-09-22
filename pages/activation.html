@@ -517,10 +517,11 @@
        OVERHAULED RESPONSIVE FEATURES GRID (Step 2)
        ========================================================================== */
     .features-grid-container {
-      max-height: 520px;
+      max-height: min(600px, calc(80vh - 180px));
       overflow-y: auto;
       padding-right: 6px;
       margin: 18px 0 24px 0;
+      scroll-behavior: smooth;
     }
 
     .features-grid-container::-webkit-scrollbar { width: 5px; }
@@ -752,12 +753,31 @@
       gap: 5px;
     }
 
+    .feature-tip {
+      font-size: 11.2px;
+      line-height: 1.45;
+      color: #93c5fd;
+      background: rgba(30, 58, 138, 0.25);
+      border: 1px solid rgba(59, 130, 246, 0.28);
+      padding: 6px 10px;
+      border-radius: 7px;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .feature-tip svg {
+      color: #60a5fa;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
     .features-nav-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      margin-top: 6px;
+      margin-top: 8px;
     }
 
     /* Lightbox Modal */
@@ -1201,7 +1221,7 @@
                 <div class="feature-card-title-group">
                   <div class="feature-card-title">10-Column Advising Suite</div>
                 </div>
-                <span class="feature-card-badge">Advising</span>
+                <span class="feature-card-badge">Live Advising</span>
               </div>
               
               <div class="feature-img-frame" data-lightbox-src="images/features/OnlineAdvising.png" data-lightbox-title="10-Column Live Advising Suite">
@@ -1216,12 +1236,18 @@
               </div>
 
               <p class="feature-card-desc">
-                Transforms advising with structured 10-column tables, color heatmaps for remaining seats, instant search filtering, and one-click PDF course export.
+                Enriches the online advising table with real-time seats left, color heatmaps, faculty initials, section timings, room numbers, and one-click PDF course exports.
               </p>
 
+              <div class="feature-tip">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <span><strong>Quick Tip:</strong> Press <kbd style="background:rgba(0,0,0,0.4);padding:1px 5px;border-radius:4px;border:1px solid rgba(255,255,255,0.2);">Ctrl + K</kbd> on the advising portal to filter courses or faculty initials instantly.</span>
+              </div>
+
               <div class="feature-tags-wrap">
-                <span class="feature-chip">Seat Heatmaps</span>
+                <span class="feature-chip">Live Seat Heatmap</span>
                 <span class="feature-chip">Total Courses Counter</span>
+                <span class="feature-chip">Instant Search (Ctrl+K)</span>
                 <span class="feature-chip">PDF Export</span>
               </div>
             </div>
@@ -1235,7 +1261,7 @@
                 <div class="feature-card-title-group">
                   <div class="feature-card-title">Routine Generator &amp; Calendar</div>
                 </div>
-                <span class="feature-card-badge">Schedule</span>
+                <span class="feature-card-badge">Timetable</span>
               </div>
               
               <div class="feature-img-frame" data-lightbox-src="images/features/ClassSchedule.png" data-lightbox-title="Weekly Routine &amp; Calendar Export">
@@ -1250,13 +1276,19 @@
               </div>
 
               <p class="feature-card-desc">
-                Converts enrolled courses into an ultra-HD weekly timetable grid with PDF/PNG downloads and automatic Academic Calendar (.ics) sync for Google/Apple Calendar.
+                Converts your enrolled courses into an aesthetic weekly timetable with HD PNG/PDF downloads and official Academic Calendar (.ics) sync for Google &amp; Apple Calendar.
               </p>
 
+              <div class="feature-tip">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <span><strong>Quick Tip:</strong> Download the <strong>.ics file</strong> to automatically import your class schedule with official holidays into your mobile calendar.</span>
+              </div>
+
               <div class="feature-tags-wrap">
-                <span class="feature-chip">Timetable Grid</span>
-                <span class="feature-chip">Apple/Google Calendar (.ics)</span>
-                <span class="feature-chip">HD PNG/PDF</span>
+                <span class="feature-chip">Weekly Routine Grid</span>
+                <span class="feature-chip">Google &amp; Apple Calendar (.ics)</span>
+                <span class="feature-chip">HD PNG &amp; PDF</span>
+                <span class="feature-chip">Holiday Aware</span>
               </div>
             </div>
 
@@ -1267,7 +1299,7 @@
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
                 </div>
                 <div class="feature-card-title-group">
-                  <div class="feature-card-title">Offline Advising Course Planner</div>
+                  <div class="feature-card-title">Offline Course Planner &amp; Clash Simulator</div>
                 </div>
                 <span class="feature-card-badge">Planner</span>
               </div>
@@ -1284,11 +1316,17 @@
               </div>
 
               <p class="feature-card-desc">
-                Simulate multiple schedule combinations offline before advising opens. Features drag-and-drop course picking, time conflict detection, and credit limit tracking.
+                Simulate multiple schedule combinations before advising begins. Features drag-and-drop course picking, credit limit tracking, and automatic time overlap detection.
               </p>
 
+              <div class="feature-tip">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <span><strong>Quick Tip:</strong> Drag courses into your semester plan to instantly test whether lecture or lab slots conflict with each other.</span>
+              </div>
+
               <div class="feature-tags-wrap">
-                <span class="feature-chip">Clash Prevention</span>
+                <span class="feature-chip">Time Clash Prevention</span>
+                <span class="feature-chip">Drag &amp; Drop Workflow</span>
                 <span class="feature-chip">Credit Limit Monitor</span>
                 <span class="feature-chip">Live Schedule Preview</span>
               </div>
@@ -1318,12 +1356,18 @@
               </div>
 
               <p class="feature-card-desc">
-                Browse hundreds of semester offerings effortlessly with pinned sticky table headers, instant faculty/department filtering, and lag-free scrolling.
+                Browse semester offerings effortlessly with sticky headers that stay pinned as you scroll, live seat counts, and instant department or instructor search.
               </p>
+
+              <div class="feature-tip">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <span><strong>Quick Tip:</strong> Click any faculty initial to compose a direct email or export filtered department courses into a clean PDF document.</span>
+              </div>
 
               <div class="feature-tags-wrap">
                 <span class="feature-chip">Sticky Navigation</span>
                 <span class="feature-chip">Department Filtering</span>
+                <span class="feature-chip">Faculty Email Links</span>
                 <span class="feature-chip">Instant PDF Print</span>
               </div>
             </div>
@@ -1335,7 +1379,7 @@
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                 </div>
                 <div class="feature-card-title-group">
-                  <div class="feature-card-title">Recommended &amp; Retake Track</div>
+                  <div class="feature-card-title">Recommended &amp; Degree Roadmap</div>
                 </div>
                 <span class="feature-card-badge">Degree Track</span>
               </div>
@@ -1352,13 +1396,19 @@
               </div>
 
               <p class="feature-card-desc">
-                Access flowchart recommendations, retake opportunities, and prerequisite roadmaps cleanly organized in tabbed advising views.
+                Access flowchart recommendations, prerequisite chains, and retake opportunities cleanly structured in tabbed views for informed decision-making.
               </p>
+
+              <div class="feature-tip">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <span><strong>Quick Tip:</strong> Verify prerequisite requirements in advance and identify retake options for GPA enhancement.</span>
+              </div>
 
               <div class="feature-tags-wrap">
                 <span class="feature-chip">Prerequisite Guide</span>
                 <span class="feature-chip">Retake / D+ Tracking</span>
                 <span class="feature-chip">Degree Progress</span>
+                <span class="feature-chip">Tabbed Advising View</span>
               </div>
             </div>
 
@@ -1369,9 +1419,9 @@
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 </div>
                 <div class="feature-card-title-group">
-                  <div class="feature-card-title">Automated Captcha Solver</div>
+                  <div class="feature-card-title">Instant Math Captcha Helper</div>
                 </div>
-                <span class="feature-card-badge">Login Speed</span>
+                <span class="feature-card-badge">Fast Login</span>
               </div>
               
               <div class="captcha-showcase">
@@ -1387,12 +1437,18 @@
               </div>
 
               <p class="feature-card-desc">
-                Automatically detects and calculates math security challenges on the student portal login page with configurable timing for instant access.
+                Automatically detects and calculates math security challenges on the student portal login page with customizable delay for seamless access.
               </p>
+
+              <div class="feature-tip">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <span><strong>Quick Tip:</strong> You can adjust the auto-fill delay or toggle automatic submission in the extension settings popup.</span>
+              </div>
 
               <div class="feature-tags-wrap">
                 <span class="feature-chip">Instant Math Solver</span>
-                <span class="feature-chip">Configurable Delay</span>
+                <span class="feature-chip">Auto-Fill Delay Control</span>
+                <span class="feature-chip">100% Client-Side</span>
                 <span class="feature-chip">Safe &amp; Secure</span>
               </div>
             </div>
@@ -1400,13 +1456,26 @@
           </div>
         </div>
 
-        <div class="features-nav-bar">
+        <!-- Onboarding Navigation (First-Time Setup) -->
+        <div class="features-nav-bar" id="featuresOnboardingNav">
           <button type="button" id="btnBackToTerms" class="btn-secondary" style="width:auto; padding:12px 20px;">
             &larr; Back to Terms
           </button>
           <button type="button" id="btnNextToActivation" class="btn-primary" style="flex:1;">
             <span>Next: Licence Activation</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+
+        <!-- Standalone Navigation (Settings -> View Features) -->
+        <div class="features-nav-bar" id="featuresStandaloneNav" style="display:none;">
+          <button type="button" id="btnStandalonePortal" class="btn-primary" style="flex:1; background: linear-gradient(135deg, #059669 0%, #0284c7 100%);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Launch Student Portal
+          </button>
+          <button type="button" id="btnStandaloneLicense" class="btn-secondary" style="width:auto; padding:12px 20px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Manage Licence
           </button>
         </div>
       </div>
@@ -1483,6 +1552,11 @@
           <button type="button" id="btnVisitPortal" class="btn-primary" style="background: linear-gradient(135deg, #059669 0%, #0284c7 100%);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
             Launch Student Portal
+          </button>
+
+          <button type="button" id="btnViewFeaturesGuide" class="btn-secondary" style="background: rgba(99,102,241,0.14); border-color: rgba(99,102,241,0.32); color: #818cf8;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            View Features &amp; Capabilities
           </button>
 
           <button type="button" id="btnChangeLicense" class="btn-secondary">
