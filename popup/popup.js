@@ -205,7 +205,7 @@
 
   function broadcastSettings(settings) {
     if (typeof chrome === 'undefined' || !chrome.tabs) return;
-    chrome.tabs.query({ url: ['https://portal.ewubd.edu/*', 'http://localhost/*', 'http://127.0.0.1/*'] }, (tabs) => {
+    chrome.tabs.query({ url: 'https://portal.ewubd.edu/*' }, (tabs) => {
       if (!tabs) return;
       for (const tab of tabs) {
         chrome.tabs.sendMessage(tab.id, {

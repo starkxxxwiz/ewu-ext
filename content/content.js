@@ -246,11 +246,6 @@
       callback(false);
       return;
     }
-    // Allow localhost / 127.0.0.1 for local test environments
-    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-      callback(true);
-      return;
-    }
     chrome.storage.local.get(['ewu_system_shutdown', 'ewu_system_update'], function (res) {
       var shutdown = res.ewu_system_shutdown || { enabled: false };
       var update = res.ewu_system_update || { isMandatory: false, minVersion: '1.2.0' };
@@ -5752,9 +5747,7 @@
   async function initApp() {
     _settings = await loadSettings();
 
-    var isAllowedHost = location.href.startsWith(CONFIG.PORTAL_BASE) ||
-                        location.hostname === 'localhost' ||
-                        location.hostname === '127.0.0.1';
+    var isAllowedHost = location.href.startsWith(CONFIG.PORTAL_BASE);
     if (!isAllowedHost) return;
 
     var pageInfo = detectPage();

@@ -13,9 +13,7 @@
   "host_permissions": [
     "https://portal.ewubd.edu/*",
     "https://www.ewubd.edu/*",
-    "https://*.workers.dev/*",
-    "http://localhost/*",
-    "http://127.0.0.1/*"
+    "https://*.workers.dev/*"
   ],
 
   "background": {
@@ -40,9 +38,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://portal.ewubd.edu/*",
-        "http://localhost/*",
-        "http://127.0.0.1/*"
+        "https://portal.ewubd.edu/*"
       ],
       "js": [
         "lib/html2canvas.min.js",
@@ -71,9 +67,7 @@
         "icons/*"
       ],
       "matches": [
-        "https://portal.ewubd.edu/*",
-        "http://localhost/*",
-        "http://127.0.0.1/*"
+        "https://portal.ewubd.edu/*"
       ]
     }
   ]
