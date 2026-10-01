@@ -242,12 +242,23 @@
     });
   }
 
+  var _licenseFeatures = null;
+
+  function isFeatureAllowed(featureKey) {
+    if (!_licenseFeatures || typeof _licenseFeatures !== 'object') return true;
+    if (_licenseFeatures[featureKey] === false) return false;
+    return true;
+  }
+
   function checkLicense(callback) {
     if (typeof chrome === 'undefined' || !chrome.runtime) {
       callback(false);
       return;
     }
-    chrome.storage.local.get(['ewu_system_shutdown', 'ewu_system_update'], function (res) {
+    chrome.storage.local.get(['ewu_system_shutdown', 'ewu_system_update', 'ewu_license_features'], function (res) {
+      if (res && res.ewu_license_features) {
+        _licenseFeatures = res.ewu_license_features;
+      }
       var shutdown = res.ewu_system_shutdown || { enabled: false };
       var update = res.ewu_system_update || { isMandatory: false, minVersion: '1.2.0' };
       var manifestVer = (chrome.runtime.getManifest && chrome.runtime.getManifest().version) || '1.2.0';
@@ -269,11 +280,14 @@
       }
 
       // PRIORITY 3: License check
-      chrome.runtime.sendMessage({ type: 'GET_LICENSE_STATUS' }, function (res) {
-        if (chrome.runtime.lastError || !res || !res.authorized) {
+      chrome.runtime.sendMessage({ type: 'GET_LICENSE_STATUS' }, function (licRes) {
+        if (chrome.runtime.lastError || !licRes || !licRes.authorized) {
           showUnactivatedPrompt();
           callback(false);
         } else {
+          if (licRes.features) {
+            _licenseFeatures = licRes.features;
+          }
           callback(true);
         }
       });
@@ -3910,8 +3924,8 @@
       var existingRow = safeQuery('#ewu-adv-offline-row');
       if (existingRow) existingRow.remove();
 
-      var showPlanner = !settings.modules || settings.modules.advisingOfflinePlanner !== false;
-      var showRecommended = !settings.modules || settings.modules.advisingOfflineRecommended !== false;
+      var showPlanner = isFeatureAllowed('advisingOfflinePlanner') && (!settings.modules || settings.modules.advisingOfflinePlanner !== false);
+      var showRecommended = isFeatureAllowed('advisingOfflineRecommended') && (!settings.modules || settings.modules.advisingOfflineRecommended !== false);
 
       if (!showPlanner && !showRecommended) return;
 
@@ -4548,24 +4562,36 @@
       var view = this._mountView();
       if (!view) return;
 
+      var allowFetch = isFeatureAllowed('advisingOfflineFetch');
+
+      var optionsHtml = '';
+      if (allowFetch) {
+        optionsHtml +=
+          '<div class="ewu-option-card" id="ewu-cp-btn-fetch">' +
+            '<div class="ewu-option-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg></div>' +
+            '<div class="ewu-option-title">Fetch Courses from Portal</div>' +
+            '<div class="ewu-option-desc">Automatically fetch current semester routine data via portal API.</div>' +
+          '</div>';
+      }
+
+      optionsHtml +=
+        '<label class="ewu-option-card" style="margin:0;' + (!allowFetch ? ' max-width:380px; width:100%;' : '') + '">' +
+          '<input type="file" id="ewu-cp-file-pdf" accept=".pdf" style="display:none;">' +
+          '<div class="ewu-option-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>' +
+          '<div class="ewu-option-title">Upload Routine PDF</div>' +
+          '<div class="ewu-option-desc">Parse course routine tables directly from a PDF file locally.</div>' +
+        '</label>';
+
+      var optionsStyle = !allowFetch ? 'style="justify-content:center;"' : '';
+
       view.innerHTML =
         '<div class="ewu-landing-card">' +
           '<div class="ewu-landing-header">' +
             '<h2 class="ewu-landing-title">EWU Course Planner</h2>' +
             '<p class="ewu-landing-subtitle">Build, customize, and analyze conflict-free schedule combinations for your advising.</p>' +
           '</div>' +
-          '<div class="ewu-landing-options">' +
-            '<div class="ewu-option-card" id="ewu-cp-btn-fetch">' +
-              '<div class="ewu-option-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg></div>' +
-              '<div class="ewu-option-title">Fetch Courses from Portal</div>' +
-              '<div class="ewu-option-desc">Automatically fetch current semester routine data via portal API.</div>' +
-            '</div>' +
-            '<label class="ewu-option-card" style="margin:0;">' +
-              '<input type="file" id="ewu-cp-file-pdf" accept=".pdf" style="display:none;">' +
-              '<div class="ewu-option-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>' +
-              '<div class="ewu-option-title">Upload Routine PDF</div>' +
-              '<div class="ewu-option-desc">Parse course routine tables directly from a PDF file locally.</div>' +
-            '</label>' +
+          '<div class="ewu-landing-options" ' + optionsStyle + '>' +
+            optionsHtml +
           '</div>' +
           '<div style="text-align: center;">' +
             '<button type="button" class="ewu-btn-modern ewu-btn-modern-ghost" id="ewu-cp-btn-back" style="min-width:140px;">' +
@@ -4574,16 +4600,22 @@
           '</div>' +
         '</div>';
 
-      safeQuery('#ewu-cp-btn-fetch').addEventListener('click', function () {
-        self._fetchCoursesData();
-      });
+      var fetchBtn = safeQuery('#ewu-cp-btn-fetch');
+      if (fetchBtn) {
+        fetchBtn.addEventListener('click', function () {
+          self._fetchCoursesData();
+        });
+      }
 
-      safeQuery('#ewu-cp-file-pdf').addEventListener('change', function (e) {
-        if (e.target.files && e.target.files[0]) {
-          self._parsePDFFile(e.target.files[0]);
-          e.target.value = '';
-        }
-      });
+      var fileInput = safeQuery('#ewu-cp-file-pdf');
+      if (fileInput) {
+        fileInput.addEventListener('change', function (e) {
+          if (e.target.files && e.target.files[0]) {
+            self._parsePDFFile(e.target.files[0]);
+            e.target.value = '';
+          }
+        });
+      }
 
       safeQuery('#ewu-cp-btn-back').addEventListener('click', function () {
         self.hideView();
@@ -5613,25 +5645,25 @@
 
   function loadModules(pageInfo, settings) {
     if (!settings.enabled || !pageInfo) return;
-    if (pageInfo.id === 'login' && settings.modules.loginHelper) {
+    if (pageInfo.id === 'login' && settings.modules.loginHelper && isFeatureAllowed('loginHelper')) {
       LoginHelperModule.reset();
       LoginHelperModule.init(settings);
     }
     if (pageInfo.id === 'classSchedule') {
-      if (settings.modules.routineGenerator !== false) {
+      if (settings.modules.routineGenerator !== false && isFeatureAllowed('routineGenerator')) {
         RoutineGeneratorModule.reset();
         RoutineGeneratorModule.init(settings);
       }
-      if (settings.modules.scheduleEnhancer !== false) {
+      if (settings.modules.scheduleEnhancer !== false && isFeatureAllowed('scheduleEnhancer')) {
         ScheduleEnhancerModule.reset();
         ScheduleEnhancerModule.init(settings);
       }
     }
-    if (pageInfo.id === 'offeredCourses' && settings.modules.offeredCoursesEnhancer) {
+    if (pageInfo.id === 'offeredCourses' && settings.modules.offeredCoursesEnhancer && isFeatureAllowed('offeredCoursesEnhancer')) {
       OfferedCoursesEnhancerModule.reset();
       OfferedCoursesEnhancerModule.init(settings);
     }
-    if (pageInfo.id === 'advising' && settings.modules.advisingTableEnhancer !== false) {
+    if (pageInfo.id === 'advising' && settings.modules.advisingTableEnhancer !== false && isFeatureAllowed('advisingTableEnhancer')) {
       AdvisingTableEnhancerModule.reset();
       AdvisingTableEnhancerModule.init(settings);
     }

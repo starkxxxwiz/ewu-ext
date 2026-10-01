@@ -528,6 +528,8 @@
             ewu_license_expiry: licExp,
             ewu_token_exp: data.expiresAt || data.tokenExpiresAt,
             ewu_license_prefix: licPrefix,
+            ewu_license_type: data.licenseType || 'full',
+            ewu_license_features: data.features || null,
             ewu_device_id: deviceId
           };
 

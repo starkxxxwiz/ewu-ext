@@ -120,6 +120,8 @@ async function verifyLicenseToken() {
       'ewu_license_status',
       'ewu_license_expiry',
       'ewu_license_prefix',
+      'ewu_license_type',
+      'ewu_license_features',
       'ewu_device_id'
     ], function (res) {
       var isLocallyValid = isLicenseAuthorizedLocally(res);
@@ -129,7 +131,14 @@ async function verifyLicenseToken() {
       }
 
       // Fast-path: Instant zero-latency authorization for content and popup
-      resolve({ authorized: true, termsAccepted: true, expiresAt: res.ewu_license_expiry || null, prefix: res.ewu_license_prefix || '' });
+      resolve({
+        authorized: true,
+        termsAccepted: true,
+        expiresAt: res.ewu_license_expiry || null,
+        prefix: res.ewu_license_prefix || '',
+        licenseType: res.ewu_license_type || 'full',
+        features: res.ewu_license_features || null
+      });
 
       // Silent background server re-verification
       var token = res.ewu_license_token;
@@ -143,11 +152,15 @@ async function verifyLicenseToken() {
           return r.json();
         }).then(function (data) {
           if (data && data.valid) {
-            chrome.storage.local.set({
+            var updateObj = {
               ewu_license_status: 'active',
               ewu_license_expiry: data.licenseExpiresAt,
               ewu_license_prefix: data.licensePrefix || res.ewu_license_prefix
-            });
+            };
+            if (data.features) updateObj.ewu_license_features = data.features;
+            if (data.licenseType) updateObj.ewu_license_type = data.licenseType;
+            chrome.storage.local.set(updateObj);
+
             if (data.system) {
               var u = data.system.update || {};
               chrome.storage.local.set({

@@ -283,6 +283,90 @@
   }
 
   /* -----------------------------------------------------------
+     LICENSE FEATURE GATING
+     ----------------------------------------------------------- */
+  let _licenseFeatures = null;
+
+  function isFeatureAllowed(featureKey) {
+    if (!_licenseFeatures || typeof _licenseFeatures !== 'object') return true;
+    if (_licenseFeatures[featureKey] === false) return false;
+    return true;
+  }
+
+  function applyLicenseFeatureGating(features) {
+    _licenseFeatures = features || null;
+
+    // Login Helper
+    const loginCard = els.toggleLoginHelper ? els.toggleLoginHelper.closest('.setting-card') : null;
+    if (loginCard) {
+      const allowed = isFeatureAllowed('loginHelper');
+      loginCard.dataset.featureHidden = allowed ? '0' : '1';
+      if (!allowed) loginCard.style.display = 'none';
+    }
+
+    // Routine Generator
+    const routineCard = els.toggleRoutine ? els.toggleRoutine.closest('.setting-card') : null;
+    if (routineCard) {
+      const allowed = isFeatureAllowed('routineGenerator');
+      routineCard.dataset.featureHidden = allowed ? '0' : '1';
+      if (!allowed) routineCard.style.display = 'none';
+    }
+
+    // Schedule Enhancer
+    const scheduleCard = els.toggleScheduleEnhancer ? els.toggleScheduleEnhancer.closest('.setting-card') : null;
+    if (scheduleCard) {
+      const allowed = isFeatureAllowed('scheduleEnhancer');
+      scheduleCard.dataset.featureHidden = allowed ? '0' : '1';
+      if (!allowed) scheduleCard.style.display = 'none';
+    }
+
+    // Offered Courses
+    const coursesCard = els.toggleOfferedCourses ? els.toggleOfferedCourses.closest('.setting-card') : null;
+    if (coursesCard) {
+      const allowed = isFeatureAllowed('offeredCoursesEnhancer');
+      coursesCard.dataset.featureHidden = allowed ? '0' : '1';
+      if (!allowed) coursesCard.style.display = 'none';
+    }
+
+    // Live Advising Table Enhancer
+    const advisingCard = els.toggleAdvisingEnhancer ? els.toggleAdvisingEnhancer.closest('.setting-card') : null;
+    if (advisingCard) {
+      const allowed = isFeatureAllowed('advisingTableEnhancer');
+      advisingCard.dataset.featureHidden = allowed ? '0' : '1';
+      if (!allowed) advisingCard.style.display = 'none';
+      const secTitle = advisingCard.previousElementSibling;
+      if (secTitle && secTitle.classList.contains('section-title')) {
+        secTitle.style.display = allowed ? '' : 'none';
+      }
+    }
+
+    // Advising Offline Sub-items
+    const recRow = els.toggleOfflineRecommended ? els.toggleOfflineRecommended.closest('.sub-item-row') : null;
+    if (recRow) {
+      const allowed = isFeatureAllowed('advisingOfflineRecommended');
+      recRow.style.display = allowed ? '' : 'none';
+    }
+
+    const planRow = els.toggleOfflinePlanner ? els.toggleOfflinePlanner.closest('.sub-item-row') : null;
+    if (planRow) {
+      const allowed = isFeatureAllowed('advisingOfflinePlanner');
+      planRow.style.display = allowed ? '' : 'none';
+    }
+
+    // If both offline planner and recommended are disabled, hide the offline card
+    const offlineCard = els.toggleAdvisingOffline ? els.toggleAdvisingOffline.closest('.setting-card') : null;
+    if (offlineCard) {
+      const hasAnyOffline = isFeatureAllowed('advisingOfflinePlanner') || isFeatureAllowed('advisingOfflineRecommended');
+      offlineCard.dataset.featureHidden = hasAnyOffline ? '0' : '1';
+      if (!hasAnyOffline) offlineCard.style.display = 'none';
+      const secTitle = offlineCard.previousElementSibling;
+      if (secTitle && secTitle.classList.contains('section-title')) {
+        secTitle.style.display = hasAnyOffline ? '' : 'none';
+      }
+    }
+  }
+
+  /* -----------------------------------------------------------
      BIND EVENTS
      ----------------------------------------------------------- */
   function bindEvents() {
@@ -303,7 +387,13 @@
         grp.style.display = (groupName === tab) ? 'block' : 'none';
       });
 
-      els.settingCards.forEach(c => { c.style.display = 'block'; });
+      els.settingCards.forEach(c => {
+        if (c.dataset.featureHidden === '1') {
+          c.style.display = 'none';
+        } else {
+          c.style.display = 'block';
+        }
+      });
       if (els.emptySearchState) els.emptySearchState.style.display = 'none';
     }
 
@@ -362,6 +452,10 @@
 
         let totalVisibleCards = 0;
         els.settingCards.forEach((card) => {
+          if (card.dataset.featureHidden === '1') {
+            card.style.display = 'none';
+            return;
+          }
           const text = card.textContent.toLowerCase();
           const match = text.includes(query);
           card.style.display = match ? 'block' : 'none';
@@ -730,6 +824,7 @@
       'ewu_license_status',
       'ewu_license_expiry',
       'ewu_license_prefix',
+      'ewu_license_features',
       'ewu_system_shutdown',
       'ewu_system_update',
       'ewu_system_notice'
@@ -873,6 +968,8 @@
       }
 
       // User is Authorized
+      applyLicenseFeatureGating(res.ewu_license_features);
+
       if (els.licBadgeDot) {
         els.licBadgeDot.className = 'status-dot';
       }
