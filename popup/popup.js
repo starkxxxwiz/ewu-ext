@@ -1036,7 +1036,7 @@
         banner.id = 'ewu-popup-broadcast-banner';
         banner.style.cssText = `margin:8px 14px 0 14px; background:${bannerBg}; border:1px solid ${bannerBorder}; border-radius:8px; padding:8px 10px; font-size:11.5px; line-height:1.45; color:#f1f5f9; position:relative;`;
         banner.innerHTML = `
-          <button style="position:absolute; top:4px; right:6px; background:transparent; border:none; color:#9ca3af; font-size:12px; cursor:pointer;" onclick="this.parentElement.remove()">✕</button>
+          <button style="position:absolute; top:4px; right:6px; background:transparent; border:none; color:#9ca3af; font-size:12px; cursor:pointer;" onclick="this.parentElement.remove()" title="Close"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
           ${notice.title ? `<strong style="display:block; color:${bannerColor}; font-size:11.5px; margin-bottom:2px;">${notice.title}</strong>` : ''}
           <span>${notice.message}</span>
         `;

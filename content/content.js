@@ -124,7 +124,7 @@
         var sBanner = document.createElement('div');
         sBanner.id = 'ewu-portal-system-banner';
         sBanner.style.cssText = 'position:fixed; top:18px; right:18px; z-index:999999; max-width:400px; background:rgba(13,19,33,0.95); border:1px solid rgba(244,63,94,0.55); border-radius:16px; padding:16px 20px; box-shadow:0 15px 40px rgba(0,0,0,0.8), 0 0 25px rgba(244,63,94,0.3); color:#fff; font-family:-apple-system,BlinkMacSystemFont,sans-serif; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); transition:all 0.3s ease;';
-        sBanner.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;"><span style="color:#f43f5e; font-weight:800; font-size:13.5px; letter-spacing:0.3px;">' + (shutdown.title || 'System Temporarily Offline') + '</span><button style="background:transparent; border:none; color:#94a3b8; font-size:16px; cursor:pointer; padding:2px 6px; line-height:1;" onclick="this.closest(\'#ewu-portal-system-banner\').remove()">✕</button></div><div style="font-size:12.5px; color:#cbd5e1; line-height:1.5;">' + (shutdown.message || 'EWU Buddy is currently disabled by administrator.') + '</div>';
+        sBanner.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;"><span style="color:#f43f5e; font-weight:800; font-size:13.5px; letter-spacing:0.3px;">' + (shutdown.title || 'System Temporarily Offline') + '</span><button style="background:transparent; border:none; color:#94a3b8; font-size:14px; cursor:pointer; padding:2px 6px; line-height:1; display:flex; align-items:center; justify-content:center;" onclick="this.closest(\'#ewu-portal-system-banner\').remove()" title="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div style="font-size:12.5px; color:#cbd5e1; line-height:1.5;">' + (shutdown.message || 'EWU Buddy is currently disabled by administrator.') + '</div>';
         document.body.appendChild(sBanner);
         return;
       }
@@ -161,7 +161,7 @@
                   '<span style="font-size:10.5px; font-weight:600; color:#94a3b8;">v' + manifestVer + ' &rarr; v' + targetVer + '</span>' +
                 '</div>' +
               '</div>' +
-              '<button id="btnDismissMandatoryToast" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#94a3b8; width:26px; height:26px; border-radius:7px; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; transition:all 0.15s ease;" title="Close">✕</button>' +
+              '<button id="btnDismissMandatoryToast" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#94a3b8; width:26px; height:26px; border-radius:7px; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; transition:all 0.15s ease;" title="Close"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>' +
             '</div>' +
             '<div style="font-size:12px; color:#cbd5e1; line-height:1.5; margin-bottom:12px;">' +
               'Extension features are currently paused. Please update EWU Buddy to v' + targetVer + ' to continue using automated tools on the student portal.' +
@@ -223,7 +223,7 @@
         var nBanner = document.createElement('div');
         nBanner.id = 'ewu-portal-system-banner';
         nBanner.style.cssText = 'width:100%; background:' + nBg + '; border-bottom:1px solid ' + nBorder + '; padding:10px 20px; color:#ffffff; font-size:13px; font-weight:500; font-family:-apple-system,BlinkMacSystemFont,sans-serif; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box; z-index:99999; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); transition:opacity 0.4s ease;';
-        nBanner.innerHTML = '<div>' + (notice.title ? '<strong style="color:' + nColor + '; font-weight:800; margin-right:8px;">' + notice.title + '</strong>' : '') + '<span>' + notice.message + '</span></div><button style="background:transparent; border:none; color:#94a3b8; font-size:16px; cursor:pointer; padding:0 6px; line-height:1;" onclick="this.parentElement.remove()">✕</button>';
+        nBanner.innerHTML = '<div>' + (notice.title ? '<strong style="color:' + nColor + '; font-weight:800; margin-right:8px;">' + notice.title + '</strong>' : '') + '<span>' + notice.message + '</span></div><button style="background:transparent; border:none; color:#94a3b8; font-size:16px; cursor:pointer; padding:0 6px; line-height:1;" onclick="this.parentElement.remove()" title="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
         
         var topBar = document.body.firstElementChild;
         if (topBar) {
@@ -305,7 +305,7 @@
     var prompt = document.createElement('div');
     prompt.id = 'ewu-unactivated-prompt';
     prompt.style.cssText = 'position:fixed; bottom:20px; right:20px; z-index:999999; background:rgba(13,19,33,0.95); border:1px solid rgba(99,102,241,0.45); border-radius:14px; padding:14px 18px; box-shadow:0 12px 35px rgba(0,0,0,0.7), 0 0 20px rgba(99,102,241,0.25); color:#ffffff; font-family:-apple-system,BlinkMacSystemFont,sans-serif; backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); display:flex; align-items:center; gap:12px; font-size:13px; max-width:360px;';
-    prompt.innerHTML = '<div style="width:34px; height:34px; border-radius:10px; background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#818cf8;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div><strong style="display:block; font-size:13px; margin-bottom:2px;">Activate EWU Buddy</strong><span style="font-size:11.5px; color:#cbd5e1;">Enter your license key to unlock automated captcha &amp; advising tools.</span></div><button id="btnPromptActivate" style="padding:7px 12px; background:linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; margin-left:4px;">Activate &rarr;</button><button id="btnDismissUnactPrompt" style="background:transparent; border:none; color:#94a3b8; font-size:14px; cursor:pointer; padding:0 2px;">✕</button>';
+    prompt.innerHTML = '<div style="width:34px; height:34px; border-radius:10px; background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#818cf8;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div><strong style="display:block; font-size:13px; margin-bottom:2px;">Activate EWU Buddy</strong><span style="font-size:11.5px; color:#cbd5e1;">Enter your license key to unlock automated captcha &amp; advising tools.</span></div><button id="btnPromptActivate" style="padding:7px 12px; background:linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; margin-left:4px;">Activate &rarr;</button><button id="btnDismissUnactPrompt" style="background:transparent; border:none; color:#94a3b8; font-size:14px; cursor:pointer; padding:0 2px; display:flex; align-items:center; justify-content:center;" title="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
     
     document.body.appendChild(prompt);
 
@@ -1797,6 +1797,112 @@
       };
     },
 
+    _saveCalendarToStorage: function (cacheKey, parsed) {
+      if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local) return;
+      try {
+        chrome.storage.local.get(['ewu_cached_academic_calendars'], function (res) {
+          var calStore = (res && res.ewu_cached_academic_calendars) || {};
+          var serialized = {
+            baseYear: parsed.baseYear,
+            semesterName: parsed.semesterName,
+            startDateStr: parsed.startDateStr,
+            endDateStr: parsed.endDateStr,
+            startDayName: parsed.startDayName,
+            endDayName: parsed.endDayName,
+            specialScheduleMap: parsed.specialScheduleMap || {},
+            holidayEntries: (parsed.holidayEntries || []).map(function (h) {
+              return {
+                rawDate: h.rawDate,
+                rawEvent: h.rawEvent,
+                name: h.name,
+                dates: (h.dates || []).map(function (d) {
+                  var y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
+                  return y + '-' + m + '-' + day;
+                })
+              };
+            }),
+            savedAt: Date.now()
+          };
+          calStore[cacheKey] = serialized;
+          chrome.storage.local.set({ ewu_cached_academic_calendars: calStore }, function () {
+            routineLog('[Calendar] Saved academic calendar to persistent storage for key: ' + cacheKey);
+          });
+        });
+      } catch (err) {
+        routineLog('[Calendar] Failed to save calendar to storage:', err.message);
+      }
+    },
+
+    _loadCalendarFromStorage: function (cacheKey) {
+      var self = this;
+      return new Promise(function (resolve) {
+        if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local) {
+          resolve(null);
+          return;
+        }
+        try {
+          chrome.storage.local.get(['ewu_cached_academic_calendars'], function (res) {
+            if (chrome.runtime.lastError || !res || !res.ewu_cached_academic_calendars) {
+              resolve(null);
+              return;
+            }
+            var item = res.ewu_cached_academic_calendars[cacheKey];
+            if (!item || !item.startDateStr || !item.endDateStr) {
+              resolve(null);
+              return;
+            }
+            var sParts = item.startDateStr.split('-');
+            var eParts = item.endDateStr.split('-');
+            var classStartDate = new Date(parseInt(sParts[0], 10), parseInt(sParts[1], 10) - 1, parseInt(sParts[2], 10));
+            var classEndDate = new Date(parseInt(eParts[0], 10), parseInt(eParts[1], 10) - 1, parseInt(eParts[2], 10));
+
+            var holidayEntries = (item.holidayEntries || []).map(function (h) {
+              var dates = (h.dates || []).map(function (dStr) {
+                var dp = dStr.split('-');
+                return new Date(parseInt(dp[0], 10), parseInt(dp[1], 10) - 1, parseInt(dp[2], 10));
+              });
+              return {
+                rawDate: h.rawDate,
+                rawEvent: h.rawEvent,
+                name: h.name,
+                dates: dates
+              };
+            });
+
+            var holidayDatesMap = {};
+            holidayEntries.forEach(function (h) {
+              h.dates.forEach(function (d) {
+                holidayDatesMap[self._formatDateKey(d)] = {
+                  date: d,
+                  name: h.name
+                };
+              });
+            });
+
+            var reconstructed = {
+              ok: true,
+              baseYear: item.baseYear,
+              semesterName: item.semesterName,
+              classStartDate: classStartDate,
+              classEndDate: classEndDate,
+              startDateStr: item.startDateStr,
+              endDateStr: item.endDateStr,
+              startDayName: item.startDayName,
+              endDayName: item.endDayName,
+              holidayEntries: holidayEntries,
+              holidayDatesMap: holidayDatesMap,
+              specialScheduleMap: item.specialScheduleMap || {}
+            };
+            routineLog('[Calendar] Reconstructed academic calendar from persistent offline storage for key: ' + cacheKey);
+            resolve(reconstructed);
+          });
+        } catch (e) {
+          routineLog('[Calendar] Storage load exception:', e.message);
+          resolve(null);
+        }
+      });
+    },
+
     _fetchAcademicCalendar: async function (semesterName) {
       var self = this;
       if (!semesterName || typeof semesterName !== 'string') {
@@ -1810,6 +1916,13 @@
 
       if (self._cachedAcademicCalendars[cacheKey]) {
         return self._cachedAcademicCalendars[cacheKey];
+      }
+
+      // Check persistent local storage for offline support
+      var storageCached = await self._loadCalendarFromStorage(cacheKey);
+      if (storageCached && storageCached.ok) {
+        self._cachedAcademicCalendars[cacheKey] = storageCached;
+        return storageCached;
       }
 
       if (self._pendingCalendarFetch[cacheKey]) {
@@ -1894,6 +2007,7 @@
             if (parsedDirect && parsedDirect.ok) {
               routineLog('[Calendar] Successfully loaded academic calendar from candidate: ' + testSlug);
               self._cachedAcademicCalendars[cacheKey] = parsedDirect;
+              self._saveCalendarToStorage(cacheKey, parsedDirect);
               return parsedDirect;
             }
           }
@@ -1922,6 +2036,7 @@
                 if (parsedDir && parsedDir.ok) {
                   routineLog('[Calendar] Successfully loaded academic calendar from directory link: ' + candidateUrl);
                   self._cachedAcademicCalendars[cacheKey] = parsedDir;
+                  self._saveCalendarToStorage(cacheKey, parsedDir);
                   return parsedDir;
                 }
               }
@@ -1929,7 +2044,14 @@
           }
         }
 
-        return { ok: false, error: 'Could not load official academic calendar for ' + semesterName };
+        // Final offline fallback check if previous attempts failed
+        var lateStorageCheck = await self._loadCalendarFromStorage(cacheKey);
+        if (lateStorageCheck && lateStorageCheck.ok) {
+          self._cachedAcademicCalendars[cacheKey] = lateStorageCheck;
+          return lateStorageCheck;
+        }
+
+        return { ok: false, error: 'Unable to connect to EWU Academic Calendar. Please check your internet connection or try again later.' };
       })();
 
       self._pendingCalendarFetch[cacheKey] = fetchPromise;
@@ -2113,7 +2235,7 @@
           this._showLoad(false);
           var errMsg = (calResult && calResult.error) ? (': ' + calResult.error) : '';
           routineLog('[Calendar] ICS export aborted - official calendar not available' + errMsg);
-          Toast.show('Unable to fetch official EWU Academic Calendar for ' + semName + '. Calendar export unavailable.', 'error');
+          Toast.show('Calendar (.ics) generation failed: Unable to connect to EWU Academic Calendar. Please check your internet connection or try again later.', 'error', 4500);
           return;
         }
 
@@ -2262,7 +2384,7 @@
       } catch (err) {
         routineLog('Calendar ICS export failed:', err);
         this._showLoad(false);
-        Toast.show('Calendar export failed: ' + (err.message || 'Error'), 'error');
+        Toast.show('Calendar (.ics) generation failed: ' + (err.message || 'Please check your internet connection or try again later.'), 'error', 4500);
       }
     },
 
